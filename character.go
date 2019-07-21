@@ -10,7 +10,7 @@ type Character struct {
 	SecurityStatus float32   `db:"security_status" json:"security_status"`
 	AllianceID     NullInt64 `db:"alliance_id" json:"alliance_id"`
 	CorporationID  uint32    `db:"corporation_id" json:"corporation_id"`
-	FactionID      uint32    `db:"faction_id" json:"faction_id"`
+	FactionID      NullInt64 `db:"faction_id" json:"faction_id"`
 	AncestryID     uint32    `db:"ancestry_id" json:"ancestry_id"`
 	BloodlineID    uint32    `db:"bloodline_id" json:"bloodline_id"`
 	RaceID         uint32    `db:"race_id" json:"race_id"`

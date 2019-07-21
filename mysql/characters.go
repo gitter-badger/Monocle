@@ -5,6 +5,45 @@ import (
 	sb "github.com/huandu/go-sqlbuilder"
 )
 
+func (db *DB) SelectCharacters(page, perPage int, where map[string]interface{}) ([]eveindex.Character, error) {
+
+	var characters []eveindex.Character
+
+	s := sb.NewSelectBuilder()
+	q := s.Select(
+		"id",
+		"name",
+		"birthday",
+		"gender",
+		"security_status",
+		"alliance_id",
+		"corporation_id",
+		"faction_id",
+		"ancestry_id",
+		"bloodline_id",
+		"race_id",
+		"expires",
+		"etag",
+		"created_at",
+		"updated_at",
+	).From(
+		"eveindex.characters",
+	)
+
+	for col, val := range where {
+		q.Where(q.E(col, val))
+	}
+
+	offset := (page * perPage) - perPage
+
+	q.Limit(perPage).Offset(offset)
+
+	query, args := q.Build()
+
+	err := db.Select(&characters, query, args...)
+	return characters, err
+}
+
 func (db *DB) SelectCharacterByCharacterID(id uint64) (eveindex.Character, error) {
 
 	var character eveindex.Character

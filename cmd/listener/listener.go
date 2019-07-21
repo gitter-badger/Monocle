@@ -105,9 +105,10 @@ func listen(stream chan []byte, connected, disconnected, done chan bool) {
 			logit.Infof("Recovered in f %s", r)
 			disconnected <- true
 		}
-		wg.Done()
+
 		return
 	}()
+	defer wg.Done()
 
 	interrupt := make(chan os.Signal)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
@@ -243,9 +244,7 @@ func processCharacter(id uint64) {
 		character.ID = id
 		newCharacter = true
 	}
-	logit.Debugf("\tCharacter: %d:%s\tNew Character: %t\tCharacter Expiration: %s\tCharacter Expired: %t", character.ID, character.Name, newCharacter, character.Expires, character.IsExpired())
 	if !character.IsExpired() {
-		logit.Debugf("\tSkipping Character: %d", character.ID)
 		return
 	}
 
@@ -294,6 +293,8 @@ func processCharacter(id uint64) {
 		return
 	}
 
+	logit.Debugf("\tCharacter: %d:%s\tNew Character: %t", character.ID, character.Name, newCharacter)
+
 	switch newCharacter {
 	case true:
 		_, err := db.InsertCharacter(character)
@@ -324,10 +325,7 @@ func processCorporation(id uint) {
 		newCorporation = true
 	}
 
-	logit.Debugf("\tCorporation: %d:%s\tNew Corporation: %t\tCorporation Expiration: %s\tCorporation Expired: %t", corporation.ID, corporation.Name, newCorporation, corporation.Expires, corporation.IsExpired())
-
 	if !corporation.IsExpired() {
-		logit.Debugf("\tSkipping Corporation: %d", corporation.ID)
 		return
 	}
 
@@ -376,6 +374,8 @@ func processCorporation(id uint) {
 		return
 	}
 
+	logit.Debugf("\tCorporation: %d:%s\tNew Corporation: %t", corporation.ID, corporation.Name, newCorporation)
+
 	switch newCorporation {
 	case true:
 		_, err := db.InsertCorporation(corporation)
@@ -405,10 +405,7 @@ func processAlliance(id uint) {
 		newAlliance = true
 	}
 
-	logit.Debugf("\tAlliance: %d:%s\tNew Alliance: %t\tAlliance Expiration: %s\tAlliance Expired: %t", alliance.ID, alliance.Name, newAlliance, alliance.Expires, alliance.IsExpired())
-
 	if !alliance.IsExpired() {
-		logit.Debugf("\tSkipping Alliance: %d", alliance.ID)
 		return
 	}
 
@@ -457,6 +454,8 @@ func processAlliance(id uint) {
 		logit.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
 		return
 	}
+
+	logit.Debugf("\tAlliance: %d:%s\tNew Alliance: %t", alliance.ID, alliance.Name, newAlliance)
 
 	switch newAlliance {
 	case true:
