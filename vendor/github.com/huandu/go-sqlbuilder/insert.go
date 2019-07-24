@@ -38,7 +38,7 @@ func (ib *InsertBuilder) InsertInto(table string) *InsertBuilder {
 	return ib
 }
 
-// InsertIgnoreInto sets table name and verb in INSERT.
+// InsertIgnoreInto sets table name in INSERT.
 func (ib *InsertBuilder) InsertIgnoreInto(table string) *InsertBuilder {
 	ib.verb = "INSERT IGNORE"
 	ib.table = Escape(table)

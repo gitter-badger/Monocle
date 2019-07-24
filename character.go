@@ -1,4 +1,4 @@
-package eveindex
+package monocle
 
 import "time"
 
@@ -14,6 +14,7 @@ type Character struct {
 	AncestryID     uint32    `db:"ancestry_id" json:"ancestry_id"`
 	BloodlineID    uint32    `db:"bloodline_id" json:"bloodline_id"`
 	RaceID         uint32    `db:"race_id" json:"race_id"`
+	Ignored        bool      `db:"ignored" json:"ignored"`
 	Expires        time.Time `db:"expires" json:"expires"`
 	Etag           string    `db:"etag" json:"etag"`
 	CreatedAt      time.Time `db:"created_at" json:"created_at"`

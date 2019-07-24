@@ -1,13 +1,16 @@
 package mysql
 
 import (
-	"github.com/ddouglas/eveindex"
+	"fmt"
+
+	"github.com/ddouglas/monocle"
 	sb "github.com/huandu/go-sqlbuilder"
+	"github.com/pkg/errors"
 )
 
-func (db *DB) SelectCorporationByCorporationID(id uint) (eveindex.Corporation, error) {
+func (db *DB) SelectCorporationByCorporationID(id uint) (monocle.Corporation, error) {
 
-	var corporation eveindex.Corporation
+	var corporation monocle.Corporation
 
 	s := sb.NewSelectBuilder()
 	s.Select(
@@ -20,15 +23,16 @@ func (db *DB) SelectCorporationByCorporationID(id uint) (eveindex.Corporation, e
 		"date_founded",
 		"creator_id",
 		"home_station_id",
-		"url",
 		"tax_rate",
 		"war_eligible",
+		"ignored",
+		"closed",
 		"etag",
 		"expires",
 		"created_at",
 		"updated_at",
 	).From(
-		"eveindex.corporations",
+		"monocle.corporations",
 	).Where(
 		s.E("id", id),
 	).Limit(1)
@@ -39,10 +43,99 @@ func (db *DB) SelectCorporationByCorporationID(id uint) (eveindex.Corporation, e
 	return corporation, err
 }
 
-func (db *DB) InsertCorporation(corporation eveindex.Corporation) (eveindex.Corporation, error) {
+func (db *DB) SelectMissingCorporationIdsFromList(ids []int) ([]int, error) {
+	var results []int
+	var table = "temp_ids"
+
+	query := fmt.Sprintf("TRUNCATE %s", table)
+	_, err := db.Exec(query)
+	if err != nil {
+		return results, err
+	}
 
 	i := sb.NewInsertBuilder()
-	i.ReplaceInto("eveindex.corporations").Cols(
+	i.InsertInto(table).Cols(
+		"id",
+	)
+	for _, v := range ids {
+		i.Values(v)
+	}
+
+	query, args := i.Build()
+
+	_, err = db.Exec(query, args...)
+	if err != nil {
+		err = errors.Wrapf(err, "Unable to insertIds into temporary %s table", table)
+		return results, err
+	}
+
+	s := sb.NewSelectBuilder()
+	s.Select("tmp.id")
+	s.From(
+		fmt.Sprintf("%s tmp", table),
+	)
+	s.JoinWithOption(sb.LeftJoin, "corporations corps", "tmp.id = corps.id")
+	s.Where(
+		s.IsNull("corps.id"),
+	)
+
+	query, _ = s.Build()
+	err = db.Select(&results, query)
+	if err != nil {
+		err = errors.Wrapf(err, "Unable perform select operation temporary %s table", table)
+		return results, err
+	}
+
+	query = fmt.Sprintf("TRUNCATE %s", table)
+	_, err = db.Exec(query)
+	return results, err
+}
+
+func (db *DB) SelectCountOfExpiredCorporationEtags() (monocle.Counter, error) {
+	var counter monocle.Counter
+
+	s := sb.NewSelectBuilder()
+	s.Select(
+		s.As("COUNT(*)", "count"),
+	).From(
+		"monocle.corporations",
+	)
+
+	s.Where(
+		s.LessThan("expires", sb.Raw("NOW()")),
+		s.E("ignored", 0),
+	)
+
+	query, args := s.Build()
+	err := db.Get(&counter, query, args...)
+	return counter, err
+}
+
+func (db *DB) SelectCountOfCorporationEtags() (monocle.Counter, error) {
+	var counter monocle.Counter
+
+	s := sb.NewSelectBuilder()
+	s.Select(
+		s.As("COUNT(*)", "count"),
+	).From(
+		"monocle.corporations",
+	)
+
+	s.Where(
+		s.E("ignored", 0),
+	)
+
+	query, args := s.Build()
+	err := db.Get(&counter, query, args...)
+	return counter, err
+}
+
+func (db *DB) SelectExpiredCorporationEtags(page, perPage int) ([]monocle.Corporation, error) {
+
+	var corporations []monocle.Corporation
+
+	s := sb.NewSelectBuilder()
+	s.Select(
 		"id",
 		"name",
 		"ticker",
@@ -52,9 +145,47 @@ func (db *DB) InsertCorporation(corporation eveindex.Corporation) (eveindex.Corp
 		"date_founded",
 		"creator_id",
 		"home_station_id",
-		"url",
 		"tax_rate",
 		"war_eligible",
+		"ignored",
+		"closed",
+		"etag",
+		"expires",
+		"created_at",
+		"updated_at",
+	).From(
+		"monocle.corporations",
+	)
+
+	offset := (page * perPage) - perPage
+	s.Where(
+		s.LessThan("expires", sb.Raw("NOW()")),
+		s.E("ignored", 0),
+	).OrderBy("expires").Asc().Limit(perPage).Offset(offset)
+
+	query, args := s.Build()
+
+	err := db.Select(&corporations, query, args...)
+	return corporations, err
+}
+
+func (db *DB) InsertCorporation(corporation monocle.Corporation) (monocle.Corporation, error) {
+
+	i := sb.NewInsertBuilder()
+	i.ReplaceInto("monocle.corporations").Cols(
+		"id",
+		"name",
+		"ticker",
+		"member_count",
+		"ceo_id",
+		"alliance_id",
+		"date_founded",
+		"creator_id",
+		"home_station_id",
+		"tax_rate",
+		"war_eligible",
+		"ignored",
+		"closed",
 		"etag",
 		"expires",
 		"created_at",
@@ -69,9 +200,10 @@ func (db *DB) InsertCorporation(corporation eveindex.Corporation) (eveindex.Corp
 		corporation.DateFounded,
 		corporation.CreatorID,
 		corporation.HomeStationID,
-		corporation.URL,
 		corporation.TaxRate,
 		corporation.WarEligible,
+		corporation.Ignored,
+		corporation.Closed,
 		corporation.Etag,
 		corporation.Expires,
 		sb.Raw("NOW()"),
@@ -88,16 +220,17 @@ func (db *DB) InsertCorporation(corporation eveindex.Corporation) (eveindex.Corp
 	return db.SelectCorporationByCorporationID(corporation.ID)
 }
 
-func (db *DB) UpdateCorporationByID(corporation eveindex.Corporation) (eveindex.Corporation, error) {
+func (db *DB) UpdateCorporationByID(corporation monocle.Corporation) (monocle.Corporation, error) {
 	u := sb.NewUpdateBuilder()
-	u.Update("eveindex.corporations").Set(
+	u.Update("monocle.corporations").Set(
 		u.E("member_count", corporation.MemberCount),
 		u.E("ceo_id", corporation.CeoID),
 		u.E("alliance_id", corporation.AllianceID),
 		u.E("home_station_id", corporation.HomeStationID),
-		u.E("url", corporation.URL),
 		u.E("tax_rate", corporation.TaxRate),
 		u.E("war_eligible", corporation.WarEligible),
+		u.E("ignored", corporation.Ignored),
+		u.E("closed", corporation.Closed),
 		u.E("expires", corporation.Expires),
 		u.E("etag", corporation.Etag),
 	).Where(
@@ -116,7 +249,7 @@ func (db *DB) UpdateCorporationByID(corporation eveindex.Corporation) (eveindex.
 
 func (db *DB) DeleteCorporationByID(id uint) error {
 	d := sb.NewDeleteBuilder()
-	d.DeleteFrom("eveindex.corporations").Where(d.E("id", id))
+	d.DeleteFrom("monocle.corporations").Where(d.E("id", id))
 
 	query, args := d.Build()
 

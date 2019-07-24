@@ -2,6 +2,7 @@ package esi
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -112,4 +113,27 @@ func (e *Client) Request(request Request) (Response, error) {
 	response.Headers = headers
 
 	return response, nil
+}
+
+func RetreiveExpiresHeaderFromResponse(response Response) (time.Time, error) {
+	if _, ok := response.Headers["Expires"]; !ok {
+		err := fmt.Errorf("Expires Headers is missing for url %s", response.Path)
+		return time.Time{}, err
+	}
+	expires, err := time.Parse(LayoutESI, response.Headers["Expires"])
+	if err != nil {
+		return expires, err
+	}
+
+	expires = expires.Add(time.Hour * 3)
+
+	return expires, nil
+}
+
+func RetrieveEtagHeaderFromResponse(response Response) (string, error) {
+	if _, ok := response.Headers["Etag"]; !ok {
+		err = fmt.Errorf("Etag Header is missing from url %s", response.Path)
+		return "", err
+	}
+	return response.Headers["Etag"], nil
 }

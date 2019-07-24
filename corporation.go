@@ -1,4 +1,4 @@
-package eveindex
+package monocle
 
 import "time"
 
@@ -12,9 +12,10 @@ type Corporation struct {
 	DateFounded   NullTime  `db:"date_founded" json:"date_founded"`
 	CreatorID     uint64    `db:"creator_id" json:"creator_id"`
 	HomeStationID NullInt64 `db:"home_station_id" json:"home_station_id"`
-	URL           string    `db:"url" json:"url"`
 	TaxRate       float32   `db:"tax_rate" json:"tax_rate"`
 	WarEligible   bool      `db:"war_eligible" json:"war_eligible"`
+	Ignored       bool      `db:"ignored" json:"ignored"`
+	Closed        bool      `db:"closed" json:"closed"`
 	Expires       time.Time `db:"expires" json:"expires"`
 	Etag          string    `db:"etag" json:"etag"`
 	CreatedAt     time.Time `db:"created_at" json:"created_at"`

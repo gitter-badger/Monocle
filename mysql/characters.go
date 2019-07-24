@@ -1,13 +1,13 @@
 package mysql
 
 import (
-	"github.com/ddouglas/eveindex"
+	"github.com/ddouglas/monocle"
 	sb "github.com/huandu/go-sqlbuilder"
 )
 
-func (db *DB) SelectCharacters(page, perPage int, where map[string]interface{}) ([]eveindex.Character, error) {
+func (db *DB) SelectCharacters(page, perPage int, where map[string]interface{}) ([]monocle.Character, error) {
 
-	var characters []eveindex.Character
+	var characters []monocle.Character
 
 	s := sb.NewSelectBuilder()
 	q := s.Select(
@@ -22,12 +22,13 @@ func (db *DB) SelectCharacters(page, perPage int, where map[string]interface{}) 
 		"ancestry_id",
 		"bloodline_id",
 		"race_id",
+		"ignored",
 		"expires",
 		"etag",
 		"created_at",
 		"updated_at",
 	).From(
-		"eveindex.characters",
+		"monocle.characters",
 	)
 
 	for col, val := range where {
@@ -44,9 +45,9 @@ func (db *DB) SelectCharacters(page, perPage int, where map[string]interface{}) 
 	return characters, err
 }
 
-func (db *DB) SelectCharacterByCharacterID(id uint64) (eveindex.Character, error) {
+func (db *DB) SelectCharacterByCharacterID(id uint64) (monocle.Character, error) {
 
-	var character eveindex.Character
+	var character monocle.Character
 
 	s := sb.NewSelectBuilder()
 	s.Select(
@@ -61,12 +62,13 @@ func (db *DB) SelectCharacterByCharacterID(id uint64) (eveindex.Character, error
 		"ancestry_id",
 		"bloodline_id",
 		"race_id",
+		"ignored",
 		"expires",
 		"etag",
 		"created_at",
 		"updated_at",
 	).From(
-		"eveindex.characters",
+		"monocle.characters",
 	).Where(
 		s.E("id", id),
 	).Limit(1)
@@ -77,10 +79,11 @@ func (db *DB) SelectCharacterByCharacterID(id uint64) (eveindex.Character, error
 	return character, err
 }
 
-func (db *DB) InsertCharacter(character eveindex.Character) (eveindex.Character, error) {
+func (db *DB) SelectExpiredCharacterEtags(page, perPage int) ([]monocle.Character, error) {
+	var characters []monocle.Character
 
-	i := sb.NewInsertBuilder()
-	i.InsertIgnoreInto("eveindex.characters").Cols(
+	s := sb.NewSelectBuilder()
+	s.Select(
 		"id",
 		"name",
 		"birthday",
@@ -92,6 +95,82 @@ func (db *DB) InsertCharacter(character eveindex.Character) (eveindex.Character,
 		"ancestry_id",
 		"bloodline_id",
 		"race_id",
+		"ignored",
+		"expires",
+		"etag",
+		"created_at",
+		"updated_at",
+	).From(
+		"monocle.characters",
+	)
+
+	offset := (page * perPage) - perPage
+	s.Where(
+		s.LessThan("expires", sb.Raw("NOW()")),
+		s.E("ignored", 0),
+	).OrderBy("expires").Asc().Limit(perPage).Offset(offset)
+
+	query, args := s.Build()
+
+	err := db.Select(&characters, query, args...)
+	return characters, err
+}
+
+func (db *DB) SelectCountOfExpiredCharacterEtags() (monocle.Counter, error) {
+	var counter monocle.Counter
+
+	s := sb.NewSelectBuilder()
+	s.Select(
+		s.As("COUNT(*)", "count"),
+	).From(
+		"monocle.characters",
+	)
+
+	s.Where(
+		s.LessThan("expires", sb.Raw("NOW()")),
+		s.E("ignored", 0),
+	)
+
+	query, args := s.Build()
+	err := db.Get(&counter, query, args...)
+	return counter, err
+}
+
+func (db *DB) SelectCountOfCharacterEtags() (monocle.Counter, error) {
+	var counter monocle.Counter
+
+	s := sb.NewSelectBuilder()
+	s.Select(
+		s.As("COUNT(*)", "count"),
+	).From(
+		"monocle.characters",
+	)
+
+	s.Where(
+		s.E("ignored", 0),
+	)
+
+	query, args := s.Build()
+	err := db.Get(&counter, query, args...)
+	return counter, err
+}
+
+func (db *DB) InsertCharacter(character monocle.Character) (monocle.Character, error) {
+
+	i := sb.NewInsertBuilder()
+	i.InsertIgnoreInto("monocle.characters").Cols(
+		"id",
+		"name",
+		"birthday",
+		"gender",
+		"security_status",
+		"alliance_id",
+		"corporation_id",
+		"faction_id",
+		"ancestry_id",
+		"bloodline_id",
+		"race_id",
+		"ignored",
 		"expires",
 		"etag",
 		"created_at",
@@ -108,6 +187,7 @@ func (db *DB) InsertCharacter(character eveindex.Character) (eveindex.Character,
 		character.AncestryID,
 		character.BloodlineID,
 		character.RaceID,
+		character.Ignored,
 		character.Expires,
 		character.Etag,
 		sb.Raw("NOW()"),
@@ -124,14 +204,15 @@ func (db *DB) InsertCharacter(character eveindex.Character) (eveindex.Character,
 
 }
 
-func (db *DB) UpdateCharacterByID(character eveindex.Character) (eveindex.Character, error) {
+func (db *DB) UpdateCharacterByID(character monocle.Character) (monocle.Character, error) {
 
 	u := sb.NewUpdateBuilder()
-	u.Update("eveindex.characters").Set(
+	u.Update("monocle.characters").Set(
 		u.E("security_status", character.SecurityStatus),
 		u.E("alliance_id", character.AllianceID),
 		u.E("corporation_id", character.CorporationID),
 		u.E("faction_id", character.FactionID),
+		u.E("ignored", character.Ignored),
 		u.E("expires", character.Expires),
 		u.E("etag", character.Etag),
 		u.E("updated_at", sb.Raw("NOW()")),
@@ -152,7 +233,7 @@ func (db *DB) UpdateCharacterByID(character eveindex.Character) (eveindex.Charac
 func (db *DB) DeleteCharacterByID(id uint64) error {
 
 	d := sb.NewDeleteBuilder()
-	d.DeleteFrom("eveindex.characters").Where(d.E("id", id))
+	d.DeleteFrom("monocle.characters").Where(d.E("id", id))
 
 	query, args := d.Build()
 

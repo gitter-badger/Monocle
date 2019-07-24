@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+    listener:
+        image: core
+        command: ./cli listen
+        network_mode: "host"
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: listener
+        env_file:
+            - ./cmd/.env-docker
+    char:
+        image: core
+        command: ./cli update --scope=characters --workers=10 --records=250
+        network_mode: "host"
+        container_name: updater_char
+        env_file:
+            - ./cmd/.env-docker
+    corp:
+        image: core
+        command: ./cli update --scope=corporations --workers=10 --records=250
+        network_mode: "host"
+        container_name: updater_corp
+        env_file:
+            - ./cmd/.env-docker
+    alli:
+        image: core
+        command: ./cli update --scope=alliances --workers=2 --records=50 --threshold=10
+        network_mode: "host"
+        container_name: updater_alli
+        env_file:
+            - ./cmd/.env-docker
+    counter:
+        image: core
+        command: ./cli counter
+        network_mode: "host"
+        container_name: counter
+        env_file:
+            - ./cmd/.env-docker
