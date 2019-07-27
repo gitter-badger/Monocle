@@ -9,4 +9,12 @@ type EtagResource struct {
 	Expires   time.Time `db:"expires" json:"expires"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+	Exists    bool
+}
+
+func (e EtagResource) IsExpired() bool {
+	if e.Expires.Before(time.Now()) {
+		return true
+	}
+	return false
 }

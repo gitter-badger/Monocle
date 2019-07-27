@@ -12,6 +12,7 @@ import (
 type (
 	Updater struct {
 		*core.App
+		reset, count uint64
 	}
 )
 
@@ -21,6 +22,7 @@ var (
 	records int
 	scope string
 	wg    sync.WaitGroup
+	mx    sync.Mutex
 )
 
 func Process(c *cli.Context) error {
@@ -33,7 +35,7 @@ func Process(c *cli.Context) error {
 	}
 
 	updater := Updater{
-		core,
+		core, 40, 100,
 	}
 
 	workers = c.Int("workers")
@@ -41,6 +43,11 @@ func Process(c *cli.Context) error {
 	sleep = c.Int("sleep")
 	threshold = c.Int("threshold")
 	scope = c.String("scope")
+
+	if records <= threshold {
+		err = errors.New("Records cannot be less than or equal to threshold")
+		return cli.NewExitError(err, 1)
+	}
 
 	core.Logger.Infof("Starting Updates with the Scope of %s utilizing %d workers and assigning %d records to each worker", scope, workers, records)
 

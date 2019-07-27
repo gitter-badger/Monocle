@@ -7,7 +7,6 @@ import (
 
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/esi"
-	"github.com/pkg/errors"
 )
 
 func (u *Updater) evaluateCharacters(sleep, threshold int) error {
@@ -15,8 +14,10 @@ func (u *Updater) evaluateCharacters(sleep, threshold int) error {
 	var errorCount int
 
 	for {
-		if errorCount >= 10 {
-			return errors.New("Error Count High. Exiting Programs")
+		u.Logger.DebugF("Current Error Count: %d Remain: %d", u.count, u.reset)
+		if u.count < 10 {
+			u.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", u.reset)
+			time.Sleep(time.Second * time.Duration(u.reset))
 		}
 		for x := 1; x <= workers; x++ {
 			characters, err := u.DB.SelectExpiredCharacterEtags(x, records)
@@ -28,7 +29,7 @@ func (u *Updater) evaluateCharacters(sleep, threshold int) error {
 				continue
 			}
 
-			if len(characters) <= threshold {
+			if len(characters) < threshold {
 				u.Logger.Infof("Minimum threshold of %d for job not met. Sleeping for %d seconds", threshold, sleep)
 				time.Sleep(time.Second * time.Duration(sleep))
 				continue
@@ -57,13 +58,18 @@ func (u *Updater) updateCharacters(characters []monocle.Character) {
 }
 
 func (u *Updater) updateCharacter(character monocle.Character) {
-	u.Logger.DebugF("Updating Character %s", character.ID)
+	u.Logger.DebugF("Updating Character %d", character.ID)
 
 	response, err := u.ESI.GetCharactersCharacterID(character.ID, character.Etag)
 	if err != nil {
 		u.Logger.Errorf("Error completing request to ESI for Character %d information: %s", character.ID, err)
 		return
 	}
+
+	mx.Lock()
+	defer mx.Unlock()
+	u.reset = esi.RetrieveErrorResetFromResponse(response)
+	u.count = esi.RetrieveErrorCountFromResponse(response)
 
 	switch response.Code {
 	case 200:
@@ -72,7 +78,7 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 			u.Logger.Errorf("unable to unmarshel response body for %d: %s", character.ID, err)
 			return
 		}
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}
@@ -86,7 +92,7 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 		character.Expires = expires
 		break
 	case 304:
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}

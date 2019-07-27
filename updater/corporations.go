@@ -7,7 +7,6 @@ import (
 
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/esi"
-	"github.com/pkg/errors"
 )
 
 func (u *Updater) evaluateCorporations(sleep, threshold int) error {
@@ -15,8 +14,10 @@ func (u *Updater) evaluateCorporations(sleep, threshold int) error {
 	var errorCount int
 supervisor:
 	for {
-		if errorCount >= 10 {
-			return errors.New("Error Count High. Exiting Programs")
+		u.Logger.DebugF("Current Error Count: %d Remain: %d", u.count, u.reset)
+		if u.count < 10 {
+			u.Logger.Error("Error Counter is Low, sleeping for 30 seconds")
+			time.Sleep(time.Second * 30)
 		}
 		for x := 1; x <= workers; x++ {
 			corporations, err := u.DB.SelectExpiredCorporationEtags(x, records)
@@ -28,7 +29,7 @@ supervisor:
 				continue supervisor
 			}
 
-			if len(corporations) <= threshold {
+			if len(corporations) < threshold {
 				if x == 1 {
 					u.Logger.Infof("Minimum threshold of %d for job not met. Sleeping for %d seconds", threshold, sleep)
 					time.Sleep(time.Second * time.Duration(sleep))
@@ -60,13 +61,18 @@ func (u *Updater) updateCorporations(corporations []monocle.Corporation) {
 }
 
 func (u *Updater) updateCorporation(corporation monocle.Corporation) {
-	u.Logger.DebugF("Updating Corporation %s", corporation.ID)
+	u.Logger.DebugF("Updating Corporation %d", corporation.ID)
 
 	response, err := u.ESI.GetCorporationsCorporationID(corporation.ID, corporation.Etag)
 	if err != nil {
 		u.Logger.Errorf("Error completing request to ESI for Corporation %d information: %s", corporation.ID, err)
 		return
 	}
+
+	mx.Lock()
+	defer mx.Unlock()
+	u.reset = esi.RetrieveErrorResetFromResponse(response)
+	u.count = esi.RetrieveErrorCountFromResponse(response)
 
 	switch response.Code {
 	case 200:
@@ -75,7 +81,7 @@ func (u *Updater) updateCorporation(corporation monocle.Corporation) {
 			u.Logger.Errorf("unable to unmarshel response body for %d: %s", corporation.ID, err)
 			return
 		}
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}
@@ -89,7 +95,7 @@ func (u *Updater) updateCorporation(corporation monocle.Corporation) {
 		corporation.Expires = expires
 		break
 	case 304:
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}

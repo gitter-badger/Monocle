@@ -86,7 +86,7 @@ func Counter(c *cli.Context) error {
 			alliDiff = fmt.Sprintf("↔%d", 0)
 		}
 
-		core.Logger.Infof("Current Count:\tChar: %d (%s)\tCorp: %d (%s)\tAlli: %d (%s)", charCount.Count, charDiff, corpCount.Count, corpDiff, alliCount.Count, alliDiff)
+		core.Logger.Infof("Char: %d (%s)\tCorp: %d (%s)\tAlli: %d (%s)", charCount.Count, charDiff, corpCount.Count, corpDiff, alliCount.Count, alliDiff)
 
 		charLast = charCount.Count
 		corpLast = corpCount.Count

@@ -4,8 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"strconv"
 	"sync"
 	"time"
+
+	"github.com/ddouglas/monocle/evewho"
 
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/core"
@@ -43,11 +46,15 @@ func Action(c *cli.Context) error {
 	records = c.Int("records")
 	sleep = c.Int("sleep")
 
+	populator.Logger.Infof("Starting process with %d workers", workers)
+
 	switch scope {
-	case "alliancelist":
+	case "getAlliancelList":
 		_ = populator.getAlliancelList()
-	case "alliancemembers":
-		_ = populator.getAllianceMemberList()
+	case "getAllianceCorpMemberList":
+		_ = populator.getAllianceCorpList()
+	case "getAllianceCharMemberList":
+		_ = populator.getAllianceCharList()
 	}
 
 	return nil
@@ -101,7 +108,7 @@ func (p *Populator) getAlliancelList() error {
 	return nil
 }
 
-func (p *Populator) getAllianceMemberList() error {
+func (p *Populator) getAllianceCorpList() error {
 	var page = 1
 
 	for {
@@ -123,113 +130,45 @@ func (p *Populator) getAllianceMemberList() error {
 		}
 
 		p.Logger.Infof("Successfully Queried %d Alliances", len(alliances))
-
+		wg.Add(1)
+		go p.processAllianceCorps(page, alliances)
 		page++
-		p.processAllianceMembers(alliances)
 
 		time.Sleep(time.Second * time.Duration(sleep))
 	}
 
 	p.Logger.Debug("Master Loop broken. Waiting for any remaining Routines")
-
+	wg.Wait()
 	p.Logger.Debug("Done Waiting. Return nil for errors")
 
 	return nil
 
 }
 
-func (p *Populator) processAllianceMembers(alliances []monocle.Alliance) {
+func (p *Populator) getAllianceCharList() error {
 
-	for _, alliance := range alliances {
-
-		var corpIDs []int
-
-		response, err := p.ESI.GetAllianceMembersByID(alliance.ID, "")
+	var page = 1
+	for {
+		alliances, err := p.DB.SelectAlliances(page, records)
 		if err != nil {
-			p.Logger.Errorf("Error completing request to ESI for Alliance information: %s", err)
-			return
+			if err != sql.ErrNoRows {
+				p.Logger.Fatalf("Unable to query for alliances: %s", err)
+				continue
+			}
 		}
 
-		switch response.Code {
-		case 200:
-			err = json.Unmarshal(response.Data.([]byte), &corpIDs)
-			if err != nil {
-				p.Logger.Errorf("unable to unmarshel response body: %s", err)
-				return
-			}
-
-			expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
-			if err != nil {
-				p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-			}
-
-			alliance.Expires = expires
-
-			etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-			if err != nil {
-				p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-			}
-			alliance.Etag = etag
+		if len(alliances) == 0 {
+			p.Logger.Info("All Alliance Member Corps updated. Breaking supervisor loop")
 			break
-
-		default:
-			p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-			return
 		}
 
-		if len(corpIDs) == 0 {
-
-			alliance.Closed = true
-			p.Logger.Debugf("%d Corps Detected for Alliance %d. Closing the Corp in DB and continuing to next corp", len(corpIDs), alliance.ID)
-
-			_, err := p.DB.UpdateAllianceByID(alliance)
-			if err != nil {
-				p.Logger.Errorf("unable to close alliance in database: %s", err)
-			}
-			continue
-		}
-
-		if len(corp)
-
-
-		chunked := chunkIntSlice(50, corpIDs)
-		chunkedLen := len(chunked)
-		p.Logger.Debugf("%d corp Ids found and chunked into %d chunkks. Starting Chunk Loop", len(corpIDs), chunkedLen)
-		for y, chunk := range chunked {
-			p.Logger.Debugf("Starting Loop %d of %d", y+1, chunkedLen)
-			missing, err := p.DB.SelectMissingCorporationIdsFromList(chunk)
-			if err != nil {
-				if err != sql.ErrNoRows {
-					p.Logger.Fatalf("Unable to query for characters: %s", err)
-				}
-				continue
-			}
-
-			if len(missing) == 0 {
-				p.Logger.Debugf("0 missing ids found for Alliance %d", alliance.ID)
-				continue
-			}
-
-			if len(missing) > 0 {
-				p.Logger.Infof("Deploying Go Routines to Process %d ids", len(missing))
-				wg.Add(1)
-				go p.processCorporationIds(missing)
-			}
-
-			time.Sleep(time.Second * 1)
-			p.Logger.Debugf("Finishing Loop %d of %d ", y+1, chunkedLen)
-		}
-
+		p.Logger.Infof("Successfully Queried %d Alliances", len(alliances))
+		p.processAllianceChars(page, alliances)
+		page++
 	}
-	return
-}
 
-func (p *Populator) processCorporationIds(ids []int) {
-	defer wg.Done()
-	for _, v := range ids {
-		p.processCorporation(uint(v))
-	}
-	return
+	return nil
+
 }
 
 func (p *Populator) processAllianceIds(ids []monocle.AllianceIDs) {
@@ -260,7 +199,7 @@ func (p *Populator) processAlliance(id uint) {
 
 		alliance.ID = id
 
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
 		}
@@ -288,50 +227,242 @@ func (p *Populator) processAlliance(id uint) {
 	}
 }
 
-func (p *Populator) processCharacter(id uint64) {
+func (p *Populator) processAllianceCorps(pid int, alliances []monocle.Alliance) {
 
-	var character monocle.Character
-	response, err := p.ESI.GetCharactersCharacterID(id, "")
-	if err != nil {
-		p.Logger.Errorf("Error completing request to ESI for Character information: %s", err)
-		return
-	}
+	for _, alliance := range alliances {
 
-	switch response.Code {
-	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &character)
+		var corpIDs []int
+
+		resource := "alliance_corp_list"
+
+		etagResource, err := p.DB.SelectEtagByIDAndResource(alliance.ID, resource)
 		if err != nil {
-			p.Logger.Errorf("unable to unmarshel response body: %s", err)
+			if err != sql.ErrNoRows {
+				p.Logger.Errorf("Unable to query for alliance member etag: %s", err)
+			}
+			etagResource.Exists = false
+			etagResource.ID = alliance.ID
+			etagResource.Resource = resource
+		}
+
+		if !etagResource.IsExpired() {
+			continue
+		}
+
+		response, err := p.ESI.GetAllianceMembersByID(alliance.ID, etagResource.Etag)
+		if err != nil {
+			p.Logger.Errorf("Error completing request to ESI for Alliance information: %s", err)
 			return
 		}
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
+
+		switch response.Code {
+		case 200:
+			err = json.Unmarshal(response.Data.([]byte), &corpIDs)
+			if err != nil {
+				p.Logger.Errorf("unable to unmarshel response body: %s", err)
+				return
+			}
+
+			expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
+			if err != nil {
+				p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
+			}
+
+			etagResource.Expires = expires
+
+			etag, err := esi.RetrieveEtagHeaderFromResponse(response)
+			if err != nil {
+				p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
+			}
+
+			etagResource.Etag = etag
+
+			_, err = p.DB.InsertEtag(etagResource)
+			if err != nil {
+				p.Logger.Errorf("Error Received when attempting to insert Etag into database: %s", err)
+				return
+			}
+
+			break
+
+		case 304:
+			expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
+			if err != nil {
+				p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
+			}
+
+			etagResource.Expires = expires
+
+			etag, err := esi.RetrieveEtagHeaderFromResponse(response)
+			if err != nil {
+				p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
+			}
+
+			etagResource.Etag = etag
+
+			_, err = p.DB.InsertEtag(etagResource)
+			if err != nil {
+				p.Logger.Errorf("Error Received when attempting to insert Etag into database: %s", err)
+			}
+
+			return
+		default:
+			p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
+			return
 		}
 
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
+		if len(corpIDs) == 0 {
+
+			alliance.Closed = true
+			p.Logger.Debugf("%d Corps Detected for Alliance %d. Closing the Corp in DB and continuing to next corp", len(corpIDs), alliance.ID)
+
+			_, err := p.DB.UpdateAllianceByID(alliance)
+			if err != nil {
+				p.Logger.Errorf("unable to close alliance in database: %s", err)
+			}
+			continue
 		}
-		character.Etag = etag
 
-		character.Expires = expires
-		break
-	default:
-		p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return
+		chunked := chunkIntSlice(50, corpIDs)
+		chunkedLen := len(chunked)
+		p.Logger.Debugf("%d corp Ids found and chunked into %d chunks. Starting Chunk Loop", len(corpIDs), chunkedLen)
+		for y, chunk := range chunked {
+			p.Logger.Debugf("Starting Loop %d of %d", y+1, chunkedLen)
+			missing, err := p.DB.SelectMissingCorporationIdsFromList(pid, chunk)
+			if err != nil {
+				if err != sql.ErrNoRows {
+					p.Logger.Fatalf("Unable to query for characters: %s", err)
+				}
+				continue
+			}
+
+			if len(missing) == 0 {
+				p.Logger.Debugf("0 missing ids found for Alliance %d", alliance.ID)
+				continue
+			}
+
+			if len(missing) > 0 {
+				p.Logger.Infof("Deploying Go Routines to Process %d ids", len(missing))
+				wg.Add(1)
+				go p.processCorporationIds(missing)
+			}
+
+			time.Sleep(time.Second * 1)
+			p.Logger.Debugf("Finishing Loop %d of %d ", y+1, chunkedLen)
+		}
+
 	}
-
-	p.Logger.Debugf("\tCharacter: %d:%s", character.ID, character.Name)
-
-	_, err = p.DB.InsertCharacter(character)
-	if err != nil {
-		p.Logger.Errorf("Error Encountered attempting to insert new character into database: %s", err)
-		return
-	}
+	return
 }
 
-func (p *Populator) processCorporation(id uint) {
+func (p *Populator) processAllianceChars(pid int, alliances []monocle.Alliance) {
+	// interrupt := make(chan os.Signal)
+	// signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	next := make(chan bool)
+	limiter := 0
+	// parent:
+	for _, alliance := range alliances {
+
+		var ewAlliance evewho.AllianceList
+
+		page := 0
+
+		for {
+			var characters []string
+			p.Logger.Infof("Requesting Page %d Member Data for Alliance %d", page, alliance.ID)
+
+			response, err := p.Who.GetAllianceMembersByID(alliance.ID, page)
+			if err != nil {
+				p.Logger.Errorf("Error completing request to ESI for Alliance information: %s", err)
+				return
+			}
+
+			p.Logger.Infof("Received Response Code of %d for %d", response.Code, alliance.ID)
+
+			switch response.Code {
+			case 200:
+				err = json.Unmarshal(response.Data.([]byte), &ewAlliance)
+				if err != nil {
+					p.Logger.Errorf("unable to unmarshel response body: %s", err)
+					return
+				}
+				break
+			default:
+				p.Logger.ErrorF("Bad Resposne Code %d received from EveWho API for url %s:", response.Code, response.Path)
+				return
+			}
+
+			ewCharacters := ewAlliance.Characters
+			ewCharactersLen := len(ewCharacters)
+			p.Logger.Infof("Alliance %d has approximately %d characters.", alliance.ID, ewCharactersLen)
+			if ewCharactersLen == 0 {
+
+				alliance.Closed = true
+				p.Logger.Debugf("%d Chars Detected for Alliance %d. Closing the Corp in DB and continuing to next corp", len(ewCharacters), alliance.ID)
+
+				_, err := p.DB.UpdateAllianceByID(alliance)
+				if err != nil {
+					p.Logger.Errorf("unable to close alliance in database: %s", err)
+				}
+				break
+			}
+
+			for _, ewCharacter := range ewCharacters {
+				characters = append(characters, ewCharacter.CharacterID)
+			}
+			wg.Add(1)
+			go p.processAllianceCharacterList(alliance.ID, page, characters, next)
+
+			if limiter >= workers {
+				select {
+				case <-next:
+					p.Logger.Info("received value on done chan")
+
+				}
+			}
+			limiter++
+			if ewCharactersLen < 200 {
+				break
+			}
+
+			page++
+			time.Sleep(1 * time.Second)
+		}
+	}
+
+	p.Logger.Info("Parent Loop Exited. Waiting for inflight goroutines to complete")
+	wg.Wait()
+	p.Logger.Info("In Flight GoRoutines Done")
+
+	return
+
+}
+
+func (p *Populator) processAllianceCharacterList(id uint, page int, characters []string, next chan bool) {
+	for _, character := range characters {
+		characterID, err := strconv.ParseUint(character, 10, 64)
+		if err != nil {
+			p.Logger.Errorf("Unable to parse %s to uint64 for esi client", character)
+			continue
+		}
+
+		p.processCharacter(characterID, false)
+	}
+
+	wg.Done()
+	next <- true
+	return
+}
+
+func (p *Populator) processCorporationIds(ids []int) {
+	defer wg.Done()
+	for _, v := range ids {
+		p.processNewCorporation(uint(v))
+	}
+	return
+}
+
+func (p *Populator) processNewCorporation(id uint) {
 
 	var corporation monocle.Corporation
 	response, err := p.ESI.GetCorporationsCorporationID(id, "")
@@ -350,7 +481,7 @@ func (p *Populator) processCorporation(id uint) {
 
 		corporation.ID = id
 
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
 		}
@@ -378,27 +509,85 @@ func (p *Populator) processCorporation(id uint) {
 	}
 }
 
-func chunkIntSlice(size int, slice []int) [][]int {
+func (p *Populator) processCharacter(id uint64, newCharacter bool) {
 
-	var chunk [][]int
-	chunk = make([][]int, 0)
-
-	if len(slice) <= size {
-		chunk = append(chunk, slice)
-		return chunk
+	character, err := p.DB.SelectCharacterByCharacterID(id)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			p.Logger.Errorf("DB Query for Character ID %d Failed with Error %s", id, err)
+			return
+		}
+		character.ID = id
+		newCharacter = true
+	}
+	if !character.IsExpired() {
+		return
 	}
 
-	for x := 0; x <= len(slice); x += size {
+	response, err := p.ESI.GetCharactersCharacterID(character.ID, character.Etag)
+	if err != nil {
+		p.Logger.Errorf("Error completing request to ESI for Character information: %s", err)
+		return
+	}
 
-		end := x + size
-
-		if end > len(slice) {
-			end = len(slice)
+	switch response.Code {
+	case 200:
+		err = json.Unmarshal(response.Data.([]byte), &character)
+		if err != nil {
+			p.Logger.Errorf("unable to unmarshel response body: %s", err)
+			return
+		}
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
+		if err != nil {
+			p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
 		}
 
-		chunk = append(chunk, slice[x:end])
+		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
+		}
+		character.Etag = etag
 
+		character.Expires = expires
+		break
+	case 304:
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
+		if err != nil {
+			p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
+		}
+		character.Expires = expires
+
+		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
+		}
+		character.Etag = etag
+
+		break
+	default:
+		p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
+		return
 	}
 
-	return chunk
+	// p.Logger.Debugf("\tCharacter: %d:%s\tNew Character: %t", character.ID, character.Name, newCharacter)
+
+	switch newCharacter {
+	case true:
+		_, err := p.DB.InsertCharacter(character)
+		if err != nil {
+			p.Logger.Errorf("Error Encountered attempting to insert new character into database: %s", err)
+			return
+		}
+	case false:
+		_, err := p.DB.UpdateCharacterByID(character)
+		if err != nil {
+			p.Logger.Errorf("Error Encountered attempting to update character in database: %s", err)
+			return
+		}
+	}
+}
+
+func (p *Populator) timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	p.Logger.Infof("%s took %s", name, elapsed)
 }

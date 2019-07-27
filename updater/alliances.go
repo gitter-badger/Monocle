@@ -29,7 +29,7 @@ supervisor:
 				continue supervisor
 			}
 
-			if len(alliances) <= threshold {
+			if len(alliances) < threshold {
 				if x == 1 {
 					u.Logger.Infof("Minimum threshold of %d for job not met. Sleeping for %d seconds", threshold, sleep)
 					time.Sleep(time.Second * time.Duration(sleep))
@@ -76,7 +76,7 @@ func (u *Updater) updateAlliance(alliance monocle.Alliance) {
 			u.Logger.Errorf("unable to unmarshel response body for %d: %s", alliance.ID, err)
 			return
 		}
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}
@@ -90,7 +90,7 @@ func (u *Updater) updateAlliance(alliance monocle.Alliance) {
 		alliance.Expires = expires
 		break
 	case 304:
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}

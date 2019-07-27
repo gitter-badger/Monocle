@@ -1,34 +1,24 @@
-package esi
+package evewho
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 )
 
-var (
-	LayoutESI = "Mon, 02 Jan 2006 15:04:05 MST"
-	err       error
-)
-
 type (
-	// Client represents the application as a whole. Client has our HTTP Client, DB Client, and holds Secrets for Third Party API Communication
-
 	Client struct {
 		Host      string
 		Http      *http.Client
 		UserAgent string
 	}
 	Config struct {
-		Host      string `envconfig:"ESI_HOST" required:"true"`
 		UserAgent string `envconfig:"API_USER_AGENT" required:"true"`
 	}
 
@@ -47,6 +37,8 @@ type (
 	}
 )
 
+var err error
+
 func New(prefix string) (*Client, error) {
 
 	var config Config
@@ -60,7 +52,7 @@ func New(prefix string) (*Client, error) {
 	}
 
 	return &Client{
-		Host:      config.Host,
+		Host:      "evewho.com",
 		Http:      http,
 		UserAgent: config.UserAgent,
 	}, nil
@@ -113,54 +105,4 @@ func (e *Client) Request(request Request) (Response, error) {
 	response.Headers = headers
 
 	return response, nil
-}
-
-func RetrieveExpiresHeaderFromResponse(response Response) (time.Time, error) {
-	if _, ok := response.Headers["Expires"]; !ok {
-		err := fmt.Errorf("Expires Headers is missing for url %s", response.Path)
-		return time.Time{}, err
-	}
-	expires, err := time.Parse(LayoutESI, response.Headers["Expires"])
-	if err != nil {
-		return expires, err
-	}
-
-	expires = expires.Add(time.Hour * 3)
-
-	return expires, nil
-}
-
-func RetrieveEtagHeaderFromResponse(response Response) (string, error) {
-	if _, ok := response.Headers["Etag"]; !ok {
-		err = fmt.Errorf("Etag Header is missing from url %s", response.Path)
-		return "", err
-	}
-	return response.Headers["Etag"], nil
-}
-
-func RetrieveErrorCountFromResponse(response Response) uint64 {
-	if _, ok := response.Headers["X-Esi-Error-Limit-Remain"]; !ok {
-		err = fmt.Errorf("X-Esi-Error-Limit-Remain Header is missing from url %s", response.Path)
-		return 0
-	}
-
-	count, err := strconv.ParseUint(response.Headers["X-Esi-Error-Limit-Remain"], 10, 32)
-	if err != nil {
-		return 0
-	}
-
-	return count
-}
-
-func RetrieveErrorResetFromResponse(response Response) uint64 {
-	if _, ok := response.Headers["X-Esi-Error-Limit-Reset"]; !ok {
-		err = fmt.Errorf("X-Esi-Error-Limit-Reset Header is missing from url %s", response.Path)
-		return 0
-	}
-	seconds, err := strconv.ParseUint(response.Headers["X-Esi-Error-Limit-Reset"], 10, 32)
-	if err != nil {
-		return 0
-	}
-
-	return seconds
 }

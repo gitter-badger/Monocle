@@ -43,25 +43,31 @@ func (db *DB) SelectCorporationByCorporationID(id uint) (monocle.Corporation, er
 	return corporation, err
 }
 
-func (db *DB) SelectMissingCorporationIdsFromList(ids []int) ([]int, error) {
+func (db *DB) SelectMissingCorporationIdsFromList(pid int, ids []int) ([]int, error) {
 	var results []int
 	var table = "temp_ids"
 
-	query := fmt.Sprintf("TRUNCATE %s", table)
-	_, err := db.Exec(query)
+	d := sb.NewDeleteBuilder()
+	d.DeleteFrom(table).Where(
+		d.E("pid", pid),
+	)
+
+	query, args := d.Build()
+
+	_, err := db.Exec(query, args...)
 	if err != nil {
 		return results, err
 	}
 
 	i := sb.NewInsertBuilder()
 	i.InsertInto(table).Cols(
-		"id",
+		"pid", "id",
 	)
 	for _, v := range ids {
-		i.Values(v)
+		i.Values(pid, v)
 	}
 
-	query, args := i.Build()
+	query, args = i.Build()
 
 	_, err = db.Exec(query, args...)
 	if err != nil {
@@ -86,8 +92,10 @@ func (db *DB) SelectMissingCorporationIdsFromList(ids []int) ([]int, error) {
 		return results, err
 	}
 
-	query = fmt.Sprintf("TRUNCATE %s", table)
-	_, err = db.Exec(query)
+	query, args = d.Build()
+
+	_, err = db.Exec(query, args...)
+
 	return results, err
 }
 
@@ -255,4 +263,35 @@ func (db *DB) DeleteCorporationByID(id uint) error {
 
 	_, err := db.Exec(query, args...)
 	return err
+}
+
+func (db *DB) SelectCorporationsByMemberCount() error {
+
+	s := sb.NewSelectBuilder()
+	sc := sb.NewSelectBuilder()
+
+	sc.Select(
+		"COUNT()",
+	).From("characters").Where("corporation_id", "corporations.id")
+
+	s.Select(
+		"id",
+		"member_count",
+	).From("monocle.corporation").Where(
+		s.G("id", 98000000),
+		s.NE("member_count", s.BuilderAs(sc, "count")),
+	)
+
+	query, _ := s.Build()
+
+	fmt.Println(query)
+
+	return nil
+
+	// 	SELECT
+	// id,
+	// member_count
+	// FROM corporations
+	// WHERE id > 90000000 AND member_count != (SELECT COUNT(*) FROM characters WHERE corporation_id = corporations.id)
+	// LIMIT 25
 }

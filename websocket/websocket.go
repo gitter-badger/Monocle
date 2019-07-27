@@ -253,7 +253,7 @@ func (l *Listener) processCharacter(id uint64) {
 			l.Logger.Errorf("unable to unmarshel response body: %s", err)
 			return
 		}
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
 		}
@@ -267,7 +267,7 @@ func (l *Listener) processCharacter(id uint64) {
 		character.Expires = expires
 		break
 	case 304:
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
 		}
@@ -334,7 +334,7 @@ func (l *Listener) processCorporation(id uint) {
 			l.Logger.Errorf("unable to unmarshel response body: %s", err)
 			return
 		}
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
 		}
@@ -348,7 +348,7 @@ func (l *Listener) processCorporation(id uint) {
 
 		break
 	case 304:
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
 		}
@@ -415,7 +415,7 @@ func (l *Listener) processAlliance(id uint) {
 			return
 		}
 
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
 		}
@@ -429,7 +429,7 @@ func (l *Listener) processAlliance(id uint) {
 		alliance.Etag = etag
 		break
 	case 304:
-		expires, err := esi.RetreiveExpiresHeaderFromResponse(response)
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
 		}

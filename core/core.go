@@ -7,6 +7,7 @@ import (
 
 	"github.com/apsdehal/go-logger"
 	"github.com/ddouglas/monocle/esi"
+	"github.com/ddouglas/monocle/evewho"
 	"github.com/ddouglas/monocle/mysql"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -17,6 +18,7 @@ type (
 	App struct {
 		Config Config
 		ESI    *esi.Client
+		Who    *evewho.Client
 		DB     *mysql.DB
 		Logger *logger.Logger
 	}
@@ -37,7 +39,7 @@ type (
 
 func New() (*App, error) {
 	var config Config
-	err = envconfig.Process("monocle", &config)
+	err = envconfig.Process("MONOCLE", &config)
 	if err != nil {
 		log.Fatalf("Unable to scan environment variables into the application: %s", err)
 		os.Exit(1)
@@ -80,9 +82,15 @@ func New() (*App, error) {
 		logging.Fatalf("Encoutered Error Attempting to set ESI Client: %s", err)
 	}
 
+	evewhoClient, err := evewho.New("monocle")
+	if err != nil {
+		logging.Fatalf("Encoutered Error Attempting to set ESI Client: %s", err)
+	}
+
 	return &App{
 		Config: config,
 		ESI:    esiClient,
+		Who:    evewhoClient,
 		DB:     db,
 		Logger: logging,
 	}, nil
