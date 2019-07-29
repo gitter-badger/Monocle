@@ -642,10 +642,6 @@ func (p *Populator) charHunter() error {
 	for x := begin; x < done; x += workers * records {
 		msg := fmt.Sprintf("Errors: %d Remaining: %d Loop: %d - %d", p.count, p.reset, x, x+(workers*records))
 		p.Logger.CriticalF("\t%s", msg)
-		_, err := p.DGO.ChannelMessageSend("394991263344230411", msg)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered Sending message to %s", err)
-		}
 
 		for y := 1; y <= workers; y++ {
 			if p.count < 20 {
