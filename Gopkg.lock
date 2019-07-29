@@ -8,10 +8,10 @@
   version = "1.3.0"
 
 [[projects]]
-  name = "github.com/davecgh/go-spew"
-  packages = ["spew"]
-  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
-  version = "v1.1.1"
+  name = "github.com/bwmarrin/discordgo"
+  packages = ["."]
+  revision = "8325a6bf6dd6c91ed4040a1617b07287b8fb0eba"
+  version = "v0.19.0"
 
 [[projects]]
   name = "github.com/go-sql-driver/mysql"
@@ -56,6 +56,18 @@
   version = "v1.20.0"
 
 [[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["internal/subtle","nacl/secretbox","poly1305","salsa20/salsa"]
+  revision = "4def268fd1a49955bfb3dda92fe3db4f924f2285"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["cpu"]
+  revision = "fc99dfbffb4e5ed5758a37e31dd861afe285406b"
+
+[[projects]]
   name = "google.golang.org/appengine"
   packages = ["cloudsql"]
   revision = "b2f4a3cf3c67576a2ee09e1fe62656a5086ce880"
@@ -64,6 +76,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ff3b07bb96a55e54ab684ffe2380d6d8303b9721335a0cc2d4d5cf1bc323112e"
+  inputs-digest = "37a953ea6545746001f78ad9d4d3747976bd2b2ef5cd97fad8a4ca03c0a59e6e"
   solver-name = "gps-cdcl"
   solver-version = 1
