@@ -18,10 +18,6 @@ type Alliance struct {
 	UpdatedAt             time.Time `db:"updated_at" json:"updated_at"`
 }
 
-type AllianceIDs struct {
-	ID uint `db:"id"`
-}
-
 func (a Alliance) IsExpired() bool {
 	if a.Expires.Before(time.Now()) {
 		return true

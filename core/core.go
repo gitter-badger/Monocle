@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/bwmarrin/discordgo"
+
 	"github.com/apsdehal/go-logger"
 	"github.com/ddouglas/monocle/esi"
 	"github.com/ddouglas/monocle/evewho"
@@ -20,6 +22,7 @@ type (
 		ESI    *esi.Client
 		Who    *evewho.Client
 		DB     *mysql.DB
+		DGO    *discordgo.Session
 		Logger *logger.Logger
 	}
 
@@ -32,6 +35,8 @@ type (
 		DBPass   string `envconfig:"DB_PASS" required:"true"`
 
 		LogLevel uint `envconfig:"LOG_LEVEL" required:"true"`
+
+		DiscordToken string `envconfig:"DISCORD_TOKEN" required:"true"`
 
 		// HttpServerPort string `envconfig:"HTTP_SERVER_PORT" required:"true"`
 	}
@@ -79,19 +84,27 @@ func New() (*App, error) {
 
 	esiClient, err := esi.New("monocle")
 	if err != nil {
-		logging.Fatalf("Encoutered Error Attempting to set ESI Client: %s", err)
+		logging.Fatalf("Encoutered Error Attempting to setup ESI Client: %s", err)
 	}
 
 	evewhoClient, err := evewho.New("monocle")
 	if err != nil {
-		logging.Fatalf("Encoutered Error Attempting to set ESI Client: %s", err)
+		logging.Fatalf("Encoutered Error Attempting to setup ESI Client: %s", err)
+	}
+	token := fmt.Sprintf("Bot %s", config.DiscordToken)
+	logging.Info(token)
+	discord, err := discordgo.New(token)
+	if err != nil {
+		logging.Fatalf("Encoutered Error Attempting to setup Discord Go: %s", err)
 	}
 
+	discord.LogLevel = discordgo.LogDebug
 	return &App{
 		Config: config,
 		ESI:    esiClient,
 		Who:    evewhoClient,
 		DB:     db,
+		DGO:    discord,
 		Logger: logging,
 	}, nil
 }

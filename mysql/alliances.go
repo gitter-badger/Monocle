@@ -73,9 +73,11 @@ func (db *DB) SelectAllianceByAllianceID(id uint) (monocle.Alliance, error) {
 
 }
 
-func (db *DB) SelectMissingAllianceIdsFromList(ids []int) ([]monocle.AllianceIDs, error) {
-	var results []monocle.AllianceIDs
-	var table = "allianceids"
+func (db *DB) SelectMissingAllianceIdsFromList(ids []int) ([]uint, error) {
+	var results []uint
+	var table = "temp_ids"
+	var alias = "tmp"
+	var tableAlias = fmt.Sprintf("%s %s", table, alias)
 
 	query := fmt.Sprintf("TRUNCATE %s", table)
 	_, err := db.Exec(query)
@@ -102,7 +104,7 @@ func (db *DB) SelectMissingAllianceIdsFromList(ids []int) ([]monocle.AllianceIDs
 	s := sb.NewSelectBuilder()
 	s.Select("tmp.id")
 	s.From(
-		fmt.Sprintf("%s tmp", table),
+		tableAlias,
 	)
 	s.JoinWithOption(sb.LeftJoin, "alliances alli", "tmp.id = alli.id")
 	s.Where(

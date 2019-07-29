@@ -43,6 +43,45 @@ func (db *DB) SelectCorporationByCorporationID(id uint) (monocle.Corporation, er
 	return corporation, err
 }
 
+func (db *DB) SelectIndependentCorps(page, perPage int) ([]monocle.Corporation, error) {
+	var corporations []monocle.Corporation
+
+	s := sb.NewSelectBuilder()
+	s.Select(
+		"id",
+		"name",
+		"ticker",
+		"member_count",
+		"ceo_id",
+		"alliance_id",
+		"date_founded",
+		"creator_id",
+		"home_station_id",
+		"tax_rate",
+		"war_eligible",
+		"ignored",
+		"closed",
+		"etag",
+		"expires",
+		"created_at",
+		"updated_at",
+	).From(
+		"monocle.corporations",
+	)
+
+	offset := (page * perPage) - perPage
+	s.Where(
+		s.E("closed", 0),
+		s.E("ignored", 0),
+		s.IsNull("alliance_id"),
+	).Limit(perPage).Offset(offset)
+
+	query, args := s.Build()
+
+	err := db.Select(&corporations, query, args...)
+	return corporations, err
+}
+
 func (db *DB) SelectMissingCorporationIdsFromList(pid int, ids []int) ([]int, error) {
 	var results []int
 	var table = "temp_ids"

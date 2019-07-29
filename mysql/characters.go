@@ -1,6 +1,8 @@
 package mysql
 
 import (
+	"fmt"
+
 	"github.com/ddouglas/monocle"
 	sb "github.com/huandu/go-sqlbuilder"
 )
@@ -40,6 +42,42 @@ func (db *DB) SelectCharacters(page, perPage int, where map[string]interface{}) 
 	q.Limit(perPage).Offset(offset)
 
 	query, args := q.Build()
+
+	err := db.Select(&characters, query, args...)
+	return characters, err
+}
+
+func (db *DB) SelectCharactersFromRange(start int, end int) ([]monocle.Character, error) {
+	var characters []monocle.Character
+
+	s := sb.NewSelectBuilder()
+	q := s.Select(
+		"id",
+		"name",
+		"birthday",
+		"gender",
+		"security_status",
+		"alliance_id",
+		"corporation_id",
+		"faction_id",
+		"ancestry_id",
+		"bloodline_id",
+		"race_id",
+		"ignored",
+		"expires",
+		"etag",
+		"created_at",
+		"updated_at",
+	).From(
+		"monocle.characters",
+	).Where(
+		s.Between("id", start, end),
+		s.E("ignored", false),
+	)
+
+	query, args := q.Build()
+
+	fmt.Println(query)
 
 	err := db.Select(&characters, query, args...)
 	return characters, err

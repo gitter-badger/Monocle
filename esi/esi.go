@@ -141,12 +141,12 @@ func RetrieveEtagHeaderFromResponse(response Response) (string, error) {
 func RetrieveErrorCountFromResponse(response Response) uint64 {
 	if _, ok := response.Headers["X-Esi-Error-Limit-Remain"]; !ok {
 		err = fmt.Errorf("X-Esi-Error-Limit-Remain Header is missing from url %s", response.Path)
-		return 0
+		return 100
 	}
 
 	count, err := strconv.ParseUint(response.Headers["X-Esi-Error-Limit-Remain"], 10, 32)
 	if err != nil {
-		return 0
+		return 100
 	}
 
 	return count
@@ -155,11 +155,11 @@ func RetrieveErrorCountFromResponse(response Response) uint64 {
 func RetrieveErrorResetFromResponse(response Response) uint64 {
 	if _, ok := response.Headers["X-Esi-Error-Limit-Reset"]; !ok {
 		err = fmt.Errorf("X-Esi-Error-Limit-Reset Header is missing from url %s", response.Path)
-		return 0
+		return 100
 	}
 	seconds, err := strconv.ParseUint(response.Headers["X-Esi-Error-Limit-Reset"], 10, 32)
 	if err != nil {
-		return 0
+		return 100
 	}
 
 	return seconds

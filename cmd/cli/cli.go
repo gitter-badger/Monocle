@@ -21,6 +21,7 @@ var scope = cli.StringFlag{
 	Name:  "scope",
 	Usage: "Defines the Scope of this execution (i.e. Characters, Corporations, etc)",
 }
+
 var workers = cli.IntFlag{
 	Name:  "workers",
 	Usage: "Defines the number of GoRoutines that can be inflight at a single time",
@@ -30,6 +31,13 @@ var records = cli.IntFlag{
 	Name:  "records",
 	Usage: "Defines the number of records that we attempt to pull from the database at one time. Must be a multiple of Workers",
 	Value: 250,
+}
+var begin = cli.IntFlag{
+	Name: "begin",
+}
+var done = cli.IntFlag{
+	Name:  "done",
+	Value: 98000000,
 }
 var sleep = cli.IntFlag{
 	Name:  "sleep",
@@ -76,7 +84,7 @@ func init() {
 			UsageText: "Checks in with ESI looking for new entities starting with Alliances",
 			Action:    populate.Action,
 			Flags: []cli.Flag{
-				scope, workers, records, sleep,
+				scope, workers, records, sleep, begin, done,
 			},
 		},
 		cli.Command{
