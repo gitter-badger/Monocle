@@ -651,8 +651,8 @@ func (p *Populator) charHunter() error {
 			if p.count < 20 {
 				msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.reset)
 				p.Logger.Errorf("\t%s", msg)
-				// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-				// p.DGO.ChannelMessageSend("394991263344230411", msg)
+				msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
+				p.DGO.ChannelMessageSend("394991263344230411", msg)
 				time.Sleep(time.Second * time.Duration(p.reset))
 			}
 			ystart := (y * records) - records + x

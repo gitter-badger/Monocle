@@ -94,7 +94,6 @@ func New() (*App, error) {
 		logging.Fatalf("Encoutered Error Attempting to setup ESI Client: %s", err)
 	}
 	token := fmt.Sprintf("Bot %s", config.DiscordToken)
-	logging.Info(token)
 	discord, err := discordgo.New(token)
 	if err != nil {
 		logging.Fatalf("Encoutered Error Attempting to setup Discord Go: %s", err)
