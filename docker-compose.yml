@@ -23,7 +23,7 @@ services:
             options:
                 max-file: "5"
                 max-size: "50m"
-        command: ./cli populate --scope=hunter --workers=30 --records=10 --begin=90995500
+        command: ./cli populate --scope=charHunter --workers=30 --records=10 --begin=90995500
         network_mode: "host"
         container_name: populate
         env_file:
