@@ -3,6 +3,11 @@ version: "3.7"
 services:
     listener:
         image: core
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
         command: ./cli listen
         network_mode: "host"
         build:
@@ -10,10 +15,14 @@ services:
             dockerfile: Dockerfile
         container_name: listener
         env_file:
-            - ./cmd/.env-docke
-	   
+            - ./cmd/.env-docker
     populate:
         image: core
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
         command: ./cli populate --scope=hunter --workers=30 --records=10 --begin=90995500
         network_mode: "host"
         container_name: populate
@@ -21,6 +30,11 @@ services:
             - ./cmd/.env-docker
     counter:
         image: core
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
         command: ./cli counter
         network_mode: "host"
         container_name: counter
