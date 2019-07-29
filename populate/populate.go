@@ -48,9 +48,16 @@ func Action(c *cli.Context) error {
 	scope = c.String("scope")
 	workers = c.Int("workers")
 	records = c.Int("records")
-	begin = c.Int("begin")
 	done = c.Int("done")
 	sleep = c.Int("sleep")
+
+	if populator.Config.PopulateBegin > 0 {
+		begin = populator.Config.PopulateBegin
+	} else if c.Int("begin") > 0 {
+		begin = c.Int("begin")
+	} else {
+		begin = 90000000
+	}
 
 	populator.Logger.Infof("Starting process with %d workers", workers)
 
@@ -63,8 +70,8 @@ func Action(c *cli.Context) error {
 		_ = populator.getAllianceCharList()
 	case "getCorpCharList":
 		_ = populator.getCorpCharList()
-	case "hunter":
-		_ = populator.hunter()
+	case "charHunter":
+		_ = populator.charHunter()
 	}
 
 	return nil
@@ -630,7 +637,7 @@ func (p *Populator) processCharacterList(ids []uint64, next chan bool) {
 	return
 }
 
-func (p *Populator) hunter() error {
+func (p *Populator) charHunter() error {
 
 	for x := begin; x < done; x += workers * records {
 		msg := fmt.Sprintf("Errors: %d Remaining: %d Loop: %d - %d", p.count, p.reset, x, x+(workers*records))

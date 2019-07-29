@@ -38,6 +38,8 @@ type (
 
 		DiscordToken string `envconfig:"DISCORD_TOKEN" required:"true"`
 
+		PopulateBegin int `envconfig:"POPULATE_BEGIN"`
+
 		// HttpServerPort string `envconfig:"HTTP_SERVER_PORT" required:"true"`
 	}
 )
