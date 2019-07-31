@@ -16,8 +16,8 @@ supervisor:
 	for {
 		u.Logger.DebugF("Current Error Count: %d Remain: %d", u.count, u.reset)
 		if u.count < 10 {
-			u.Logger.Error("Error Counter is Low, sleeping for 30 seconds")
-			time.Sleep(time.Second * 30)
+			u.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", u.reset)
+			time.Sleep(time.Second * time.Duration(u.reset))
 		}
 		for x := 1; x <= workers; x++ {
 			corporations, err := u.DB.SelectExpiredCorporationEtags(x, records)

@@ -7,7 +7,7 @@ import (
 	sb "github.com/huandu/go-sqlbuilder"
 )
 
-func (db *DB) SelectCharacters(page, perPage int, where map[string]interface{}) ([]monocle.Character, error) {
+func (db *DB) SelectCharacters(page, perPage int) ([]monocle.Character, error) {
 
 	var characters []monocle.Character
 
@@ -32,10 +32,6 @@ func (db *DB) SelectCharacters(page, perPage int, where map[string]interface{}) 
 	).From(
 		"monocle.characters",
 	)
-
-	for col, val := range where {
-		q.Where(q.E(col, val))
-	}
 
 	offset := (page * perPage) - perPage
 
@@ -83,6 +79,42 @@ func (db *DB) SelectCharactersFromRange(start int, end int) ([]monocle.Character
 	return characters, err
 }
 
+func (db *DB) SelectCharactersLikeName(name string, page, perPage int) ([]monocle.Character, error) {
+
+	var characters []monocle.Character
+
+	sb := sb.NewSelectBuilder()
+	q := sb.Select(
+		"id",
+		"name",
+		"birthday",
+		"gender",
+		"security_status",
+		"alliance_id",
+		"corporation_id",
+		"faction_id",
+		"ancestry_id",
+		"bloodline_id",
+		"race_id",
+		"ignored",
+		"expires",
+		"etag",
+		"created_at",
+		"updated_at",
+	).From(
+		"monocle.characters",
+	).Where(
+		sb.Like("name", fmt.Sprintf("%%%s%%", name)),
+		sb.G("id", 90848155),
+	).Limit(perPage).Offset((page * perPage) - perPage)
+
+	query, args := q.Build()
+
+	err := db.Select(&characters, query, args...)
+	return characters, err
+
+}
+
 func (db *DB) SelectCharacterByCharacterID(id uint64) (monocle.Character, error) {
 
 	var character monocle.Character
@@ -109,7 +141,7 @@ func (db *DB) SelectCharacterByCharacterID(id uint64) (monocle.Character, error)
 		"monocle.characters",
 	).Where(
 		s.E("id", id),
-	).Limit(1)
+	)
 
 	query, args := s.Build()
 
@@ -247,6 +279,11 @@ func (db *DB) UpdateCharacterByID(character monocle.Character) (monocle.Characte
 	u := sb.NewUpdateBuilder()
 	u.Update("monocle.characters").Set(
 		u.E("security_status", character.SecurityStatus),
+		u.E("name", character.Name),
+		u.E("gender", character.Gender),
+		u.E("ancestry_id", character.AncestryID),
+		u.E("bloodline_id", character.BloodlineID),
+		u.E("race_id", character.RaceID),
 		u.E("alliance_id", character.AllianceID),
 		u.E("corporation_id", character.CorporationID),
 		u.E("faction_id", character.FactionID),

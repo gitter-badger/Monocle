@@ -5,7 +5,7 @@ import (
 	sb "github.com/huandu/go-sqlbuilder"
 )
 
-func (db *DB) SelectEtagByIDAndResource(id uint, resource string) (monocle.EtagResource, error) {
+func (db *DB) SelectEtagByIDAndResource(id uint64, resource string) (monocle.EtagResource, error) {
 	var etag monocle.EtagResource
 
 	s := sb.NewSelectBuilder()
@@ -29,24 +29,24 @@ func (db *DB) SelectEtagByIDAndResource(id uint, resource string) (monocle.EtagR
 	return etag, err
 }
 
-// SelectCountOfExpiredIAREtags select the count of expired etags by id and resource
-func (db *DB) SelectCountOfExpiredIAREtags() (int, error) {
-	var count int
+// // SelectCountOfExpiredIAREtags select the count of expired etags by id and resource
+// func (db *DB) SelectCountOfExpiredIAREtags() (int, error) {
+// 	var count int
 
-	s := sb.NewSelectBuilder()
-	s.Select(
-		s.As("COUNT(*)", "count"),
-	).From(
-		"monocle.etags",
-	).Where(
-		s.LessThan("expires", sb.Raw("NOW()")),
-	).Limit(1)
+// 	s := sb.NewSelectBuilder()
+// 	s.Select(
+// 		s.As("COUNT(*)", "count"),
+// 	).From(
+// 		"monocle.etags",
+// 	).Where(
+// 		s.LessThan("expires", sb.Raw("NOW()")),
+// 	).Limit(1)
 
-	query, args := s.Build()
+// 	query, args := s.Build()
 
-	err := db.Get(&count, query, args...)
-	return count, err
-}
+// 	err := db.Get(&count, query, args...)
+// 	return count, err
+// }
 
 func (db *DB) InsertEtag(etag monocle.EtagResource) (monocle.EtagResource, error) {
 

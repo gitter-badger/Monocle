@@ -54,6 +54,8 @@ func Process(c *cli.Context) error {
 	switch scope {
 	case "characters":
 		_ = updater.evaluateCharacters(sleep, threshold)
+	case "character-corporation-history":
+		_ = updater.evaluateCharacterCorporationHistory()
 	case "corporations":
 		_ = updater.evaluateCorporations(sleep, threshold)
 	case "alliances":

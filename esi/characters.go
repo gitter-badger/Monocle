@@ -5,10 +5,31 @@ import (
 	"net/url"
 )
 
+func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
+
+	path := fmt.Sprintf("/v4/characters/%d/", id)
+
+	url := url.URL{
+		Scheme: "https",
+		Host:   e.Host,
+		Path:   path,
+	}
+
+	headers := make(map[string]string)
+
+	request := Request{
+		Method:  "HEAD",
+		Path:    url,
+		Headers: headers,
+		Body:    []byte(""),
+	}
+
+	return e.Request(request)
+}
+
 func (e *Client) GetCharactersCharacterID(id uint64, etag string) (Response, error) {
 
-	version := 4
-	path := fmt.Sprintf("/v%d/characters/%d/", version, id)
+	path := fmt.Sprintf("/v4/characters/%d/", id)
 
 	url := url.URL{
 		Scheme: "https",
@@ -32,9 +53,9 @@ func (e *Client) GetCharactersCharacterID(id uint64, etag string) (Response, err
 	return e.Request(request)
 }
 
-func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
-	version := 4
-	path := fmt.Sprintf("/v%d/characters/%d/", version, id)
+func (e *Client) GetCharactersCharacterIDCorporationHistory(id uint64, etag string) (Response, error) {
+
+	path := fmt.Sprintf("/v1/characters/%d/corporationhistory/", id)
 
 	url := url.URL{
 		Scheme: "https",
@@ -44,8 +65,12 @@ func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
 
 	headers := make(map[string]string)
 
+	if etag != "" {
+		headers["If-None-Match"] = etag
+	}
+
 	request := Request{
-		Method:  "HEAD",
+		Method:  "GET",
 		Path:    url,
 		Headers: headers,
 		Body:    []byte(""),

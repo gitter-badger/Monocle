@@ -3,6 +3,7 @@ package websocket
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/websocket"
 	gorilla "github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
@@ -26,14 +28,6 @@ var wg sync.WaitGroup
 type (
 	Listener struct {
 		*core.App
-	}
-	Config struct {
-		DBDriver string `envconfig:"DB_DRIVER" required:"true"`
-		DBHost   string `envconfig:"DB_HOST" required:"true"`
-		DBPort   string `envconfig:"DB_PORT" required:"true"`
-		DBName   string `envconfig:"DB_NAME" required:"true"`
-		DBUser   string `envconfig:"DB_USER" required:"true"`
-		DBPass   string `envconfig:"DB_PASS" required:"true"`
 	}
 	LittleKill struct {
 		Action        string `json:"action"`
@@ -91,7 +85,13 @@ func (l *Listener) supervisor() {
 			l.Logger.Infof("Number of Go Routines Remaining: %d", runtime.NumGoroutine())
 			return
 		case <-disconnected:
-			l.Logger.Infof("Supervisor: Disconnected from Websocket. Attempting to reconnect")
+			msg := fmt.Sprint("Supervisor: Disconnected from Websocket. Attempting to reconnect")
+			l.Logger.Error(msg)
+			msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
+			go func(msg string) {
+				_, _ = l.DGO.ChannelMessageSend("394991263344230411", msg)
+				return
+			}(msg)
 			time.Sleep(2 * time.Second)
 			wg.Add(1)
 			go l.listen(stream, connected, disconnected, done)
@@ -180,9 +180,16 @@ func (l *Listener) listen(stream chan []byte, connected, disconnected, done chan
 		}
 	}()
 
+	ticker := time.NewTicker(time.Second * 10)
+
 	for {
 		select {
-
+		case t := <-ticker.C:
+			err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
+			if err != nil {
+				log.Println("write:", err)
+				return
+			}
 		case <-interrupt:
 			l.Logger.Info("Interrupted")
 			err := c.WriteMessage(gorilla.CloseMessage, gorilla.FormatCloseMessage(gorilla.CloseNormalClosure, ""))
@@ -281,7 +288,7 @@ func (l *Listener) processCharacter(id uint64) {
 
 		break
 	default:
-		l.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
+		l.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
 		return
 	}
 

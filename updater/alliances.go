@@ -7,15 +7,15 @@ import (
 
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/esi"
-	"github.com/pkg/errors"
 )
 
 func (u *Updater) evaluateAlliances(sleep, threshold int) error {
 	var errorCount int
 supervisor:
 	for {
-		if errorCount >= 10 {
-			return errors.New("Error Count High. Exiting Program")
+		if u.count < 10 {
+			u.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", u.reset)
+			time.Sleep(time.Second * time.Duration(u.reset))
 		}
 
 		for x := 1; x <= workers; x++ {

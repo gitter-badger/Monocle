@@ -11,18 +11,15 @@ import (
 
 func (u *Updater) evaluateCharacters(sleep, threshold int) error {
 
-	var errorCount int
-
 	for {
 		u.Logger.DebugF("Current Error Count: %d Remain: %d", u.count, u.reset)
-		if u.count < 10 {
+		if u.count < 20 {
 			u.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", u.reset)
 			time.Sleep(time.Second * time.Duration(u.reset))
 		}
 		for x := 1; x <= workers; x++ {
 			characters, err := u.DB.SelectExpiredCharacterEtags(x, records)
 			if err != nil {
-				errorCount++
 				if err != sql.ErrNoRows {
 					u.Logger.Fatalf("Unable to query for characters: %s", err)
 				}
