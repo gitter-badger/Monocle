@@ -69,7 +69,7 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 		return
 	}
 
-	// mx.Lock()
+	mx.Lock()
 	u.reset = esi.RetrieveErrorResetFromResponse(response)
 	u.count = esi.RetrieveErrorCountFromResponse(response)
 	mx.Unlock()

@@ -28,7 +28,7 @@ services:
         container_name: updater_char
         env_file:
             - ./cmd/.env-docker
-     updater_corp:
+    updater_corp:
         image: core
         logging:
             driver: "json-file"
@@ -37,7 +37,7 @@ services:
                 max-size: "50m"
         command: ./cli update --scope=corporations --workers=2 --records=100 --threshold=25
         network_mode: "host"
-        container_name: updater_char
+        container_name: updater_corp
         env_file:
             - ./cmd/.env-docker
     counter:
