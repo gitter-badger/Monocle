@@ -4,6 +4,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/core"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
@@ -54,8 +55,6 @@ func Process(c *cli.Context) error {
 	switch scope {
 	case "characters":
 		_ = updater.evaluateCharacters(sleep, threshold)
-	case "character-corporation-history":
-		_ = updater.evaluateCharacterCorporationHistory()
 	case "corporations":
 		_ = updater.evaluateCorporations(sleep, threshold)
 	case "alliances":
@@ -66,4 +65,29 @@ func Process(c *cli.Context) error {
 
 	return nil
 
+}
+
+func chunkCharacterSlice(size int, slice []monocle.Character) [][]monocle.Character {
+
+	var chunk [][]monocle.Character
+	chunk = make([][]monocle.Character, 0)
+
+	if len(slice) <= size {
+		chunk = append(chunk, slice)
+		return chunk
+	}
+
+	for x := 0; x <= len(slice); x += size {
+
+		end := x + size
+
+		if end > len(slice) {
+			end = len(slice)
+		}
+
+		chunk = append(chunk, slice[x:end])
+
+	}
+
+	return chunk
 }

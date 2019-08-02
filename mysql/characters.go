@@ -149,7 +149,7 @@ func (db *DB) SelectCharacterByCharacterID(id uint64) (monocle.Character, error)
 	return character, err
 }
 
-func (db *DB) SelectExpiredCharacterEtags(page, perPage int) ([]monocle.Character, error) {
+func (db *DB) SelectExpiredCharacterEtags(limit int) ([]monocle.Character, error) {
 	var characters []monocle.Character
 
 	s := sb.NewSelectBuilder()
@@ -170,15 +170,16 @@ func (db *DB) SelectExpiredCharacterEtags(page, perPage int) ([]monocle.Characte
 		"etag",
 		"created_at",
 		"updated_at",
-	).From(
-		"monocle.characters",
-	)
-
-	offset := (page * perPage) - perPage
-	s.Where(
-		s.LessThan("expires", sb.Raw("NOW()")),
-		s.E("ignored", 0),
-	).OrderBy("expires").Asc().Limit(perPage).Offset(offset)
+	).
+		From(
+			"monocle.characters",
+		).
+		Where(
+			s.LessThan("expires", sb.Raw("NOW()")),
+			s.E("ignored", 0),
+		).
+		OrderBy("expires").Asc().
+		Limit(limit)
 
 	query, args := s.Build()
 

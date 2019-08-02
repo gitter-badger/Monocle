@@ -18,25 +18,29 @@ func (u *Updater) evaluateCharacters(sleep, threshold int) error {
 			u.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", u.reset)
 			time.Sleep(time.Second * time.Duration(u.reset))
 		}
-		for x := 1; x <= workers; x++ {
-			characters, err := u.DB.SelectExpiredCharacterEtags(x, records)
-			if err != nil {
-				if err != sql.ErrNoRows {
-					u.Logger.Fatalf("Unable to query for characters: %s", err)
-				}
-				continue
-			}
 
-			if len(characters) < threshold {
-				u.Logger.Infof("Minimum threshold of %d for job not met. Sleeping for %d seconds", threshold, sleep)
-				time.Sleep(time.Second * time.Duration(sleep))
-				continue
+		characters, err := u.DB.SelectExpiredCharacterEtags(records * workers)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				u.Logger.Fatalf("Unable to query for characters: %s", err)
 			}
+			continue
+		}
 
-			u.Logger.Infof("Successfully Queried %d Characters", len(characters))
+		if len(characters) < threshold {
+			u.Logger.Infof("Minimum threshold of %d for job not met. Sleeping for %d seconds", threshold, sleep)
+			time.Sleep(time.Second * time.Duration(sleep))
+			continue
+		}
+
+		charChunk := chunkCharacterSlice(records, characters)
+
+		for _, characters := range charChunk {
+			// u.Logger.Infof("Successfully Queried %d Characters", len(characters))
 			wg.Add(1)
 			go u.updateCharacters(characters)
 		}
+
 		u.Logger.Info("Waiting")
 		wg.Wait()
 		u.Logger.Info("Done")
