@@ -36,9 +36,14 @@ func (u *Updater) evaluateCharacters(sleep, threshold int) error {
 		charChunk := chunkCharacterSlice(records, characters)
 
 		for _, characters := range charChunk {
-			// u.Logger.Infof("Successfully Queried %d Characters", len(characters))
 			wg.Add(1)
-			go u.updateCharacters(characters)
+			go func(characters []monocle.Character) {
+				for _, character := range characters {
+					u.updateCharacter(character)
+					u.updateCharacterCorpHistory(character)
+				}
+				wg.Done()
+			}(characters)
 		}
 
 		u.Logger.Info("Waiting")
@@ -48,16 +53,10 @@ func (u *Updater) evaluateCharacters(sleep, threshold int) error {
 
 }
 
-func (u *Updater) updateCharacters(characters []monocle.Character) {
-	for _, character := range characters {
-		u.updateCharacter(character)
-		u.updateCharacterCorpHistory(character)
-	}
-	wg.Done()
-	return
-}
-
 func (u *Updater) updateCharacter(character monocle.Character) {
+
+	var response esi.Response
+
 	u.Logger.DebugF("Updating Character %d", character.ID)
 	if u.count < 20 {
 		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", u.reset)
@@ -66,17 +65,30 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 		u.DGO.ChannelMessageSend("394991263344230411", msg)
 		time.Sleep(time.Second * time.Duration(u.reset))
 	}
+	attempts := 0
+	for {
+		if attempts >= 3 {
+			break
+		}
+		response, err = u.ESI.GetCharactersCharacterID(character.ID, character.Etag)
+		if err != nil {
+			u.Logger.Errorf("Error completing request to ESI for Character %d information: %s", character.ID, err)
+			return
+		}
 
-	response, err := u.ESI.GetCharactersCharacterID(character.ID, character.Etag)
-	if err != nil {
-		u.Logger.Errorf("Error completing request to ESI for Character %d information: %s", character.ID, err)
-		return
+		mx.Lock()
+		u.reset = esi.RetrieveErrorResetFromResponse(response)
+		u.count = esi.RetrieveErrorCountFromResponse(response)
+		mx.Unlock()
+
+		if response.Code < 500 {
+			break
+		}
+		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempt request again in 1 second", response.Code, response.Path)
+
+		time.Sleep(1 * time.Second)
+		attempts++
 	}
-
-	mx.Lock()
-	u.reset = esi.RetrieveErrorResetFromResponse(response)
-	u.count = esi.RetrieveErrorCountFromResponse(response)
-	mx.Unlock()
 
 	switch response.Code {
 	case 200:

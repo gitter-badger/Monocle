@@ -24,6 +24,7 @@ var (
 	scope string
 	wg    sync.WaitGroup
 	mx    sync.Mutex
+	err   error
 )
 
 func Process(c *cli.Context) error {
