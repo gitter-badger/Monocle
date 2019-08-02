@@ -20,11 +20,11 @@ func Counter(c *cli.Context) error {
 		log.Fatal(err)
 		return cli.NewExitError(err, 1)
 	}
-	var charLast = 0
-	var corpLast = 0
-	var alliLast = 0
+
 	var charDiff, corpDiff, alliDiff string
-	var charCount, corpCount, alliCount monocle.Counter
+	var charCount, charLast uint
+	var corpLast, corpCount uint
+	var alliLast, alliCount uint
 
 	sleep := c.Int("sleep")
 	expired := c.Bool("expired")
@@ -62,35 +62,41 @@ func Counter(c *cli.Context) error {
 			}
 		}
 
-		if charCount.Count > charLast {
-			charDiff = fmt.Sprintf("↑%d", charCount.Count-charLast)
-		} else if charCount.Count < charLast {
-			charDiff = fmt.Sprintf("↓%d", charLast-charCount.Count)
+		if charCount > charLast {
+			charDiff = fmt.Sprintf("+%d", charCount-charLast)
+		} else if charCount < charLast {
+			charDiff = fmt.Sprintf("-%d", charLast-charCount)
 		} else {
-			charDiff = fmt.Sprintf("↔%d", 0)
+			charDiff = fmt.Sprintf("=%d", 0)
 		}
 
-		if corpCount.Count > corpLast {
-			corpDiff = fmt.Sprintf("↑%d", corpCount.Count-corpLast)
-		} else if corpCount.Count < corpLast {
-			corpDiff = fmt.Sprintf("↓%d", corpLast-corpCount.Count)
+		if corpCount > corpLast {
+			corpDiff = fmt.Sprintf("+%d", corpCount-corpLast)
+		} else if corpCount < corpLast {
+			corpDiff = fmt.Sprintf("-%d", corpLast-corpCount)
 		} else {
-			corpDiff = fmt.Sprintf("↔%d", 0)
+			corpDiff = fmt.Sprintf("=%d", 0)
 		}
 
-		if alliCount.Count > alliLast {
-			alliDiff = fmt.Sprintf("↑%d", alliCount.Count-alliLast)
-		} else if alliCount.Count < alliLast {
-			alliDiff = fmt.Sprintf("↓%d", alliLast-alliCount.Count)
+		if alliCount > alliLast {
+			alliDiff = fmt.Sprintf("+%d", alliCount-alliLast)
+		} else if alliCount < alliLast {
+			alliDiff = fmt.Sprintf("-%d", alliLast-alliCount)
 		} else {
-			alliDiff = fmt.Sprintf("↔%d", 0)
+			alliDiff = fmt.Sprintf("=%d", 0)
 		}
 
-		core.Logger.Infof("Char: %d (%s)\tCorp: %d (%s)\tAlli: %d (%s)", charCount.Count, charDiff, corpCount.Count, corpDiff, alliCount.Count, alliDiff)
+		core.Logger.Infof("Char: %d (%s)\tCorp: %d (%s)\tAlli: %d (%s)", charCount, charDiff, corpCount, corpDiff, alliCount, alliDiff)
 
-		charLast = charCount.Count
-		corpLast = corpCount.Count
-		alliLast = alliCount.Count
+		core.DB.InsertCounter(monocle.Counter{
+			CharCount: charCount,
+			CorpCount: corpCount,
+			AlliCount: alliCount,
+		})
+
+		charLast = charCount
+		corpLast = corpCount
+		alliLast = alliCount
 
 		time.Sleep(time.Second * time.Duration(sleep))
 

@@ -138,8 +138,8 @@ func (db *DB) SelectMissingCorporationIdsFromList(pid int, ids []int) ([]int, er
 	return results, err
 }
 
-func (db *DB) SelectCountOfExpiredCorporationEtags() (monocle.Counter, error) {
-	var counter monocle.Counter
+func (db *DB) SelectCountOfExpiredCorporationEtags() (uint, error) {
+	var count uint
 
 	s := sb.NewSelectBuilder()
 	s.Select(
@@ -154,12 +154,12 @@ func (db *DB) SelectCountOfExpiredCorporationEtags() (monocle.Counter, error) {
 	)
 
 	query, args := s.Build()
-	err := db.Get(&counter, query, args...)
-	return counter, err
+	err := db.Get(&count, query, args...)
+	return count, err
 }
 
-func (db *DB) SelectCountOfCorporationEtags() (monocle.Counter, error) {
-	var counter monocle.Counter
+func (db *DB) SelectCountOfCorporationEtags() (uint, error) {
+	var count uint
 
 	s := sb.NewSelectBuilder()
 	s.Select(
@@ -173,8 +173,8 @@ func (db *DB) SelectCountOfCorporationEtags() (monocle.Counter, error) {
 	)
 
 	query, args := s.Build()
-	err := db.Get(&counter, query, args...)
-	return counter, err
+	err := db.Get(&count, query, args...)
+	return count, err
 }
 
 func (db *DB) SelectExpiredCorporationEtags(page, perPage int) ([]monocle.Corporation, error) {

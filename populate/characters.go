@@ -83,18 +83,21 @@ func (p *Populator) missingCharHunter() error {
 	page := 1
 	for {
 		p.Logger.Infof("On Page: %d", page)
-		characters, err := p.DB.SelectCharactersLikeName("Invalid Character ID!", page, records)
+		characters, err := p.DB.SelectCharactersLikeName("Invalid Character", page, records)
 		if err != nil {
 			p.Logger.Errorf("Unable to query DB for character information: %s", err)
 			continue
 		}
+
 		if len(characters) == 0 {
 			break
 		}
 
 		for _, character := range characters {
-			p.processCharacter(character.ID, false)
-			time.Sleep(time.Millisecond * 250)
+			for z := character.ID; z < character.ID+10; z++ {
+				p.processCharacter(character.ID, false)
+				time.Sleep(time.Millisecond * 250)
+			}
 		}
 		page++
 	}

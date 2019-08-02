@@ -123,8 +123,8 @@ func (db *DB) SelectMissingAllianceIdsFromList(ids []int) ([]uint, error) {
 	return results, err
 }
 
-func (db *DB) SelectCountOfExpiredAllianceEtags() (monocle.Counter, error) {
-	var counter monocle.Counter
+func (db *DB) SelectCountOfExpiredAllianceEtags() (uint, error) {
+	var count uint
 
 	s := sb.NewSelectBuilder()
 	s.Select(
@@ -139,13 +139,13 @@ func (db *DB) SelectCountOfExpiredAllianceEtags() (monocle.Counter, error) {
 	)
 
 	query, args := s.Build()
-	err := db.Get(&counter, query, args...)
-	return counter, err
+	err := db.Get(&count, query, args...)
+	return count, err
 
 }
 
-func (db *DB) SelectCountOfAllianceEtags() (monocle.Counter, error) {
-	var counter monocle.Counter
+func (db *DB) SelectCountOfAllianceEtags() (uint, error) {
+	var count uint
 
 	s := sb.NewSelectBuilder()
 	s.Select(
@@ -159,8 +159,8 @@ func (db *DB) SelectCountOfAllianceEtags() (monocle.Counter, error) {
 	)
 
 	query, args := s.Build()
-	err := db.Get(&counter, query, args...)
-	return counter, err
+	err := db.Get(&count, query, args...)
+	return count, err
 
 }
 

@@ -3,6 +3,7 @@ package updater
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/ddouglas/monocle"
@@ -44,18 +45,23 @@ func (u *Updater) evaluateCharacters(sleep, threshold int) error {
 }
 
 func (u *Updater) updateCharacters(characters []monocle.Character) {
-	defer wg.Done()
 	for _, character := range characters {
-		if !character.IsExpired() {
-			continue
-		}
 		u.updateCharacter(character)
+		u.updateCharacterCorpHistory(character)
 	}
+	wg.Done()
 	return
 }
 
 func (u *Updater) updateCharacter(character monocle.Character) {
 	u.Logger.DebugF("Updating Character %d", character.ID)
+	if u.count < 20 {
+		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", u.reset)
+		u.Logger.Errorf("\t%s", msg)
+		msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
+		u.DGO.ChannelMessageSend("394991263344230411", msg)
+		time.Sleep(time.Second * time.Duration(u.reset))
+	}
 
 	response, err := u.ESI.GetCharactersCharacterID(character.ID, character.Etag)
 	if err != nil {
@@ -63,10 +69,10 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 		return
 	}
 
-	mx.Lock()
-	defer mx.Unlock()
+	// mx.Lock()
 	u.reset = esi.RetrieveErrorResetFromResponse(response)
 	u.count = esi.RetrieveErrorCountFromResponse(response)
+	mx.Unlock()
 
 	switch response.Code {
 	case 200:
@@ -79,6 +85,7 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 		if err != nil {
 			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}
+		character.Expires = expires
 
 		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
@@ -86,7 +93,6 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 		}
 		character.Etag = etag
 
-		character.Expires = expires
 		break
 	case 304:
 		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
@@ -114,4 +120,135 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 	}
 
 	return
+}
+
+func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
+	u.Logger.Debugf("Updating Character %d Corporation History", character.ID)
+
+	if u.count < 20 {
+		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", u.reset)
+		u.Logger.Errorf("\t%s", msg)
+		msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
+		u.DGO.ChannelMessageSend("394991263344230411", msg)
+		time.Sleep(time.Second * time.Duration(u.reset))
+	}
+	var newEtag bool
+	var history []monocle.CharacterCorporationHistory
+	historyEtag, err := u.DB.SelectEtagByIDAndResource(character.ID, "character_corporation_history")
+	if err != nil {
+		if err != sql.ErrNoRows {
+			u.Logger.Errorf("Unable to query character_corporation_history etag resource for Character %d due to SQL Error: %s", character.ID, err)
+			return
+		}
+
+		newEtag = true
+		historyEtag.ID = character.ID
+		historyEtag.Resource = "character_corporation_history"
+	}
+
+	response, err := u.ESI.GetCharactersCharacterIDCorporationHistory(historyEtag.ID, historyEtag.Etag)
+	if err != nil {
+		u.Logger.Errorf("Error completing request to ESI for Character %d Corporation History: %s", historyEtag.ID, err)
+		return
+	}
+
+	mx.Lock()
+	u.reset = esi.RetrieveErrorResetFromResponse(response)
+	u.count = esi.RetrieveErrorCountFromResponse(response)
+	mx.Unlock()
+
+	switch response.Code {
+	case 200:
+		err = json.Unmarshal(response.Data.([]byte), &history)
+		if err != nil {
+			u.Logger.Errorf("unable to unmarshel response body for %d corporation history: %s", historyEtag.ID, err)
+			return
+		}
+
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
+		if err != nil {
+			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
+		}
+		historyEtag.Expires = expires
+
+		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			u.Logger.Errorf("Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
+		}
+		historyEtag.Etag = etag
+
+		break
+	case 304:
+		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
+		if err != nil {
+			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
+		}
+		historyEtag.Expires = expires
+
+		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			u.Logger.Errorf("Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
+		}
+		historyEtag.Etag = etag
+
+		break
+	default:
+		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
+		return
+	}
+
+	existing, err := u.DB.SelectCharacterCorporationHistoryByID(historyEtag.ID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			u.Logger.Errorf("Unable to query character_corporation_history etag resource for Character %d due to SQL Error: %s", character.ID, err)
+			return
+		}
+	}
+
+	diff := diffExistingHistory(existing, history)
+	switch newEtag {
+	case true:
+		_, err := u.DB.InsertEtag(historyEtag)
+		if err != nil {
+			u.Logger.Errorf("error encountered attempting to insert new etag for history into database: %s", err)
+			return
+		}
+	case false:
+		_, err := u.DB.UpdateEtagByIDAndResource(historyEtag)
+		if err != nil {
+			u.Logger.Errorf("error encountered attempting to insert new etag for history into database: %s", err)
+			return
+		}
+	}
+
+	if len(diff) > 0 {
+		_, err := u.DB.InsertCharacterCorporationHistory(historyEtag.ID, diff)
+		if err != nil {
+			u.Logger.Errorf("error encountered attempting to insert new character corporation history records into database: %s", err)
+			return
+		}
+	}
+	return
+
+}
+
+func diffExistingHistory(a []monocle.CharacterCorporationHistory, b []monocle.CharacterCorporationHistory) []monocle.CharacterCorporationHistory {
+	c := convertToMap(a)
+	d := convertToMap(b)
+	result := make([]monocle.CharacterCorporationHistory, 0)
+	for recordID, history := range d {
+		if _, ok := c[recordID]; !ok {
+			result = append(result, history)
+		}
+	}
+
+	return result
+}
+
+func convertToMap(a []monocle.CharacterCorporationHistory) map[uint]monocle.CharacterCorporationHistory {
+	result := make(map[uint]monocle.CharacterCorporationHistory, 0)
+	for _, history := range a {
+		result[history.RecordID] = history
+	}
+	return result
 }

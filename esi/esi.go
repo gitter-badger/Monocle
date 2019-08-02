@@ -125,7 +125,7 @@ func RetrieveExpiresHeaderFromResponse(response Response) (time.Time, error) {
 		return expires, err
 	}
 
-	expires = expires.Add(time.Hour * 3)
+	expires = expires.Add(time.Hour * 12)
 
 	return expires, nil
 }

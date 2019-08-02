@@ -186,8 +186,8 @@ func (db *DB) SelectExpiredCharacterEtags(page, perPage int) ([]monocle.Characte
 	return characters, err
 }
 
-func (db *DB) SelectCountOfExpiredCharacterEtags() (monocle.Counter, error) {
-	var counter monocle.Counter
+func (db *DB) SelectCountOfExpiredCharacterEtags() (uint, error) {
+	var count uint
 
 	s := sb.NewSelectBuilder()
 	s.Select(
@@ -202,12 +202,12 @@ func (db *DB) SelectCountOfExpiredCharacterEtags() (monocle.Counter, error) {
 	)
 
 	query, args := s.Build()
-	err := db.Get(&counter, query, args...)
-	return counter, err
+	err := db.Get(&count, query, args...)
+	return count, err
 }
 
-func (db *DB) SelectCountOfCharacterEtags() (monocle.Counter, error) {
-	var counter monocle.Counter
+func (db *DB) SelectCountOfCharacterEtags() (uint, error) {
+	var count uint
 
 	s := sb.NewSelectBuilder()
 	s.Select(
@@ -221,8 +221,8 @@ func (db *DB) SelectCountOfCharacterEtags() (monocle.Counter, error) {
 	)
 
 	query, args := s.Build()
-	err := db.Get(&counter, query, args...)
-	return counter, err
+	err := db.Get(&count, query, args...)
+	return count, err
 }
 
 func (db *DB) InsertCharacter(character monocle.Character) (monocle.Character, error) {
@@ -314,5 +314,62 @@ func (db *DB) DeleteCharacterByID(id uint64) error {
 
 	_, err := db.Exec(query, args...)
 	return err
+
+}
+
+func (db *DB) SelectCharacterCorporationHistoryByID(id uint64) ([]monocle.CharacterCorporationHistory, error) {
+
+	history := make([]monocle.CharacterCorporationHistory, 0)
+
+	sb := sb.NewSelectBuilder()
+	q := sb.Select(
+		"id",
+		"record_id",
+		"corporation_id",
+		"start_date",
+		"created_at",
+		"updated_at",
+	).
+		From("monocle.character_corporation_history").
+		Where(
+			sb.E("id", id),
+		)
+
+	query, args := q.Build()
+
+	err := db.Select(&history, query, args...)
+	return history, err
+}
+
+func (db *DB) InsertCharacterCorporationHistory(id uint64, history []monocle.CharacterCorporationHistory) ([]monocle.CharacterCorporationHistory, error) {
+
+	ib := sb.NewInsertBuilder()
+	q := ib.InsertIgnoreInto("monocle.character_corporation_history").Cols(
+		"id",
+		"record_id",
+		"corporation_id",
+		"start_date",
+		"created_at",
+		"updated_at",
+	)
+	for _, v := range history {
+		q.Values(
+			id,
+			v.RecordID,
+			v.CorporationID,
+			v.StartDate,
+			sb.Raw("NOW()"),
+			sb.Raw("NOW()"),
+		)
+	}
+
+	query, args := ib.Build()
+
+	_, err := db.Exec(query, args...)
+	if err != nil {
+		return history, err
+	}
+
+	return db.SelectCharacterCorporationHistoryByID(id)
 
 }

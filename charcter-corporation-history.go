@@ -7,7 +7,6 @@ type CharacterCorporationHistory struct {
 	RecordID      uint      `db:"record_id" json:"record_id"`
 	CorporationID uint      `db:"corporation_id" json:"corporation_id"`
 	StartDate     time.Time `db:"start_date" json:"start_date"`
-	EndDate       NullTime  `db:"end_date" json:"end_date"`
 	CreatedAt     time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
 }
