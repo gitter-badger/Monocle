@@ -139,6 +139,10 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 }
 
 func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
+	var newEtag bool
+	var history []monocle.CharacterCorporationHistory
+	var response esi.Response
+
 	u.Logger.Debugf("Updating Character %d Corporation History", character.ID)
 
 	if u.count < 20 {
@@ -148,8 +152,7 @@ func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
 		u.DGO.ChannelMessageSend("394991263344230411", msg)
 		time.Sleep(time.Second * time.Duration(u.reset))
 	}
-	var newEtag bool
-	var history []monocle.CharacterCorporationHistory
+
 	historyEtag, err := u.DB.SelectEtagByIDAndResource(character.ID, "character_corporation_history")
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -161,17 +164,31 @@ func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
 		historyEtag.ID = character.ID
 		historyEtag.Resource = "character_corporation_history"
 	}
+	attempts := 0
+	for {
+		if attempts >= 3 {
+			break
+		}
+		response, err := u.ESI.GetCharactersCharacterIDCorporationHistory(historyEtag.ID, historyEtag.Etag)
+		if err != nil {
+			u.Logger.Errorf("Error completing request to ESI for Character %d Corporation History: %s", historyEtag.ID, err)
+			return
+		}
 
-	response, err := u.ESI.GetCharactersCharacterIDCorporationHistory(historyEtag.ID, historyEtag.Etag)
-	if err != nil {
-		u.Logger.Errorf("Error completing request to ESI for Character %d Corporation History: %s", historyEtag.ID, err)
-		return
+		mx.Lock()
+		u.reset = esi.RetrieveErrorResetFromResponse(response)
+		u.count = esi.RetrieveErrorCountFromResponse(response)
+		mx.Unlock()
+
+		if response.Code < 500 {
+			break
+		}
+
+		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempt request again in 1 second", response.Code, response.Path)
+
+		time.Sleep(1 * time.Second)
+		attempts++
 	}
-
-	mx.Lock()
-	u.reset = esi.RetrieveErrorResetFromResponse(response)
-	u.count = esi.RetrieveErrorCountFromResponse(response)
-	mx.Unlock()
 
 	switch response.Code {
 	case 200:
