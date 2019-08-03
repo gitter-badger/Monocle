@@ -171,6 +171,7 @@ func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
 	attempts := 0
 	for {
 		if attempts >= 3 {
+			u.Logger.Errorf("All Attempts exhuasted for Character %d", character.ID)
 			break
 		}
 		response, err = u.ESI.GetCharactersCharacterIDCorporationHistory(historyEtag.ID, historyEtag.Etag)
@@ -188,10 +189,9 @@ func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
 			break
 		}
 
-		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting request again in 1 second", response.Code, response.Path)
-
-		time.Sleep(1 * time.Second)
 		attempts++
+		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting %d request again in 1 second", response.Code, response.Path, attempts)
+		time.Sleep(1 * time.Second)
 	}
 
 	switch response.Code {
