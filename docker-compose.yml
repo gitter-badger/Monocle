@@ -23,7 +23,7 @@ services:
             options:
                 max-file: "5"
                 max-size: "50m"
-        command: ./cli update --scope=characters --workers=10 --records=100 --threshold=25
+        command: ./cli update --scope=characters --workers=25 --records=250
         network_mode: "host"
         container_name: updater_char
         env_file:
@@ -38,17 +38,5 @@ services:
         command: ./cli update --scope=corporations --workers=2 --records=100 --threshold=25
         network_mode: "host"
         container_name: updater_corp
-        env_file:
-            - ./cmd/.env-docker
-    counter:
-        image: core
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "50m"
-        command: ./cli counter --sleep 60
-        network_mode: "host"
-        container_name: counter
         env_file:
             - ./cmd/.env-docker

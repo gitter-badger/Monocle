@@ -33,6 +33,8 @@ func (u *Updater) evaluateCharacters(sleep, threshold int) error {
 			continue
 		}
 
+		u.Logger.Infof("Successfully Queried %d Characters", len(characters))
+
 		charChunk := chunkCharacterSlice(records, characters)
 
 		for _, characters := range charChunk {
@@ -68,6 +70,7 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 	attempts := 0
 	for {
 		if attempts >= 3 {
+			u.Logger.Errorf("All Attempts exhuasted for Character %d", character.ID)
 			break
 		}
 		response, err = u.ESI.GetCharactersCharacterID(character.ID, character.Etag)
@@ -84,10 +87,10 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 		if response.Code < 500 {
 			break
 		}
-		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting request again in 1 second", response.Code, response.Path)
 
-		time.Sleep(1 * time.Second)
 		attempts++
+		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting %d request again in 1 second", response.Code, response.Path, attempts)
+		time.Sleep(1 * time.Second)
 	}
 
 	switch response.Code {
