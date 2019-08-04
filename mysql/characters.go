@@ -196,9 +196,7 @@ func (db *DB) SelectCountOfExpiredCharacterEtags() (uint, error) {
 		s.As("COUNT(*)", "count"),
 	).From(
 		"monocle.characters",
-	)
-
-	s.Where(
+	).Where(
 		s.LessThan("expires", sb.Raw("NOW()")),
 		s.E("ignored", 0),
 		s.NE("corporation_id", 1000001),
@@ -221,6 +219,7 @@ func (db *DB) SelectCountOfCharacterEtags() (uint, error) {
 
 	s.Where(
 		s.E("ignored", 0),
+		s.NE("corporation_id", 1000001),
 	)
 
 	query, args := s.Build()

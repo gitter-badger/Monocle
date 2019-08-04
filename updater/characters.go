@@ -73,7 +73,7 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 			break
 		}
 		response, err = u.ESI.GetCharactersCharacterID(character)
-		if err != nil {
+		if err != nil && response.Code >= 400 && response.Code < 500 {
 			u.Logger.Errorf("Error completing request to ESI for Character %d information: %s", character.ID, err)
 			return
 		}
