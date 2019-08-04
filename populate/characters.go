@@ -12,7 +12,7 @@ import (
 
 func (p *Populator) processCharacterList(ids []uint64, next chan bool) {
 	for _, id := range ids {
-		p.processCharacter(id, false)
+		p.processCharacter(id)
 	}
 	wg.Done()
 	next <- true
@@ -20,187 +20,107 @@ func (p *Populator) processCharacterList(ids []uint64, next chan bool) {
 }
 
 func (p *Populator) charHunter() error {
+	var response esi.Response
+	var value struct {
+		Value int `json:"value"`
+	}
+	kv, err := p.DB.SelectValueByKey("last_good_character_id")
+	if err != nil {
+		if err != sql.ErrNoRows {
+			p.Logger.Criticalf("Unable to query for ID: %s", err)
+			return err
+		}
+	}
 
-	for x := begin; x < done; x += workers * records {
-		msg := fmt.Sprintf("Errors: %d Remaining: %d Loop: %d - %d", p.count, p.reset, x, x+(workers*records))
+	err = json.Unmarshal(kv.Value, &value)
+	if err != nil {
+		p.Logger.Criticalf("Unable to unmarshal value: %s", err)
+		return err
+	}
+
+	begin = value.Value
+
+	p.Logger.Infof("Starting at ID %d", begin)
+
+	for x := begin; x <= 2147483647; x += workers * records {
+		end := x + (workers * records)
+		msg := fmt.Sprintf("Errors: %d Remaining: %d Loop: %d - %d", p.ESI.Remain, p.ESI.Reset, x, x+(workers*records))
 		p.Logger.CriticalF("\t%s", msg)
 
+		for {
+			p.Logger.InfoF("Checking for valid end of %d", end)
+			response, err = p.ESI.HeadCharactersCharacterID(uint64(end))
+			if err != nil {
+				p.Logger.ErrorF(err.Error())
+				if response.Code >= 500 {
+					time.Sleep(time.Second * 5)
+					continue
+				}
+				time.Sleep(time.Minute * 10)
+				continue
+			}
+			break
+		}
+
 		for y := 1; y <= workers; y++ {
-			if p.count < 20 {
-				msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.reset)
+			if p.ESI.Remain < 20 {
+				msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
 				p.Logger.Errorf("\t%s", msg)
 				msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
 				p.DGO.ChannelMessageSend("394991263344230411", msg)
-				time.Sleep(time.Second * time.Duration(p.reset))
+				time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 			}
 			ystart := (y * records) - records + x
 			yend := (y * records) + x
-
-			yresponse, err := p.ESI.HeadCharactersCharacterID(uint64(yend))
-			if err != nil {
-				p.Logger.Errorf("Error completing request to ESI for Character information: %s", err)
-				continue
-			}
-
-			mx.Lock()
-			p.reset = esi.RetrieveErrorResetFromResponse(yresponse)
-			p.count = esi.RetrieveErrorCountFromResponse(yresponse)
-			mx.Unlock()
-
-			if yresponse.Code >= 400 && yresponse.Code < 500 {
-				p.Logger.Errorf("Head Request for ID %d resulted in %d", yend, yresponse.Code)
-
-				// for z := ystart; z <= yend; z++ {
-				// 	p.DB.InsertCharacter(monocle.Character{
-				// 		ID:      uint64(ystart),
-				// 		Name:    "Invalid Character",
-				// 		Expires: time.Now(),
-				// 		Ignored: true,
-				// 	})
-				// }
-				continue
-			}
 
 			wg.Add(1)
 			go func(start, end int) {
 
 				for z := start; z <= end; z++ {
-					p.processCharacter(uint64(z), false)
+					p.processCharacter(uint64(z))
+					p.processCharacterCorpHistory(uint64(z))
 				}
 				// next <- true
 				wg.Done()
 			}(ystart, yend)
 		}
 
+		p.Logger.Info("Done Dispatching. Waiting for Completion")
 		wg.Wait()
-		time.Sleep(time.Millisecond * 500)
-	}
-	return nil
-}
+		p.Logger.Infof("Completed, sleep for %d seconds", sleep)
+		time.Sleep(time.Second * time.Duration(sleep))
 
-func (p *Populator) missingCharHunter() error {
+		value.Value = end
 
-	page := 1
-	for {
-		p.Logger.Infof("On Page: %d", page)
-		characters, err := p.DB.SelectCharactersLikeName("Invalid Character", page, records)
+		kv.Value, err = json.Marshal(value)
 		if err != nil {
-			p.Logger.Errorf("Unable to query DB for character information: %s", err)
-			continue
+			p.Logger.Criticalf("Unable to unmarshal value: %s", err)
+			return err
 		}
 
-		if len(characters) == 0 {
-			break
-		}
-
-		for _, character := range characters {
-			for z := character.ID; z < character.ID+10; z++ {
-				p.processCharacter(character.ID, false)
-				time.Sleep(time.Millisecond * 250)
+		_, err = p.DB.UpdateValueByKey(kv)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				p.Logger.Criticalf("Unable to query for ID: %s", err)
+				return err
 			}
 		}
-		page++
+
 	}
 
-	// for x := begin; x < done; x += workers * records {
-	// 	msg := fmt.Sprintf("Errors: %d Remaining: %d Loop: %d - %d", p.count, p.reset, x, x+(workers*records))
-	// 	p.Logger.CriticalF("\t%s", msg)
-
-	// 	for y := 1; y <= workers; y++ {
-	// 		if p.count < 20 {
-	// 			msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.reset)
-	// 			p.Logger.Errorf("\t%s", msg)
-	// 			msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-	// 			p.DGO.ChannelMessageSend("394991263344230411", msg)
-	// 			time.Sleep(time.Second * time.Duration(p.reset))
-	// 		}
-	// 		ystart := (y * records) - records + x
-	// 		yend := (y * records) + x
-
-	// 		yresponse, err := p.ESI.HeadCharactersCharacterID(uint64(yend))
-	// 		if err != nil {
-	// 			p.Logger.Errorf("Error completing request to ESI for Character information: %s", err)
-	// 			continue
-	// 		}
-
-	// 		mx.Lock()
-	// 		p.reset = esi.RetrieveErrorResetFromResponse(yresponse)
-	// 		p.count = esi.RetrieveErrorCountFromResponse(yresponse)
-	// 		mx.Unlock()
-
-	// 		if yresponse.Code >= 400 && yresponse.Code < 500 {
-	// 			p.Logger.Errorf("Head Request for ID %d resulted in %d", yend, yresponse.Code)
-
-	// 			// for z := ystart; z <= yend; z++ {
-	// 			// 	p.DB.InsertCharacter(monocle.Character{
-	// 			// 		ID:      uint64(ystart),
-	// 			// 		Name:    "Invalid Character",
-	// 			// 		Expires: time.Now(),
-	// 			// 		Ignored: true,
-	// 			// 	})
-	// 			// }
-	// 			continue
-	// 		}
-
-	// 		wg.Add(1)
-	// 		go func(start, end int) {
-
-	// 			for z := start; z <= end; z++ {
-	// 				p.processCharacter(uint64(z), false)
-	// 			}
-	// 			// next <- true
-	// 			wg.Done()
-	// 		}(ystart, yend)
-	// 	}
-
-	// 	wg.Wait()
-	// 	time.Sleep(time.Millisecond * 500)
-	// }
 	return nil
 }
 
-// func (p *Populator) corpHistory() error {
-// 	page := 0
+func (p *Populator) processCharacter(id uint64) {
 
-// 	for {
-// 		p.Logger.DebugF("Current Error Count: %d Remain: %d", p.count, p.reset)
-// 		if p.count < 20 {
-// 			p.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", p.reset)
-// 			time.Sleep(time.Second * time.Duration(p.reset))
-// 		}
+	var newCharacter bool
 
-// 		for x := 1; x <= workers; x++ {
-// 			characters, err := p.DB.SelectCharactersFromRange(x, records)
-// 			if err != nil {
-// 				if err != sql.ErrNoRows {
-// 					p.Logger.Fatalf("Unable to query for characters: %s", err)
-// 				}
-// 				continue
-// 			}
-
-// 			wg.Add(1)
-// 			go func(characters []monocle.Character) {
-// 				for _, character := range characters {
-// 					p.processCharacterCorpHistory(character.ID)
-// 				}
-// 				wg.Done()
-// 				return
-// 			}(characters)
-// 		}
-
-// 		wg.Wait()
-// 		page++
-// 	}
-// }
-
-func (p *Populator) processCharacter(id uint64, newCharacter bool) {
-
-	if p.count < 20 {
-		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.reset)
+	if p.ESI.Remain < 20 {
+		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
 		p.Logger.Errorf("\t%s", msg)
-		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-		// p.DGO.ChannelMessageSend("394991263344230411", msg)
-		time.Sleep(time.Second * time.Duration(p.reset))
+		msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
+		p.DGO.ChannelMessageSend("394991263344230411", msg)
+		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 	character, err := p.DB.SelectCharacterByCharacterID(id)
 	if err != nil {
@@ -216,16 +136,13 @@ func (p *Populator) processCharacter(id uint64, newCharacter bool) {
 		return
 	}
 
-	response, err := p.ESI.GetCharactersCharacterID(character.ID, "")
+	response, err := p.ESI.GetCharactersCharacterID(character)
 	if err != nil {
 		p.Logger.Errorf("Error completing request to ESI for Character information: %s", err)
 		return
 	}
 
-	character, proceed := p.processCharacterResponse(response, character)
-	if !proceed {
-		return
-	}
+	character = response.Data.(monocle.Character)
 
 	p.Logger.Debugf("\tCharacter: %d:%s\tNew Character: %t", character.ID, character.Name, newCharacter)
 
@@ -245,153 +162,106 @@ func (p *Populator) processCharacter(id uint64, newCharacter bool) {
 	}
 }
 
-func (p *Populator) processCharacterResponse(response esi.Response, character monocle.Character) (monocle.Character, bool) {
+func (p *Populator) processCharacterCorpHistory(id uint64) {
+	var newEtag bool
+	var history []monocle.CharacterCorporationHistory
+	var response esi.Response
 
-	mx.Lock()
-	defer mx.Unlock()
-	p.reset = esi.RetrieveErrorResetFromResponse(response)
-	p.count = esi.RetrieveErrorCountFromResponse(response)
-
-	switch response.Code {
-	case 200:
-		err := json.Unmarshal(response.Data.([]byte), &character)
-		if err != nil {
-			p.Logger.Errorf("unable to unmarshel response body: %s", err)
-			return character, false
-		}
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		character.Etag = etag
-
-		character.Expires = expires
-		break
-	case 304:
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-		character.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		character.Etag = etag
-
-		break
-	case 420:
-		p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return character, false
-	case 400:
-		p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return character, false
-	case 404:
-		p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return character, false
-	default:
-		p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-		character.Name = "Invalid Character ID!"
-		character.Ignored = true
-		character.Expires = time.Now()
+	if p.ESI.Remain < 20 {
+		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
+		p.Logger.Errorf("\t%s", msg)
+		msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
+		p.DGO.ChannelMessageSend("394991263344230411", msg)
+		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
-	return character, true
+	historyEtag, err := p.DB.SelectEtagByIDAndResource(id, "character_corporation_history")
+	if err != nil {
+		if err != sql.ErrNoRows {
+			p.Logger.Errorf("Unable to query character_corporation_history etag resource for Character %d due to SQL Error: %s", id, err)
+			return
+		}
+
+		newEtag = true
+		historyEtag.ID = id
+		historyEtag.Resource = "character_corporation_history"
+	}
+
+	attempts := 0
+	for {
+		if attempts >= 3 {
+			p.Logger.Errorf("All Attempts exhuasted for Character %d", historyEtag.ID)
+			break
+		}
+		response, historyEtag, err = p.ESI.GetCharactersCharacterIDCorporationHistory(historyEtag)
+		if err != nil {
+			p.Logger.Errorf("Error completing request to ESI for Character %d Corporation History: %s", historyEtag.ID, err)
+			return
+		}
+
+		if response.Code < 500 {
+			break
+		}
+
+		attempts++
+		p.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting %d request again in 1 second", response.Code, response.Path, attempts)
+		time.Sleep(1 * time.Second)
+	}
+
+	history = response.Data.([]monocle.CharacterCorporationHistory)
+
+	existing, err := p.DB.SelectCharacterCorporationHistoryByID(historyEtag.ID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			p.Logger.Errorf("Unable to query character_corporation_history etag resource for Character %d due to SQL Error: %s", historyEtag.ID, err)
+			return
+		}
+	}
+
+	diff := diffExistingHistory(existing, history)
+	switch newEtag {
+	case true:
+		_, err := p.DB.InsertEtag(historyEtag)
+		if err != nil {
+			p.Logger.Errorf("error encountered attempting to insert new etag for history into database: %s", err)
+			return
+		}
+	case false:
+		_, err := p.DB.UpdateEtagByIDAndResource(historyEtag)
+		if err != nil {
+			p.Logger.Errorf("error encountered attempting to insert new etag for history into database: %s", err)
+			return
+		}
+	}
+
+	if len(diff) > 0 {
+		_, err := p.DB.InsertCharacterCorporationHistory(historyEtag.ID, diff)
+		if err != nil {
+			p.Logger.Errorf("error encountered attempting to insert new character corporation history records into database: %s", err)
+			return
+		}
+	}
+	return
 
 }
 
-// func (p *Populator) processCharacterCorpHistory(id uint64) {
-
-// 	if p.count < 20 {
-// 		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.reset)
-// 		p.Logger.Errorf("\t%s", msg)
-// 		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-// 		// p.DGO.ChannelMessageSend("394991263344230411", msg)
-// 		time.Sleep(time.Second * time.Duration(p.reset))
-// 	}
-
-// 	// var newHistory bool
-// 	var history []monocle.CharacterCorporationHistory
-// 	var etag monocle.EtagResource
-
-// 	etag, err := p.DB.SelectEtagByIDAndResource(id, "character_corporation_history")
-// 	if err != nil {
-// 		if err != sql.ErrNoRows {
-// 			return
-// 		}
-
-// 		newHistory = true
-// 		etag.ID = id
-// 	}
-
-// 	response, err := p.ESI.GetCharactersCharacterIDCorporationHistory(id, etag.Etag)
-// 	if err != nil {
-// 		p.Logger.Errorf("Error completeing request to ESI for Character &d corporation history: %s", id, err)
-// 		return
-// 	}
-
-// 	history, etag, proceed := p.processCharacterCorpHistoryResponse(response, history, etag)
-// 	if !proceed {
-// 		return
-// 	}
-
-// }
-
-func (p *Populator) processCharacterCorpHistoryResponse(response esi.Response, history []monocle.CharacterCorporationHistory, etag monocle.EtagResource) ([]monocle.CharacterCorporationHistory, monocle.EtagResource, bool) {
-
-	mx.Lock()
-	defer mx.Unlock()
-	p.reset = esi.RetrieveErrorResetFromResponse(response)
-	p.count = esi.RetrieveErrorCountFromResponse(response)
-
-	switch response.Code {
-	case 200:
-		err := json.Unmarshal(response.Data.([]byte), &history)
-		if err != nil {
-			p.Logger.Errorf("unable to unmarshel response body: %s", err)
-			return history, etag, false
+func diffExistingHistory(a []monocle.CharacterCorporationHistory, b []monocle.CharacterCorporationHistory) []monocle.CharacterCorporationHistory {
+	c := convertToMap(a)
+	d := convertToMap(b)
+	result := make([]monocle.CharacterCorporationHistory, 0)
+	for recordID, history := range d {
+		if _, ok := c[recordID]; !ok {
+			result = append(result, history)
 		}
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-
-		etagStr, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		etag.Etag = etagStr
-
-		etag.Expires = expires
-		break
-	case 304:
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-		etag.Expires = expires
-
-		etagStr, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		etag.Etag = etagStr
-
-		break
-	case 420:
-		p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return history, etag, false
-	default:
-		p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-		etag.Expires = time.Now()
 	}
 
-	return history, etag, true
+	return result
+}
 
+func convertToMap(a []monocle.CharacterCorporationHistory) map[uint]monocle.CharacterCorporationHistory {
+	result := make(map[uint]monocle.CharacterCorporationHistory, 0)
+	for _, history := range a {
+		result[history.RecordID] = history
+	}
+	return result
 }

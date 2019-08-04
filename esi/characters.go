@@ -1,8 +1,13 @@
 package esi
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
+	"time"
+
+	"github.com/ddouglas/monocle"
+	"github.com/pkg/errors"
 )
 
 func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
@@ -24,12 +29,30 @@ func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
 		Body:    []byte(""),
 	}
 
-	return e.Request(request)
+	response, err := e.Request(request)
+	if err != nil {
+		return response, err
+	}
+
+	mx.Lock()
+	e.Reset = RetrieveErrorResetFromResponse(response)
+	e.Remain = RetrieveErrorCountFromResponse(response)
+	mx.Unlock()
+
+	switch response.Code {
+	case 200:
+		break
+	case 304:
+		break
+	default:
+		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
+	}
+	return response, err
 }
 
-func (e *Client) GetCharactersCharacterID(id uint64, etag string) (Response, error) {
+func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response, error) {
 
-	path := fmt.Sprintf("/v4/characters/%d/", id)
+	path := fmt.Sprintf("/v4/characters/%d/", character.ID)
 
 	url := url.URL{
 		Scheme: "https",
@@ -39,8 +62,8 @@ func (e *Client) GetCharactersCharacterID(id uint64, etag string) (Response, err
 
 	headers := make(map[string]string)
 
-	if etag != "" {
-		headers["If-None-Match"] = etag
+	if character.Etag != "" {
+		headers["If-None-Match"] = character.Etag
 	}
 
 	request := Request{
@@ -50,12 +73,80 @@ func (e *Client) GetCharactersCharacterID(id uint64, etag string) (Response, err
 		Body:    []byte(""),
 	}
 
-	return e.Request(request)
+	response, err := e.Request(request)
+	if err != nil {
+		return response, err
+	}
+
+	mx.Lock()
+	e.Reset = RetrieveErrorResetFromResponse(response)
+	e.Remain = RetrieveErrorCountFromResponse(response)
+	mx.Unlock()
+
+	switch response.Code {
+	case 200:
+		err := json.Unmarshal(response.Data.([]byte), &character)
+		if err != nil {
+			err = errors.Wrap(err, "unable to unmarshel response body")
+			return response, err
+		}
+		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrap(err, "Error Encountered attempting to parse expires header")
+			return response, err
+		}
+		character.Expires = expires
+
+		etag, err := RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
+			return response, err
+		}
+		character.Etag = etag
+
+		break
+	case 304:
+		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrap(err, "Error Encountered attempting to parse expires header")
+			return response, err
+		}
+		character.Expires = expires
+
+		etag, err := RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
+			return response, err
+		}
+		character.Etag = etag
+
+		break
+	case 400:
+		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
+		return response, err
+	case 404:
+		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
+		return response, err
+	case 420:
+		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
+		return response, err
+	default:
+		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
+		character.Name = "Invalid Character ID!"
+		character.Ignored = true
+		character.Expires = time.Now()
+	}
+
+	response.Data = character
+
+	return response, err
 }
 
-func (e *Client) GetCharactersCharacterIDCorporationHistory(id uint64, etag string) (Response, error) {
+func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle.EtagResource) (Response, monocle.EtagResource, error) {
 
-	path := fmt.Sprintf("/v1/characters/%d/corporationhistory/", id)
+	var history []monocle.CharacterCorporationHistory
+
+	path := fmt.Sprintf("/v1/characters/%d/corporationhistory/", etagResource.ID)
 
 	url := url.URL{
 		Scheme: "https",
@@ -65,8 +156,8 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(id uint64, etag stri
 
 	headers := make(map[string]string)
 
-	if etag != "" {
-		headers["If-None-Match"] = etag
+	if etagResource.Etag != "" {
+		headers["If-None-Match"] = etagResource.Etag
 	}
 
 	request := Request{
@@ -76,5 +167,59 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(id uint64, etag stri
 		Body:    []byte(""),
 	}
 
-	return e.Request(request)
+	response, err := e.Request(request)
+	if err != nil {
+		return response, etagResource, err
+	}
+
+	switch response.Code {
+	case 200:
+		err = json.Unmarshal(response.Data.([]byte), &history)
+		if err != nil {
+			err = errors.Wrapf(err, "unable to unmarshel response body for %d corporation history: %s", etagResource.ID, err)
+			return response, etagResource, err
+		}
+
+		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
+			return response, etagResource, err
+
+		}
+		etagResource.Expires = expires
+
+		etag, err := RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
+			return response, etagResource, err
+
+		}
+		etagResource.Etag = etag
+
+		break
+	case 304:
+		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
+			return response, etagResource, err
+
+		}
+		etagResource.Expires = expires
+
+		etag, err := RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
+			return response, etagResource, err
+		}
+		etagResource.Etag = etag
+
+		break
+	default:
+		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
+		return response, etagResource, err
+	}
+
+	response.Data = history
+
+	return response, etagResource, nil
 }

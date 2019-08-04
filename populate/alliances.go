@@ -7,32 +7,22 @@ import (
 	"time"
 
 	"github.com/ddouglas/monocle"
-	"github.com/ddouglas/monocle/esi"
 	"github.com/ddouglas/monocle/evewho"
 	"github.com/pkg/errors"
 )
 
 func (p *Populator) getAlliancelList() error {
 
-	response, err := p.ESI.GetAlliances("")
+	var ids []int
+	var etagResource monocle.EtagResource
+
+	response, etagResource, err := p.ESI.GetAlliances(etagResource)
 	if err != nil {
 		p.Logger.Errorf("Error completing request to ESI for List of Alliances: %s", err)
 		return err
 	}
 
-	var ids []int
-
-	switch response.Code {
-	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &ids)
-		if err != nil {
-			p.Logger.Errorf("unable to unmarshal response body: %s", err)
-			return err
-		}
-	default:
-		p.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return nil
-	}
+	ids = response.Data.([]int)
 
 	chunkedIds := chunkIntSlice(250, ids)
 
@@ -136,41 +126,14 @@ func (p *Populator) getAllianceCharList() error {
 func (p *Populator) processAlliance(id uint) {
 
 	var alliance monocle.Alliance
-
-	response, err := p.ESI.GetAlliancesAllianceID(id, "")
+	alliance.ID = id
+	response, err := p.ESI.GetAlliancesAllianceID(alliance)
 	if err != nil {
 		p.Logger.Errorf("Error completing request to ESI for Alliance information: %s", err)
 		return
 	}
 
-	switch response.Code {
-	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &alliance)
-		if err != nil {
-			p.Logger.Errorf("unable to unmarshel response body: %s", err)
-			return
-		}
-
-		alliance.ID = id
-
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-
-		alliance.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		alliance.Etag = etag
-		break
-
-	default:
-		p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return
-	}
+	alliance = response.Data.(monocle.Alliance)
 
 	p.Logger.Debugf("\tAlliance: %d:%s", alliance.ID, alliance.Name)
 
@@ -203,67 +166,13 @@ func (p *Populator) processAllianceCorps(pid int, alliances []monocle.Alliance) 
 			continue
 		}
 
-		response, err := p.ESI.GetAllianceMembersByID(alliance.ID, etagResource.Etag)
+		response, etagResource, err := p.ESI.GetAllianceMembersByID(etagResource)
 		if err != nil {
 			p.Logger.Errorf("Error completing request to ESI for Alliance information: %s", err)
 			return
 		}
 
-		switch response.Code {
-		case 200:
-			err = json.Unmarshal(response.Data.([]byte), &corpIDs)
-			if err != nil {
-				p.Logger.Errorf("unable to unmarshel response body: %s", err)
-				return
-			}
-
-			expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-			if err != nil {
-				p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-			}
-
-			etagResource.Expires = expires
-
-			etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-			if err != nil {
-				p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-			}
-
-			etagResource.Etag = etag
-
-			_, err = p.DB.InsertEtag(etagResource)
-			if err != nil {
-				p.Logger.Errorf("Error Received when attempting to insert Etag into database: %s", err)
-				return
-			}
-
-			break
-
-		case 304:
-			expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-			if err != nil {
-				p.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-			}
-
-			etagResource.Expires = expires
-
-			etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-			if err != nil {
-				p.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-			}
-
-			etagResource.Etag = etag
-
-			_, err = p.DB.InsertEtag(etagResource)
-			if err != nil {
-				p.Logger.Errorf("Error Received when attempting to insert Etag into database: %s", err)
-			}
-
-			return
-		default:
-			p.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-			return
-		}
+		corpIDs = response.Data.([]int)
 
 		if len(corpIDs) == 0 {
 

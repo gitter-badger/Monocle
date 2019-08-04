@@ -48,6 +48,10 @@ var expired = cli.BoolFlag{
 	Name:  "expired",
 	Usage: "Limit to query to just expired records or count all records in the database",
 }
+
+var save = cli.BoolFlag{
+	Name: "save",
+}
 var threshold = cli.IntFlag{
 	Name:  "threshold",
 	Usage: "The minimum number of records that should be returned from the query in order for the job to run",
@@ -93,7 +97,7 @@ func init() {
 			Usage:     "counter",
 			UsageText: "Continuous Loop that runs a query every few seconds and returns a count of expired etags",
 			Flags: []cli.Flag{
-				sleep, expired,
+				sleep, expired, save,
 			},
 			Action: updater.Counter,
 		},

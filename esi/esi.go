@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -17,6 +18,7 @@ import (
 var (
 	LayoutESI = "Mon, 02 Jan 2006 15:04:05 MST"
 	err       error
+	mx        sync.Mutex
 )
 
 type (
@@ -26,6 +28,8 @@ type (
 		Host      string
 		Http      *http.Client
 		UserAgent string
+		Remain    uint64 // Number of Error left until a 420 will be thrown
+		Reset     uint64 // Number of Seconds remain until Remain is reset to 100
 	}
 	Config struct {
 		Host      string `envconfig:"ESI_HOST" required:"true"`
@@ -63,6 +67,8 @@ func New(prefix string) (*Client, error) {
 		Host:      config.Host,
 		Http:      http,
 		UserAgent: config.UserAgent,
+		Remain:    100,
+		Reset:     60,
 	}, nil
 
 }

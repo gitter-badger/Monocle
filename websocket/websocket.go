@@ -18,8 +18,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 
+	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/core"
-	"github.com/ddouglas/monocle/esi"
 )
 
 var err error
@@ -247,50 +247,13 @@ func (l *Listener) processCharacter(id uint64) {
 		return
 	}
 
-	response, err := l.ESI.GetCharactersCharacterID(character.ID, character.Etag)
+	response, err := l.ESI.GetCharactersCharacterID(character)
 	if err != nil {
-		l.Logger.Errorf("Error completing request to ESI for Character information: %s", err)
+		l.Logger.Errorf(err.Error())
 		return
 	}
 
-	switch response.Code {
-	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &character)
-		if err != nil {
-			l.Logger.Errorf("unable to unmarshel response body: %s", err)
-			return
-		}
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		character.Etag = etag
-
-		character.Expires = expires
-		break
-	case 304:
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-		character.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		character.Etag = etag
-
-		break
-	default:
-		l.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return
-	}
+	character = response.Data.(monocle.Character)
 
 	l.Logger.Debugf("\tCharacter: %d:%s\tNew Character: %t", character.ID, character.Name, newCharacter)
 
@@ -328,50 +291,13 @@ func (l *Listener) processCorporation(id uint) {
 		return
 	}
 
-	response, err := l.ESI.GetCorporationsCorporationID(corporation.ID, corporation.Etag)
+	response, err := l.ESI.GetCorporationsCorporationID(corporation)
 	if err != nil {
 		l.Logger.Errorf("Error completing request to ESI for Character information: %s", err)
 		return
 	}
 
-	switch response.Code {
-	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &corporation)
-		if err != nil {
-			l.Logger.Errorf("unable to unmarshel response body: %s", err)
-			return
-		}
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-		corporation.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		corporation.Etag = etag
-
-		break
-	case 304:
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		corporation.Etag = etag
-
-		corporation.Expires = expires
-		break
-	default:
-		l.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return
-	}
+	corporation = response.Data.(monocle.Corporation)
 
 	l.Logger.Debugf("\tCorporation: %d:%s\tNew Corporation: %t", corporation.ID, corporation.Name, newCorporation)
 
@@ -408,51 +334,13 @@ func (l *Listener) processAlliance(id uint) {
 		return
 	}
 
-	response, err := l.ESI.GetAlliancesAllianceID(alliance.ID, alliance.Etag)
+	response, err := l.ESI.GetAlliancesAllianceID(alliance)
 	if err != nil {
 		l.Logger.Errorf("Error completing request to ESI for Alliance information: %s", err)
 		return
 	}
 
-	switch response.Code {
-	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &alliance)
-		if err != nil {
-			l.Logger.Errorf("unable to unmarshel response body: %s", err)
-			return
-		}
-
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-
-		alliance.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		alliance.Etag = etag
-		break
-	case 304:
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to parse expires header: %s", err)
-		}
-
-		alliance.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			l.Logger.Errorf("Error Encountered attempting to retrieve etag header: %s", err)
-		}
-		alliance.Etag = etag
-		break
-	default:
-		l.Logger.ErrorF("Bad Resposne Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return
-	}
+	alliance = response.Data.(monocle.Alliance)
 
 	l.Logger.Debugf("\tAlliance: %d:%s\tNew Alliance: %t", alliance.ID, alliance.Name, newAlliance)
 

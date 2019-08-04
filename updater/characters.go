@@ -2,7 +2,6 @@ package updater
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -13,10 +12,10 @@ import (
 func (u *Updater) evaluateCharacters(sleep, threshold int) error {
 
 	for {
-		u.Logger.DebugF("Current Error Count: %d Remain: %d", u.count, u.reset)
-		if u.count < 20 {
-			u.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", u.reset)
-			time.Sleep(time.Second * time.Duration(u.reset))
+		u.Logger.DebugF("Current Error Count: %d Remain: %d", u.ESI.Remain, u.ESI.Reset)
+		if u.ESI.Remain < 20 {
+			u.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", u.ESI.Reset)
+			time.Sleep(time.Second * time.Duration(u.ESI.Reset))
 		}
 
 		characters, err := u.DB.SelectExpiredCharacterEtags(records * workers)
@@ -60,12 +59,12 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 	var response esi.Response
 
 	u.Logger.DebugF("Updating Character %d", character.ID)
-	if u.count < 20 {
-		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", u.reset)
+	if u.ESI.Remain < 20 {
+		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", u.ESI.Reset)
 		u.Logger.Errorf("\t%s", msg)
 		msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
 		u.DGO.ChannelMessageSend("394991263344230411", msg)
-		time.Sleep(time.Second * time.Duration(u.reset))
+		time.Sleep(time.Second * time.Duration(u.ESI.Reset))
 	}
 	attempts := 0
 	for {
@@ -73,64 +72,22 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 			u.Logger.Errorf("All Attempts exhuasted for Character %d", character.ID)
 			break
 		}
-		response, err = u.ESI.GetCharactersCharacterID(character.ID, character.Etag)
+		response, err = u.ESI.GetCharactersCharacterID(character)
 		if err != nil {
 			u.Logger.Errorf("Error completing request to ESI for Character %d information: %s", character.ID, err)
 			return
 		}
-
-		mx.Lock()
-		u.reset = esi.RetrieveErrorResetFromResponse(response)
-		u.count = esi.RetrieveErrorCountFromResponse(response)
-		mx.Unlock()
 
 		if response.Code < 500 {
 			break
 		}
 
 		attempts++
-		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting %d request again in 1 second", response.Code, response.Path, attempts)
+		u.Logger.ErrorF(err.Error())
 		time.Sleep(1 * time.Second)
 	}
 
-	switch response.Code {
-	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &character)
-		if err != nil {
-			u.Logger.Errorf("unable to unmarshel response body for %d: %s", character.ID, err)
-			return
-		}
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
-		}
-		character.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
-		}
-		character.Etag = etag
-
-		break
-	case 304:
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
-		}
-
-		character.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
-		}
-		character.Etag = etag
-		break
-	default:
-		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return
-	}
+	character = response.Data.(monocle.Character)
 
 	_, err = u.DB.UpdateCharacterByID(character)
 	if err != nil {
@@ -146,14 +103,12 @@ func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
 	var history []monocle.CharacterCorporationHistory
 	var response esi.Response
 
-	u.Logger.Debugf("Updating Character %d Corporation History", character.ID)
-
-	if u.count < 20 {
-		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", u.reset)
+	if u.ESI.Remain < 20 {
+		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", u.ESI.Reset)
 		u.Logger.Errorf("\t%s", msg)
 		msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
 		u.DGO.ChannelMessageSend("394991263344230411", msg)
-		time.Sleep(time.Second * time.Duration(u.reset))
+		time.Sleep(time.Second * time.Duration(u.ESI.Reset))
 	}
 
 	historyEtag, err := u.DB.SelectEtagByIDAndResource(character.ID, "character_corporation_history")
@@ -174,16 +129,11 @@ func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
 			u.Logger.Errorf("All Attempts exhuasted for Character %d", character.ID)
 			break
 		}
-		response, err = u.ESI.GetCharactersCharacterIDCorporationHistory(historyEtag.ID, historyEtag.Etag)
+		response, historyEtag, err = u.ESI.GetCharactersCharacterIDCorporationHistory(historyEtag)
 		if err != nil {
 			u.Logger.Errorf("Error completing request to ESI for Character %d Corporation History: %s", historyEtag.ID, err)
 			return
 		}
-
-		mx.Lock()
-		u.reset = esi.RetrieveErrorResetFromResponse(response)
-		u.count = esi.RetrieveErrorCountFromResponse(response)
-		mx.Unlock()
 
 		if response.Code < 500 {
 			break
@@ -194,45 +144,7 @@ func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
 		time.Sleep(1 * time.Second)
 	}
 
-	switch response.Code {
-	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &history)
-		if err != nil {
-			u.Logger.Errorf("unable to unmarshel response body for %d corporation history: %s", historyEtag.ID, err)
-			return
-		}
-
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
-		}
-		historyEtag.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
-		}
-		historyEtag.Etag = etag
-
-		break
-	case 304:
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
-		}
-		historyEtag.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
-		}
-		historyEtag.Etag = etag
-
-		break
-	default:
-		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return
-	}
+	history = response.Data.([]monocle.CharacterCorporationHistory)
 
 	existing, err := u.DB.SelectCharacterCorporationHistoryByID(historyEtag.ID)
 	if err != nil {

@@ -11,7 +11,6 @@ import (
 
 type Populator struct {
 	*core.App
-	count, reset uint64
 }
 
 var (
@@ -23,7 +22,6 @@ var (
 	begin, done int
 	scope       string
 	wg          sync.WaitGroup
-	mx          sync.Mutex
 )
 
 func Action(c *cli.Context) error {
@@ -34,7 +32,9 @@ func Action(c *cli.Context) error {
 		return cli.NewExitError(err, 1)
 	}
 
-	populator := Populator{core, 100, 40}
+	populator := Populator{
+		core,
+	}
 
 	scope = c.String("scope")
 	workers = c.Int("workers")
@@ -55,12 +55,11 @@ func Action(c *cli.Context) error {
 		_ = populator.getAllianceCharList()
 	case "charHunter":
 		_ = populator.charHunter()
-	// case "corpHunter":
-	// 	_ = populator.corpHunter()
-	// case "alliHunter":
-	// 	_ = populator.alliHunter()
-	case "missingCharHunter":
-		_ = populator.missingCharHunter()
+		// case "corpHunter":
+		// 	_ = populator.corpHunter()
+		// case "alliHunter":
+		// 	_ = populator.alliHunter()
+
 	}
 
 	return nil

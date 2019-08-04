@@ -2,20 +2,18 @@ package updater
 
 import (
 	"database/sql"
-	"encoding/json"
 	"time"
 
 	"github.com/ddouglas/monocle"
-	"github.com/ddouglas/monocle/esi"
 )
 
 func (u *Updater) evaluateAlliances(sleep, threshold int) error {
 	var errorCount int
 supervisor:
 	for {
-		if u.count < 10 {
-			u.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", u.reset)
-			time.Sleep(time.Second * time.Duration(u.reset))
+		if u.ESI.Remain < 10 {
+			u.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", u.ESI.Reset)
+			time.Sleep(time.Second * time.Duration(u.ESI.Reset))
 		}
 
 		for x := 1; x <= workers; x++ {
@@ -41,7 +39,16 @@ supervisor:
 
 			u.Logger.Infof("Successfully Queried %d Alliances", len(alliances))
 			wg.Add(1)
-			go u.updateAlliances(alliances)
+			go func(alliances []monocle.Alliance) {
+				for _, alliance := range alliances {
+					if !alliance.IsExpired() {
+						continue
+					}
+					u.updateAlliance(alliance)
+				}
+				wg.Done()
+				return
+			}(alliances)
 		}
 		u.Logger.Info("Waiting")
 		wg.Wait()
@@ -49,64 +56,16 @@ supervisor:
 	}
 }
 
-func (u *Updater) updateAlliances(alliances []monocle.Alliance) {
-	defer wg.Done()
-	for _, alliance := range alliances {
-		if !alliance.IsExpired() {
-			continue
-		}
-		u.updateAlliance(alliance)
-	}
-	return
-}
-
 func (u *Updater) updateAlliance(alliance monocle.Alliance) {
 	u.Logger.DebugF("Updating Alliance %s", alliance.ID)
 
-	response, err := u.ESI.GetAlliancesAllianceID(alliance.ID, alliance.Etag)
+	response, err := u.ESI.GetAlliancesAllianceID(alliance)
 	if err != nil {
 		u.Logger.Errorf("Error completing request to ESI for Alliance %d information: %s", alliance.ID, err)
 		return
 	}
 
-	switch response.Code {
-	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &alliance)
-		if err != nil {
-			u.Logger.Errorf("unable to unmarshel response body for %d: %s", alliance.ID, err)
-			return
-		}
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
-		}
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
-		}
-		alliance.Etag = etag
-
-		alliance.Expires = expires
-		break
-	case 304:
-		expires, err := esi.RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
-		}
-
-		alliance.Expires = expires
-
-		etag, err := esi.RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			u.Logger.Errorf("Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
-		}
-		alliance.Etag = etag
-		break
-	default:
-		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return
-	}
+	alliance = response.Data.(monocle.Alliance)
 
 	_, err = u.DB.UpdateAllianceByID(alliance)
 	if err != nil {

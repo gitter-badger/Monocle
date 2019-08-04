@@ -13,7 +13,6 @@ import (
 type (
 	Updater struct {
 		*core.App
-		reset, count uint64
 	}
 )
 
@@ -23,7 +22,6 @@ var (
 	records int
 	scope string
 	wg    sync.WaitGroup
-	mx    sync.Mutex
 	err   error
 )
 
@@ -37,7 +35,7 @@ func Process(c *cli.Context) error {
 	}
 
 	updater := Updater{
-		core, 40, 100,
+		core,
 	}
 
 	workers = c.Int("workers")

@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/core"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
@@ -27,6 +28,7 @@ func Counter(c *cli.Context) error {
 
 	sleep := c.Int("sleep")
 	expired := c.Bool("expired")
+	save := c.Bool("save")
 	for {
 		if expired {
 			charCount, err = core.DB.SelectCountOfExpiredCharacterEtags()
@@ -87,11 +89,16 @@ func Counter(c *cli.Context) error {
 
 		core.Logger.Infof("Char: %d (%s)\tCorp: %d (%s)\tAlli: %d (%s)", charCount, charDiff, corpCount, corpDiff, alliCount, alliDiff)
 
-		// core.DB.InsertCounter(monocle.Counter{
-		// 	CharCount: charCount,
-		// 	CorpCount: corpCount,
-		// 	AlliCount: alliCount,
-		// })
+		if save {
+			err := core.DB.InsertCounter(monocle.Counter{
+				CharCount: charCount,
+				CorpCount: corpCount,
+				AlliCount: alliCount,
+			})
+			if err != nil {
+				core.Logger.Error(err.Error())
+			}
+		}
 
 		charLast = charCount
 		corpLast = corpCount
