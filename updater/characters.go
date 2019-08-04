@@ -83,7 +83,7 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 		}
 
 		attempts++
-		u.Logger.ErrorF(err.Error())
+		u.Logger.ErrorF("Would have of thrown error here. Response Code: %d Error: %s", response.Code, err)
 		time.Sleep(1 * time.Second)
 	}
 

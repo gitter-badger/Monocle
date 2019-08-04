@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/ddouglas/monocle"
 	"github.com/pkg/errors"
@@ -121,20 +120,8 @@ func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response
 		character.Etag = etag
 
 		break
-	case 400:
-		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
-		return response, err
-	case 404:
-		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
-		return response, err
-	case 420:
-		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
-		return response, err
 	default:
-		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
-		character.Name = "Invalid Character ID!"
-		character.Ignored = true
-		character.Expires = time.Now()
+		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
 	}
 
 	response.Data = character
