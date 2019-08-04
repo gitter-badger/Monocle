@@ -52,11 +52,12 @@ func (p *Populator) charHunter() error {
 			response, err = p.ESI.HeadCharactersCharacterID(uint64(end))
 			if err != nil {
 				p.Logger.ErrorF(err.Error())
-				if response.Code >= 500 {
-					time.Sleep(time.Second * 5)
-					continue
-				}
 				time.Sleep(time.Minute * 30)
+				continue
+			}
+
+			if response.Code >= 500 {
+				time.Sleep(time.Second * 5)
 				continue
 			}
 			break
