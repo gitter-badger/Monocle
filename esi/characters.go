@@ -43,6 +43,8 @@ func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
 		break
 	case 304:
 		break
+	case 500, 502, 503, 504:
+		break
 	default:
 		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
 	}
@@ -119,6 +121,8 @@ func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response
 		}
 		character.Etag = etag
 
+		break
+	case 500, 502, 503, 504:
 		break
 	default:
 		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
@@ -201,12 +205,13 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 		etagResource.Etag = etag
 
 		break
+	case 500, 502, 503, 504:
+		break
 	default:
 		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return response, etagResource, err
 	}
 
 	response.Data = history
 
-	return response, etagResource, nil
+	return response, etagResource, err
 }

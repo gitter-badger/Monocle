@@ -56,7 +56,7 @@ func (p *Populator) charHunter() error {
 					time.Sleep(time.Second * 5)
 					continue
 				}
-				time.Sleep(time.Minute * 10)
+				time.Sleep(time.Minute * 30)
 				continue
 			}
 			break
@@ -199,7 +199,7 @@ func (p *Populator) processCharacterCorpHistory(id uint64) {
 			return
 		}
 
-		if response.Code < 500 {
+		if response.Code < 400 {
 			break
 		}
 

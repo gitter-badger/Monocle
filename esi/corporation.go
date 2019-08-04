@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/ddouglas/monocle"
 	"github.com/pkg/errors"
@@ -81,20 +80,10 @@ func (e *Client) GetCorporationsCorporationID(corporation monocle.Corporation) (
 		corporation.Etag = etag
 
 		break
-	case 400:
-		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
-		return response, err
-	case 404:
-		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
-		return response, err
-	case 420:
-		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
-		return response, err
+	case 500, 502, 503, 504:
+		break
 	default:
 		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
-		corporation.Name = "Invalid Character ID!"
-		corporation.Ignored = true
-		corporation.Expires = time.Now()
 	}
 
 	response.Data = corporation

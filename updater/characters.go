@@ -70,20 +70,20 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 	for {
 		if attempts >= 3 {
 			u.Logger.Errorf("All Attempts exhuasted for Character %d", character.ID)
-			break
+			return
 		}
 		response, err = u.ESI.GetCharactersCharacterID(character)
-		if err != nil && response.Code >= 400 && response.Code < 500 {
+		if err != nil {
 			u.Logger.Errorf("Error completing request to ESI for Character %d information: %s", character.ID, err)
 			return
 		}
 
-		if response.Code < 500 {
+		if response.Code < 400 {
 			break
 		}
 
 		attempts++
-		u.Logger.Errorf(err.Error())
+		u.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting %d request again in 1 second", response.Code, response.Path, attempts)
 		time.Sleep(1 * time.Second)
 	}
 
@@ -127,7 +127,7 @@ func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
 	for {
 		if attempts >= 3 {
 			u.Logger.Errorf("All Attempts exhuasted for Character %d", character.ID)
-			break
+			return
 		}
 		response, historyEtag, err = u.ESI.GetCharactersCharacterIDCorporationHistory(historyEtag)
 		if err != nil {
@@ -135,7 +135,7 @@ func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
 			return
 		}
 
-		if response.Code < 500 {
+		if response.Code < 400 {
 			break
 		}
 

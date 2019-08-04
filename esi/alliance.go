@@ -257,12 +257,13 @@ func (e *Client) GetAllianceMembersByID(etagResource monocle.EtagResource) (Resp
 		}
 		etagResource.Etag = etag
 		break
+	case 500, 502, 503, 504:
+		break
 	default:
 		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return response, etagResource, err
 	}
 
 	response.Data = ids
 
-	return response, etagResource, nil
+	return response, etagResource, err
 }
