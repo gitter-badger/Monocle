@@ -90,7 +90,7 @@ func (e *Client) Request(request Request) (Response, error) {
 		req.Header.Add(k, v)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Content-Type", "application/json; charset=UTF-8")
 	req.Header.Add("User-Agent", e.UserAgent)
 
 	resp, err := e.Http.Do(req)

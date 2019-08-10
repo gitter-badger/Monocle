@@ -48,7 +48,7 @@ func (p *Populator) charHunter() error {
 		p.Logger.CriticalF("\t%s", msg)
 
 		for {
-			p.Logger.InfoF("Checking for valid end of %d", end)
+			p.Logger.DebugF("Checking for valid end of %d", end)
 			response, err = p.ESI.HeadCharactersCharacterID(uint64(end))
 			if err != nil {
 				p.Logger.ErrorF(err.Error())
@@ -86,9 +86,9 @@ func (p *Populator) charHunter() error {
 			}(ystart, yend)
 		}
 
-		p.Logger.Info("Done Dispatching. Waiting for Completion")
+		p.Logger.Debug("Done Dispatching. Waiting for Completion")
 		wg.Wait()
-		p.Logger.Infof("Completed, sleep for %d seconds", sleep)
+		p.Logger.DebugF("Completed, sleep for %d seconds", sleep)
 		time.Sleep(time.Second * time.Duration(sleep))
 
 		value.Value = end

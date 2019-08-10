@@ -35,20 +35,8 @@ services:
             options:
                 max-file: "5"
                 max-size: "50m"
-        command: ./cli populate --scope=charHunter --workers=10 --records=50
+        command: ./cli populate --scope=charHunter --workers=10 --records=50 --sleep=2
         network_mode: "host"
         container_name: hunter_char
-        env_file:
-            - ./cmd/.env-docker
-    updater_corp:
-        image: core
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "50m"
-        command: ./cli update --scope=corporations --workers=2 --records=100 --threshold=25
-        network_mode: "host"
-        container_name: updater_corp
         env_file:
             - ./cmd/.env-docker

@@ -91,7 +91,7 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 
 	_, err = u.DB.UpdateCharacterByID(character)
 	if err != nil {
-		u.Logger.Errorf("Error Encountered attempting to update character in database: %s", err)
+		u.Logger.Errorf("Error Encountered attempting to update character %d in database: %s", character.ID, err)
 		return
 	}
 
