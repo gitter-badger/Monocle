@@ -59,7 +59,7 @@ outer:
 			response, err = p.ESI.HeadCharactersCharacterID(uint64(end))
 			if err != nil {
 				p.Logger.ErrorF(err.Error())
-				time.Sleep(time.Minute * 2)
+				time.Sleep(time.Second * 5)
 				attempts++
 				continue
 			}
