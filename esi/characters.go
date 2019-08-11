@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/ddouglas/monocle"
 	"github.com/pkg/errors"
@@ -122,7 +123,10 @@ func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response
 		character.Etag = etag
 
 		break
-	case 500, 502, 503, 504:
+	case 503:
+		time.Sleep(time.Minute * 5)
+		break
+	case 500, 502, 504:
 		break
 	default:
 		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
