@@ -41,35 +41,35 @@ func (p *Populator) charHunter() error {
 	begin = value.Value
 
 	p.Logger.Infof("Starting at ID %d", begin)
-outer:
+
 	for x := begin; x <= 2147483647; x += workers * records {
 		end := x + (workers * records)
 		msg := fmt.Sprintf("Errors: %d Remaining: %d Loop: %d - %d", p.ESI.Remain, p.ESI.Reset, x, x+(workers*records))
 		p.Logger.CriticalF("\t%s", msg)
-		attempts := 0
-		for {
-			if attempts >= 2 {
-				msg := fmt.Sprintf("Head Requests to %d failed. Proceeding to next range", end)
-				p.Logger.Errorf("\t%s", msg)
-				//msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-				p.DGO.ChannelMessageSend("394991263344230411", msg)
-				continue outer
-			}
-			p.Logger.DebugF("Checking for valid end of %d", end)
-			response, err = p.ESI.HeadCharactersCharacterID(uint64(end))
-			if err != nil {
-				p.Logger.ErrorF(err.Error())
-				time.Sleep(time.Second * 5)
-				attempts++
-				continue
-			}
+		// attempts := 0
+		// for {
+		// 	if attempts >= 2 {
+		// 		msg := fmt.Sprintf("Head Requests to %d failed. Proceeding to next range", end)
+		// 		p.Logger.Errorf("\t%s", msg)
+		// 		//msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
+		// 		p.DGO.ChannelMessageSend("394991263344230411", msg)
+		// 		continue outer
+		// 	}
+		// 	p.Logger.DebugF("Checking for valid end of %d", end)
+		// 	response, err = p.ESI.HeadCharactersCharacterID(uint64(end))
+		// 	if err != nil {
+		// 		p.Logger.ErrorF(err.Error())
+		// 		time.Sleep(time.Second * 5)
+		// 		attempts++
+		// 		continue
+		// 	}
 
-			if response.Code >= 500 {
-				time.Sleep(time.Second * 5)
-				continue
-			}
-			break
-		}
+		// 	if response.Code >= 500 {
+		// 		time.Sleep(time.Second * 5)
+		// 		continue
+		// 	}
+		// 	break
+		// }
 
 		for y := 1; y <= workers; y++ {
 			if p.ESI.Remain < 20 {
@@ -144,6 +144,8 @@ func (p *Populator) processCharacter(id uint64) {
 	if !character.IsExpired() {
 		return
 	}
+
+	p.Logger.Infof("Processing Char %d", character.ID)
 
 	response, err := p.ESI.GetCharactersCharacterID(character)
 	if err != nil {

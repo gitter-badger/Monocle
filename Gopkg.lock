@@ -14,6 +14,12 @@
   version = "v0.19.0"
 
 [[projects]]
+  name = "github.com/go-chi/chi"
+  packages = ["."]
+  revision = "da24bba8dcd4021cafac38724bf10dccc97c3e36"
+  version = "v4.0.2"
+
+[[projects]]
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   revision = "72cd26f257d44c1114970e19afddcd812016007e"
@@ -76,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "37a953ea6545746001f78ad9d4d3747976bd2b2ef5cd97fad8a4ca03c0a59e6e"
+  inputs-digest = "8e077a320cdf270f4a24f31075de452aa91bc1011a0ae48a59c2d986f95fae11"
   solver-name = "gps-cdcl"
   solver-version = 1

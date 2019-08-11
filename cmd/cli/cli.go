@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/ddouglas/monocle/populate"
+	"github.com/ddouglas/monocle/server"
 	"github.com/ddouglas/monocle/updater"
 	"github.com/ddouglas/monocle/websocket"
 	"github.com/urfave/cli"
@@ -38,6 +39,11 @@ var begin = cli.IntFlag{
 var done = cli.IntFlag{
 	Name:  "done",
 	Value: 98000000,
+}
+
+var port = cli.UintFlag{
+	Name:  "port",
+	Value: 8080,
 }
 var sleep = cli.IntFlag{
 	Name:  "sleep",
@@ -100,6 +106,16 @@ func init() {
 				sleep, expired, save,
 			},
 			Action: updater.Counter,
+		},
+		cli.Command{
+			Name:      "api",
+			Category:  "HTTP",
+			Usage:     "api",
+			UsageText: "Starts the API to serve HTTPS requests",
+			Flags: []cli.Flag{
+				port,
+			},
+			Action: server.Serve,
 		},
 	}
 
