@@ -5,7 +5,7 @@ import "time"
 type Character struct {
 	ID             uint64    `db:"id" json:"id"`
 	Name           string    `db:"name" json:"name"`
-	Birthday       time.Time `db:"birthday" json:"birthday"`
+	Birthday       NullTime  `db:"birthday" json:"birthday"`
 	Gender         string    `db:"gender" json:"gender"`
 	SecurityStatus float32   `db:"security_status" json:"security_status"`
 	AllianceID     NullInt64 `db:"alliance_id" json:"alliance_id"`
