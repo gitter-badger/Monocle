@@ -49,7 +49,7 @@ outer:
 		attempts := 0
 		for {
 			if attempts >= 2 {
-				msg := fmt.Sprintf("Head Requests to %s failed. Proceeding to next range", end)
+				msg := fmt.Sprintf("Head Requests to %d failed. Proceeding to next range", end)
 				p.Logger.Errorf("\t%s", msg)
 				msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
 				p.DGO.ChannelMessageSend("394991263344230411", msg)
