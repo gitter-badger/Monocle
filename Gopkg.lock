@@ -15,7 +15,7 @@
 
 [[projects]]
   name = "github.com/go-chi/chi"
-  packages = ["."]
+  packages = [".","middleware"]
   revision = "da24bba8dcd4021cafac38724bf10dccc97c3e36"
   version = "v4.0.2"
 
@@ -36,6 +36,12 @@
   packages = ["."]
   revision = "47ad0c5de1051bb36403e717180bea3699247814"
   version = "v1.4.1"
+
+[[projects]]
+  name = "github.com/imdario/mergo"
+  packages = ["."]
+  revision = "7c29201646fa3de8506f701213473dd407f19646"
+  version = "v0.3.7"
 
 [[projects]]
   name = "github.com/jmoiron/sqlx"
@@ -82,6 +88,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8e077a320cdf270f4a24f31075de452aa91bc1011a0ae48a59c2d986f95fae11"
+  inputs-digest = "8254de87bac35ad26010a198ccc4da590fe06d1392db8285bcee1506e64b62b8"
   solver-name = "gps-cdcl"
   solver-version = 1

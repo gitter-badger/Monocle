@@ -119,10 +119,6 @@ func (p *Populator) getAllianceCharList() error {
 
 }
 
-// func (p *Populator) alliHunter() error {
-
-// }
-
 func (p *Populator) processAlliance(id uint) {
 
 	var alliance monocle.Alliance
@@ -208,9 +204,9 @@ func (p *Populator) processAllianceCorps(pid int, alliances []monocle.Alliance) 
 				p.Logger.Infof("Deploying Go Routines to Process %d ids", len(missing))
 				wg.Add(1)
 				go func(missing []int) {
-					for _, v := range missing {
-						p.processNewCorporation(uint(v))
-					}
+					// for _, v := range missing {
+					// 	p.processNewCorporation(uint(v))
+					// }
 					wg.Done()
 					return
 				}(missing)

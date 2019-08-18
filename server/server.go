@@ -18,6 +18,10 @@ import (
 	"github.com/ddouglas/monocle/core"
 )
 
+var (
+	err error
+)
+
 type Server struct {
 	App    *core.App
 	server *http.Server
@@ -73,14 +77,17 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(Cors)
+	r.Use(s.RequestLogger)
 
-	r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(struct {
-			Message string `json:"message"`
-		}{
-			Message: "Hello World",
-		})
+	r.Route("/v1", func(r chi.Router) {
+		r.Get("/characters", s.handleGetCharacters)
+		r.Get("/characters/{id}", s.handleGetCharacter)
+		r.Get("/corporations", s.handleGetCorporations)
+		r.Get("/corporations/{id}", s.handleGetCorporation)
 	})
+
+	// r.Get("/alliances", s.handleGetAlliances)
+	// r.Get("/alliances/{id}", s.handleGetAlliance)
 
 	return r
 }
@@ -97,8 +104,7 @@ func (s *Server) WriteSuccess(w http.ResponseWriter, data interface{}, status in
 		w.WriteHeader(status)
 	}
 
-	json.NewEncoder(w).Encode(data)
-	return nil
+	return json.NewEncoder(w).Encode(data)
 }
 
 func (s *Server) WriteError(w http.ResponseWriter, code int, err error) error {

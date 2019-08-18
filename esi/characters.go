@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ddouglas/monocle"
+	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 )
 
@@ -85,13 +86,33 @@ func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response
 	e.Remain = RetrieveErrorCountFromResponse(response)
 	mx.Unlock()
 
+	var updated monocle.Character
+
 	switch response.Code {
 	case 200:
-		err := json.Unmarshal(response.Data.([]byte), &character)
+		err := json.Unmarshal(response.Data.([]byte), &updated)
 		if err != nil {
 			err = errors.Wrap(err, "unable to unmarshel response body")
 			return response, err
 		}
+
+		err = mergo.Merge(&character, updated, mergo.WithOverride)
+		if err != nil {
+			err = errors.Wrap(err, "unable to merge old with new")
+			return response, err
+		}
+
+		if !updated.AllianceID.Valid {
+			character.AllianceID.Scan(nil)
+		}
+		if !updated.FactionID.Valid {
+			character.FactionID.Scan(nil)
+		}
+
+		if character.CorporationID == 1000001 {
+			character.Ignored = true
+		}
+
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrap(err, "Error Encountered attempting to parse expires header")

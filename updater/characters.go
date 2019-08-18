@@ -62,7 +62,7 @@ func (u *Updater) updateCharacter(character monocle.Character) {
 	if u.ESI.Remain < 20 {
 		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", u.ESI.Reset)
 		u.Logger.Errorf("\t%s", msg)
-		msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
+		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
 		u.DGO.ChannelMessageSend("394991263344230411", msg)
 		time.Sleep(time.Second * time.Duration(u.ESI.Reset))
 	}
@@ -106,7 +106,7 @@ func (u *Updater) updateCharacterCorpHistory(character monocle.Character) {
 	if u.ESI.Remain < 20 {
 		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", u.ESI.Reset)
 		u.Logger.Errorf("\t%s", msg)
-		msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
+		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
 		u.DGO.ChannelMessageSend("394991263344230411", msg)
 		time.Sleep(time.Second * time.Duration(u.ESI.Reset))
 	}

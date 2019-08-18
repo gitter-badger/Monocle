@@ -250,6 +250,7 @@ func (db *DB) UpdateAllianceByID(alliance monocle.Alliance) (monocle.Alliance, e
 		u.E("closed", alliance.Closed),
 		u.E("expires", alliance.Expires),
 		u.E("etag", alliance.Etag),
+		u.E("updated_at", sb.Raw("NOW()")),
 	).Where(
 		u.E("id", alliance.ID),
 	)

@@ -7,9 +7,9 @@ import (
 	sb "github.com/huandu/go-sqlbuilder"
 )
 
-func (db *DB) SelectCharacters(page, perPage int) ([]monocle.Character, error) {
+func (db *DB) SelectCharacters(page, perPage uint) ([]monocle.Character, error) {
 
-	var characters []monocle.Character
+	characters := make([]monocle.Character, 0)
 
 	s := sb.NewSelectBuilder()
 	q := s.Select(
@@ -35,7 +35,7 @@ func (db *DB) SelectCharacters(page, perPage int) ([]monocle.Character, error) {
 
 	offset := (page * perPage) - perPage
 
-	q.Limit(perPage).Offset(offset)
+	q.Limit(int(perPage)).Offset(int(offset))
 
 	query, args := q.Build()
 
@@ -281,11 +281,6 @@ func (db *DB) UpdateCharacterByID(character monocle.Character) (monocle.Characte
 	u := sb.NewUpdateBuilder()
 	u.Update("monocle.characters").Set(
 		u.E("security_status", character.SecurityStatus),
-		u.E("name", character.Name),
-		u.E("gender", character.Gender),
-		u.E("ancestry_id", character.AncestryID),
-		u.E("bloodline_id", character.BloodlineID),
-		u.E("race_id", character.RaceID),
 		u.E("alliance_id", character.AllianceID),
 		u.E("corporation_id", character.CorporationID),
 		u.E("faction_id", character.FactionID),

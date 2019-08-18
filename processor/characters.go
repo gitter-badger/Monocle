@@ -1,4 +1,4 @@
-package populate
+package processor
 
 import (
 	"database/sql"
@@ -10,16 +10,7 @@ import (
 	"github.com/ddouglas/monocle/esi"
 )
 
-func (p *Populator) processCharacterList(ids []uint64, next chan bool) {
-	for _, id := range ids {
-		p.processCharacter(id)
-	}
-	wg.Done()
-	next <- true
-	return
-}
-
-func (p *Populator) charHunter() error {
+func (p *Processor) charHunter() {
 	var value struct {
 		Value int `json:"value"`
 	}
@@ -28,14 +19,14 @@ func (p *Populator) charHunter() error {
 	if err != nil {
 		if err != sql.ErrNoRows {
 			p.Logger.Criticalf("Unable to query for ID: %s", err)
-			return err
+			return
 		}
 	}
 
 	err = json.Unmarshal(kv.Value, &value)
 	if err != nil {
 		p.Logger.Criticalf("Unable to unmarshal value: %s", err)
-		return err
+		return
 	}
 
 	begin = value.Value
@@ -102,14 +93,14 @@ func (p *Populator) charHunter() error {
 		kv.Value, err = json.Marshal(value)
 		if err != nil {
 			p.Logger.Criticalf("Unable to unmarshal value: %s", err)
-			return err
+			return
 		}
 
 		_, err = p.DB.UpdateValueByKey(kv)
 		if err != nil {
 			if err != sql.ErrNoRows {
 				p.Logger.Criticalf("Unable to query for ID: %s", err)
-				return err
+				return
 			}
 		}
 
@@ -117,112 +108,14 @@ func (p *Populator) charHunter() error {
 
 	}
 
-	return nil
+	return
 }
 
-func (p *Populator) charHunterArchive() error {
-	// var response esi.Response
-	var value struct {
-		Value int `json:"value"`
-	}
-	kv, err := p.DB.SelectValueByKey("last_good_character_id")
-	if err != nil {
-		if err != sql.ErrNoRows {
-			p.Logger.Criticalf("Unable to query for ID: %s", err)
-			return err
-		}
-	}
+func (p *Processor) charUpdater() {
 
-	err = json.Unmarshal(kv.Value, &value)
-	if err != nil {
-		p.Logger.Criticalf("Unable to unmarshal value: %s", err)
-		return err
-	}
-
-	begin = value.Value
-
-	p.Logger.Infof("Starting at ID %d", begin)
-
-	for x := begin; x <= 2147483647; x += workers * records {
-		end := x + (workers * records)
-		msg := fmt.Sprintf("Errors: %d Remaining: %d Loop: %d - %d", p.ESI.Remain, p.ESI.Reset, x, x+(workers*records))
-		p.Logger.CriticalF("%s", msg)
-		// attempts := 0
-		// for {
-		// 	if attempts >= 2 {
-		// 		msg := fmt.Sprintf("Head Requests to %d failed. Proceeding to next range", end)
-		// 		p.Logger.Errorf("\t%s", msg)
-		// 		//// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-		// 		// p.DGO.ChannelMessageSend("394991263344230411", msg)
-		// 		continue outer
-		// 	}
-		// 	p.Logger.DebugF("Checking for valid end of %d", end)
-		// 	response, err = p.ESI.HeadCharactersCharacterID(uint64(end))
-		// 	if err != nil {
-		// 		p.Logger.ErrorF(err.Error())
-		// 		time.Sleep(time.Second * 5)
-		// 		attempts++
-		// 		continue
-		// 	}
-
-		// 	if response.Code >= 500 {
-		// 		time.Sleep(time.Second * 5)
-		// 		continue
-		// 	}
-		// 	break
-		// }
-
-		for y := 1; y <= workers; y++ {
-			if p.ESI.Remain < 20 {
-				msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
-				p.Logger.Errorf("\t%s", msg)
-				// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-				// p.DGO.ChannelMessageSend("394991263344230411", msg)
-				time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-			}
-			ystart := (y * records) - records + x
-			yend := (y * records) + x - 1
-			msg := fmt.Sprintf("\tLoop: %d - %d", ystart, yend)
-			p.Logger.CriticalF("\t%s", msg)
-			wg.Add(1)
-			go func(start, end int) {
-
-				for z := start; z <= end; z++ {
-					p.processCharacter(uint64(z))
-					p.processCharacterCorpHistory(uint64(z))
-				}
-				// next <- true
-				wg.Done()
-			}(ystart, yend)
-		}
-
-		p.Logger.Debug("Done Dispatching. Waiting for Completion")
-		wg.Wait()
-		p.Logger.DebugF("Completed, sleep for %d seconds", sleep)
-		time.Sleep(time.Second * time.Duration(sleep))
-
-		value.Value = end
-
-		kv.Value, err = json.Marshal(value)
-		if err != nil {
-			p.Logger.Criticalf("Unable to unmarshal value: %s", err)
-			return err
-		}
-
-		_, err = p.DB.UpdateValueByKey(kv)
-		if err != nil {
-			if err != sql.ErrNoRows {
-				p.Logger.Criticalf("Unable to query for ID: %s", err)
-				return err
-			}
-		}
-
-	}
-
-	return nil
 }
 
-func (p *Populator) processCharacter(id uint64) {
+func (p *Processor) processCharacter(id uint64) {
 
 	var newCharacter bool
 	var response esi.Response
@@ -291,7 +184,7 @@ func (p *Populator) processCharacter(id uint64) {
 	}
 }
 
-func (p *Populator) processCharacterCorpHistory(id uint64) {
+func (p *Processor) processCharacterCorpHistory(id uint64) {
 	var newEtag bool
 	var history []monocle.CharacterCorporationHistory
 	var response esi.Response

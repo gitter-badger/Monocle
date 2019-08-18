@@ -8,6 +8,43 @@ import (
 	"github.com/pkg/errors"
 )
 
+func (db *DB) SelectCorporations(page, perPage uint) ([]monocle.Corporation, error) {
+
+	corporations := make([]monocle.Corporation, 0)
+
+	s := sb.NewSelectBuilder()
+	q := s.Select(
+		"id",
+		"name",
+		"ticker",
+		"member_count",
+		"ceo_id",
+		"alliance_id",
+		"date_founded",
+		"creator_id",
+		"home_station_id",
+		"tax_rate",
+		"war_eligible",
+		"ignored",
+		"closed",
+		"etag",
+		"expires",
+		"created_at",
+		"updated_at",
+	).From(
+		"monocle.corporations",
+	)
+
+	offset := (page * perPage) - perPage
+
+	q.Limit(int(perPage)).Offset(int(offset))
+
+	query, args := q.Build()
+
+	err := db.Select(&corporations, query, args...)
+	return corporations, err
+}
+
 func (db *DB) SelectCorporationByCorporationID(id uint) (monocle.Corporation, error) {
 
 	var corporation monocle.Corporation
@@ -280,6 +317,7 @@ func (db *DB) UpdateCorporationByID(corporation monocle.Corporation) (monocle.Co
 		u.E("closed", corporation.Closed),
 		u.E("expires", corporation.Expires),
 		u.E("etag", corporation.Etag),
+		u.E("updated_at", sb.Raw("NOW()")),
 	).Where(
 		u.E("id", corporation.ID),
 	)

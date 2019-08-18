@@ -40,3 +40,15 @@ services:
         container_name: hunter_char
         env_file:
             - ./cmd/.env-docker
+    # hunter_corp:
+    #     image: core
+    #     logging:
+    #         driver: "json-file"
+    #         options:
+    #             max-file: "5"
+    #             max-size: "50m"
+    #     command: ./cli populate --scope=corpHunter --workers=1 --records=20 --sleep=2
+    #     network_mode: "host"
+    #     container_name: hunter_corp
+    #     env_file:
+    #         - ./cmd/.env-docker
