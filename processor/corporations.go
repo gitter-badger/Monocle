@@ -184,6 +184,10 @@ func (p *Processor) processCorporation(id uint64) {
 
 	corporation = response.Data.(monocle.Corporation)
 
+	if corporation.MemberCount == 0 {
+		corporation.Closed = true
+	}
+
 	p.Logger.Debugf("Corporation: %d:%s\tNew Corporation: %t", corporation.ID, corporation.Name, new)
 
 	switch new {
