@@ -42,7 +42,7 @@ func (db *DB) SelectAlliances(page, limit int) ([]monocle.Alliance, error) {
 	return alliances, err
 }
 
-func (db *DB) SelectAllianceByAllianceID(id uint) (monocle.Alliance, error) {
+func (db *DB) SelectAllianceByAllianceID(id uint64) (monocle.Alliance, error) {
 
 	var alliance monocle.Alliance
 	s := sb.NewSelectBuilder()

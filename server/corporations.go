@@ -45,7 +45,7 @@ func (s *Server) handleGetCorporations(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleGetCorporation(w http.ResponseWriter, r *http.Request) {
 
 	urlCorporationID := chi.URLParam(r, "id")
-	corporationID64, err := strconv.ParseUint(urlCorporationID, 10, 32)
+	corporationID, err := strconv.ParseUint(urlCorporationID, 10, 32)
 	if err != nil {
 		msg := fmt.Sprint("Unable to parse %v")
 		s.App.Logger.CriticalF("%s: %s", msg, err)
@@ -53,7 +53,6 @@ func (s *Server) handleGetCorporation(w http.ResponseWriter, r *http.Request) {
 		s.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
-	corporationID := uint(corporationID64)
 
 	corporation, err := s.App.DB.SelectCorporationByCorporationID(corporationID)
 	if err != nil {

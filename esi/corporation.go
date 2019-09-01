@@ -7,13 +7,12 @@ import (
 	"time"
 
 	"github.com/ddouglas/monocle"
-	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 )
 
-func (e *Client) GetCorporationsCorporationID(corporation monocle.Corporation) (Response, error) {
+func (e *Client) HeadCorporationsCorporationID(id uint) (Response, error) {
 
-	path := fmt.Sprintf("/v4/corporations/%d/", corporation.ID)
+	path := fmt.Sprintf("/v4/corporations/%d/", id)
 
 	url := url.URL{
 		Scheme: "https",
@@ -23,8 +22,50 @@ func (e *Client) GetCorporationsCorporationID(corporation monocle.Corporation) (
 
 	headers := make(map[string]string)
 
-	if corporation.Etag != "" {
-		headers["If-None-Match"] = corporation.Etag
+	request := Request{
+		Method:  "HEAD",
+		Path:    url,
+		Headers: headers,
+		Body:    []byte(""),
+	}
+
+	response, err := e.Request(request)
+	if err != nil {
+		return response, err
+	}
+
+	mx.Lock()
+	e.Reset = RetrieveErrorResetFromResponse(response)
+	e.Remain = RetrieveErrorCountFromResponse(response)
+	mx.Unlock()
+
+	switch response.Code {
+	case 200:
+		break
+	case 304:
+		break
+	case 500, 502, 503, 504:
+		break
+	default:
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
+	}
+	return response, err
+}
+
+func (e *Client) GetCorporationsCorporationID(id uint64, etag string) (Response, error) {
+
+	path := fmt.Sprintf("/v4/corporations/%d/", id)
+
+	url := url.URL{
+		Scheme: "https",
+		Host:   e.Host,
+		Path:   path,
+	}
+
+	headers := make(map[string]string)
+
+	if etag != "" {
+		headers["If-None-Match"] = etag
 	}
 
 	request := Request{
@@ -44,25 +85,17 @@ func (e *Client) GetCorporationsCorporationID(corporation monocle.Corporation) (
 	e.Remain = RetrieveErrorCountFromResponse(response)
 	mx.Unlock()
 
-	var updated monocle.Corporation
+	var corporation monocle.Corporation
+	corporation.ID = id
 
 	switch response.Code {
 	case 200:
-		err := json.Unmarshal(response.Data.([]byte), &updated)
+		err := json.Unmarshal(response.Data.([]byte), &corporation)
 		if err != nil {
 			err = errors.Wrap(err, "unable to unmarshel response body")
 			return response, err
 		}
-		err = mergo.Merge(&corporation, updated, mergo.WithOverride)
-		if err != nil {
-			err = errors.Wrap(err, "unable to merge old with new")
-			return response, err
-		}
-
-		if !updated.AllianceID.Valid {
-			corporation.AllianceID.Scan(nil)
-		}
-
+		corporation.ID = id
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrap(err, "Error Encountered attempting to parse expires header")
@@ -100,11 +133,94 @@ func (e *Client) GetCorporationsCorporationID(corporation monocle.Corporation) (
 	case 500, 502, 504:
 		break
 	default:
-		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
 
 	response.Data = corporation
 
 	return response, err
 
+}
+
+func (e *Client) GetCorporationsCorporationIDAllianceHistory(etagResource monocle.EtagResource) (Response, error) {
+
+	var history []monocle.CorporationAllianceHistory
+
+	path := fmt.Sprintf("/v2/corporations/%d/alliancehistory/", etagResource.ID)
+
+	url := url.URL{
+		Scheme: "https",
+		Host:   e.Host,
+		Path:   path,
+	}
+
+	headers := make(map[string]string)
+
+	if etagResource.Etag != "" {
+		headers["If-None-Match"] = etagResource.Etag
+	}
+
+	request := Request{
+		Method:  "GET",
+		Path:    url,
+		Headers: headers,
+		Body:    []byte(""),
+	}
+
+	response, err := e.Request(request)
+	if err != nil {
+		return response, err
+	}
+
+	switch response.Code {
+	case 200:
+		err = json.Unmarshal(response.Data.([]byte), &history)
+		if err != nil {
+			err = errors.Wrapf(err, "unable to unmarshel response body for %d corporation history: %s", etagResource.ID, err)
+			return response, err
+		}
+
+		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
+			return response, err
+		}
+		etagResource.Expires = expires
+
+		etag, err := RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
+			return response, err
+		}
+		etagResource.Etag = etag
+
+		break
+	case 304:
+		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
+			return response, err
+		}
+		etagResource.Expires = expires
+
+		etag, err := RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
+			return response, err
+		}
+		etagResource.Etag = etag
+
+		break
+	case 500, 502, 503, 504:
+		break
+	default:
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
+	}
+
+	response.Data = map[string]interface{}{
+		"history": history,
+		"etag":    etagResource,
+	}
+
+	return response, err
 }

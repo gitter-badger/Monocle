@@ -12,7 +12,7 @@ import (
 
 func (p *Processor) charHunter() {
 	var value struct {
-		Value int `json:"value"`
+		Value uint64 `json:"value"`
 	}
 
 	kv, err := p.DB.SelectValueByKey("last_good_character_id")
@@ -86,7 +86,6 @@ func (p *Processor) charHunter() {
 
 		p.Logger.Info("Done Dispatching. Waiting for Completion")
 		wg.Wait()
-		p.Logger.InfoF("Completed, sleep for %d seconds", 2)
 
 		value.Value = end
 
@@ -104,6 +103,7 @@ func (p *Processor) charHunter() {
 			}
 		}
 
+		p.Logger.InfoF("Completed, sleep for %d seconds", 2)
 		time.Sleep(time.Second * 2)
 
 	}
@@ -112,7 +112,46 @@ func (p *Processor) charHunter() {
 }
 
 func (p *Processor) charUpdater() {
+	for {
+		p.Logger.DebugF("Current Error Count: %d Remain: %d", p.ESI.Remain, p.ESI.Reset)
+		if p.ESI.Remain < 20 {
+			p.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
+			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
+		}
 
+		characters, err := p.DB.SelectExpiredCharacterEtags(int(records * workers))
+		if err != nil {
+			if err != sql.ErrNoRows {
+				p.Logger.Fatalf("Unable to query for characters: %s", err)
+			}
+			continue
+		}
+
+		if len(characters) < int(threshold) {
+			p.Logger.Infof("Minimum threshold of %d for job not met. Sleeping for %d seconds", threshold, sleep)
+			time.Sleep(time.Second * time.Duration(sleep))
+			continue
+		}
+
+		p.Logger.Infof("Successfully Queried %d Characters", len(characters))
+
+		charChunk := chunkCharacterSlice(int(records), characters)
+
+		for _, characters := range charChunk {
+			wg.Add(1)
+			go func(characters []monocle.Character) {
+				for _, character := range characters {
+					p.processCharacter(character.ID)
+					p.processCharacterCorpHistory(character.ID)
+				}
+				wg.Done()
+			}(characters)
+		}
+
+		p.Logger.Info("Waiting")
+		wg.Wait()
+		p.Logger.Info("Done")
+	}
 }
 
 func (p *Processor) processCharacter(id uint64) {
@@ -149,7 +188,7 @@ func (p *Processor) processCharacter(id uint64) {
 			p.Logger.Errorf("All Attempts exhuasted for Character %d", character.ID)
 			return
 		}
-		response, err = p.ESI.GetCharactersCharacterID(character)
+		response, err = p.ESI.GetCharactersCharacterID(character.ID, character.Etag)
 		if err != nil {
 			p.Logger.Errorf("Error completing request to ESI for Character %d information: %s", character.ID, err)
 			return
@@ -240,7 +279,7 @@ func (p *Processor) processCharacterCorpHistory(id uint64) {
 		}
 	}
 
-	diff := diffExistingHistory(existing, history)
+	diff := diffExistingCharCorpHistory(existing, history)
 	switch newEtag {
 	case true:
 		_, err := p.DB.InsertEtag(historyEtag)
@@ -267,20 +306,19 @@ func (p *Processor) processCharacterCorpHistory(id uint64) {
 
 }
 
-func diffExistingHistory(a []monocle.CharacterCorporationHistory, b []monocle.CharacterCorporationHistory) []monocle.CharacterCorporationHistory {
-	c := convertToMap(a)
-	d := convertToMap(b)
+func diffExistingCharCorpHistory(a []monocle.CharacterCorporationHistory, b []monocle.CharacterCorporationHistory) []monocle.CharacterCorporationHistory {
+	c := convertCharCorpHistToMap(a)
+	d := convertCharCorpHistToMap(b)
 	result := make([]monocle.CharacterCorporationHistory, 0)
 	for recordID, history := range d {
 		if _, ok := c[recordID]; !ok {
 			result = append(result, history)
 		}
 	}
-
 	return result
 }
 
-func convertToMap(a []monocle.CharacterCorporationHistory) map[uint]monocle.CharacterCorporationHistory {
+func convertCharCorpHistToMap(a []monocle.CharacterCorporationHistory) map[uint]monocle.CharacterCorporationHistory {
 	result := make(map[uint]monocle.CharacterCorporationHistory, 0)
 	for _, history := range a {
 		result[history.RecordID] = history

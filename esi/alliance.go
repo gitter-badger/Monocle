@@ -87,8 +87,7 @@ func (e *Client) GetAlliances(etagResource monocle.EtagResource) (Response, mono
 		break
 
 	default:
-		err = errors.Wrapf(err, "Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return response, etagResource, err
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
 
 	response.Data = ids
@@ -97,9 +96,9 @@ func (e *Client) GetAlliances(etagResource monocle.EtagResource) (Response, mono
 
 }
 
-func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, error) {
+func (e *Client) GetAlliancesAllianceID(id uint64, etag string) (Response, error) {
 
-	path := fmt.Sprintf("/v3/alliances/%d/", alliance.ID)
+	path := fmt.Sprintf("/v3/alliances/%d/", id)
 
 	url := url.URL{
 		Scheme: "https",
@@ -109,8 +108,8 @@ func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, er
 
 	headers := make(map[string]string)
 
-	if alliance.Etag != "" {
-		headers["If-None-Match"] = alliance.Etag
+	if etag != "" {
+		headers["If-None-Match"] = etag
 	}
 
 	request := Request{
@@ -130,11 +129,12 @@ func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, er
 	e.Remain = RetrieveErrorCountFromResponse(response)
 	mx.Unlock()
 
-	var updated monocle.Alliance
+	var alliance monocle.Alliance
+	alliance.ID = id
 
 	switch response.Code {
 	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &updated)
+		err = json.Unmarshal(response.Data.([]byte), &alliance)
 		if err != nil {
 			err = errors.Wrapf(err, "unable to unmarshel response body on request %s", path)
 			return response, err
@@ -147,14 +147,14 @@ func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, er
 			return response, err
 		}
 
-		updated.Expires = expires
+		alliance.Expires = expires
 
 		etag, err := RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
 			return response, err
 		}
-		updated.Etag = etag
+		alliance.Etag = etag
 		break
 	case 304:
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
@@ -164,23 +164,22 @@ func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, er
 			return response, err
 		}
 
-		updated.Expires = expires
+		alliance.Expires = expires
 
 		etag, err := RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
 			return response, err
 		}
-		updated.Etag = etag
+		alliance.Etag = etag
 		break
 	default:
-		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
-		return response, err
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
 
-	response.Data = updated
+	response.Data = alliance
 
-	return response, nil
+	return response, err
 }
 
 func (e *Client) GetAllianceMembersByID(etagResource monocle.EtagResource) (Response, monocle.EtagResource, error) {
@@ -262,7 +261,7 @@ func (e *Client) GetAllianceMembersByID(etagResource monocle.EtagResource) (Resp
 	case 500, 502, 503, 504:
 		break
 	default:
-		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
 
 	response.Data = ids

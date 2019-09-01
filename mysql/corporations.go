@@ -45,7 +45,7 @@ func (db *DB) SelectCorporations(page, perPage uint) ([]monocle.Corporation, err
 	return corporations, err
 }
 
-func (db *DB) SelectCorporationByCorporationID(id uint) (monocle.Corporation, error) {
+func (db *DB) SelectCorporationByCorporationID(id uint64) (monocle.Corporation, error) {
 
 	var corporation monocle.Corporation
 
@@ -342,33 +342,59 @@ func (db *DB) DeleteCorporationByID(id uint) error {
 	return err
 }
 
-func (db *DB) SelectCorporationsByMemberCount() error {
+func (db *DB) SelectCorporationAllianceHistoryByID(id uint64) ([]monocle.CorporationAllianceHistory, error) {
 
-	s := sb.NewSelectBuilder()
-	sc := sb.NewSelectBuilder()
+	history := make([]monocle.CorporationAllianceHistory, 0)
 
-	sc.Select(
-		"COUNT()",
-	).From("characters").Where("corporation_id", "corporations.id")
-
-	s.Select(
+	sb := sb.NewSelectBuilder()
+	q := sb.Select(
 		"id",
-		"member_count",
-	).From("monocle.corporation").Where(
-		s.G("id", 98000000),
-		s.NE("member_count", s.BuilderAs(sc, "count")),
+		"record_id",
+		"alliance_id",
+		"start_date",
+		"created_at",
+		"updated_at",
+	).
+		From("monocle.corporation_alliance_history").
+		Where(
+			sb.E("id", id),
+		)
+
+	query, args := q.Build()
+
+	err := db.Select(&history, query, args...)
+	return history, err
+}
+
+func (db *DB) InsertCorporationAllianceHistory(id uint64, history []monocle.CorporationAllianceHistory) ([]monocle.CorporationAllianceHistory, error) {
+
+	ib := sb.NewInsertBuilder()
+	q := ib.InsertIgnoreInto("monocle.corporation_alliance_history").Cols(
+		"id",
+		"record_id",
+		"alliance_id",
+		"start_date",
+		"created_at",
+		"updated_at",
 	)
+	for _, v := range history {
+		q.Values(
+			id,
+			v.RecordID,
+			v.AllianceID,
+			v.StartDate,
+			sb.Raw("NOW()"),
+			sb.Raw("NOW()"),
+		)
+	}
 
-	query, _ := s.Build()
+	query, args := ib.Build()
 
-	fmt.Println(query)
+	_, err := db.Exec(query, args...)
+	if err != nil {
+		return history, err
+	}
 
-	return nil
+	return db.SelectCorporationAllianceHistoryByID(id)
 
-	// 	SELECT
-	// id,
-	// member_count
-	// FROM corporations
-	// WHERE id > 90000000 AND member_count != (SELECT COUNT(*) FROM characters WHERE corporation_id = corporations.id)
-	// LIMIT 25
 }

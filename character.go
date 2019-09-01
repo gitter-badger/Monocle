@@ -19,7 +19,6 @@ type Character struct {
 	Etag           string    `db:"etag" json:"etag"`
 	CreatedAt      time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
-	Exists         bool
 }
 
 func (c Character) IsExpired() bool {

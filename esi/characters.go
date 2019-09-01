@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ddouglas/monocle"
-	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 )
 
@@ -48,14 +47,14 @@ func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
 	case 500, 502, 503, 504:
 		break
 	default:
-		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
 	return response, err
 }
 
-func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response, error) {
+func (e *Client) GetCharactersCharacterID(id uint64, etag string) (Response, error) {
 
-	path := fmt.Sprintf("/v4/characters/%d/", character.ID)
+	path := fmt.Sprintf("/v4/characters/%d/", id)
 
 	url := url.URL{
 		Scheme: "https",
@@ -65,8 +64,8 @@ func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response
 
 	headers := make(map[string]string)
 
-	if character.Etag != "" {
-		headers["If-None-Match"] = character.Etag
+	if etag != "" {
+		headers["If-None-Match"] = etag
 	}
 
 	request := Request{
@@ -86,27 +85,15 @@ func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response
 	e.Remain = RetrieveErrorCountFromResponse(response)
 	mx.Unlock()
 
-	var updated monocle.Character
+	var character monocle.Character
+	character.ID = id
 
 	switch response.Code {
 	case 200:
-		err := json.Unmarshal(response.Data.([]byte), &updated)
+		err := json.Unmarshal(response.Data.([]byte), &character)
 		if err != nil {
 			err = errors.Wrap(err, "unable to unmarshel response body")
 			return response, err
-		}
-
-		err = mergo.Merge(&character, updated, mergo.WithOverride)
-		if err != nil {
-			err = errors.Wrap(err, "unable to merge old with new")
-			return response, err
-		}
-
-		if !updated.AllianceID.Valid {
-			character.AllianceID.Scan(nil)
-		}
-		if !updated.FactionID.Valid {
-			character.FactionID.Scan(nil)
 		}
 
 		if character.CorporationID == 1000001 {
@@ -150,7 +137,7 @@ func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response
 	case 500, 502, 504:
 		break
 	default:
-		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s", response.Code, response.Path)
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
 
 	response.Data = character
@@ -200,7 +187,6 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 			return response, etagResource, err
-
 		}
 		etagResource.Expires = expires
 
@@ -208,7 +194,6 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
 			return response, etagResource, err
-
 		}
 		etagResource.Etag = etag
 
@@ -218,7 +203,6 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 			return response, etagResource, err
-
 		}
 		etagResource.Expires = expires
 
@@ -233,7 +217,7 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 	case 500, 502, 503, 504:
 		break
 	default:
-		err = fmt.Errorf("Bad Response Code %d received from ESI API for url %s:", response.Code, response.Path)
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
 
 	response.Data = history

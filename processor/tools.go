@@ -1,9 +1,13 @@
-package populate
+package processor
 
-func chunkIntSlice(size int, slice []int) [][]int {
+import (
+	"github.com/ddouglas/monocle"
+)
 
-	var chunk [][]int
-	chunk = make([][]int, 0)
+func chunkCharacterSlice(size int, slice []monocle.Character) [][]monocle.Character {
+
+	var chunk [][]monocle.Character
+	chunk = make([][]monocle.Character, 0)
 
 	if len(slice) <= size {
 		chunk = append(chunk, slice)

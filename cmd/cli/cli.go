@@ -4,18 +4,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/ddouglas/monocle/populate"
+	"github.com/ddouglas/monocle/cron"
+	"github.com/ddouglas/monocle/hack"
+	"github.com/ddouglas/monocle/processor"
 	"github.com/ddouglas/monocle/server"
-	"github.com/ddouglas/monocle/updater"
-	"github.com/ddouglas/monocle/websocket"
 	"github.com/urfave/cli"
 )
-
-// var defPort = cli.UintFlag{
-// 	Name:  "port",
-// 	Usage: "Custom Port numer for the API to listen on",
-// 	Value: 8000,
-// }
 
 var app *cli.App
 var scope = cli.StringFlag{
@@ -71,42 +65,25 @@ func init() {
 	app.Version = "0.0.2"
 	app.Commands = []cli.Command{
 		cli.Command{
-			Name:      "listen",
-			Category:  "Websocket",
-			Usage:     "listen",
-			UsageText: "Opens a WSS connection to the zKillboard Websocket and Listens to the connection for new killmails. Unknown Killmail Victims are checked against the database and saved if unknown",
-			Action:    websocket.Start,
-		},
-		cli.Command{
-			Name:      "update",
-			Category:  "Something IDK",
-			Usage:     "update",
-			UsageText: "Monitors Database for Expired Etags and makes an HTTP Request to ESI to check to see if there are any updates",
-			Flags: []cli.Flag{
-				scope, workers, records, sleep, threshold,
-			},
-			Action: updater.Process,
-		},
-		cli.Command{
-			Name:      "populate",
+			Name:      "processor",
 			Category:  "Population",
-			Usage:     "populate",
-			UsageText: "Checks in with ESI looking for new entities starting with Alliances",
-			Action:    populate.Action,
+			Usage:     "processor",
+			UsageText: "processes records within the database and populates the database with new records from the API",
+			Action:    processor.Action,
 			Flags: []cli.Flag{
 				scope, workers, records, sleep, begin, done,
 			},
 		},
-		cli.Command{
-			Name:      "counter",
-			Category:  "Monitoring",
-			Usage:     "counter",
-			UsageText: "Continuous Loop that runs a query every few seconds and returns a count of expired etags",
-			Flags: []cli.Flag{
-				sleep, expired, save,
-			},
-			Action: updater.Counter,
-		},
+		// cli.Command{
+		// 	Name:      "counter",
+		// 	Category:  "Monitoring",
+		// 	Usage:     "counter",
+		// 	UsageText: "Continuous Loop that runs a query every few seconds and returns a count of expired etags",
+		// 	Flags: []cli.Flag{
+		// 		sleep, expired, save,
+		// 	},
+		// 	Action: updater.Counter,
+		// },
 		cli.Command{
 			Name:      "api",
 			Category:  "HTTP",
@@ -116,6 +93,18 @@ func init() {
 				port,
 			},
 			Action: server.Serve,
+		},
+		cli.Command{
+			Name:      "cron",
+			Category:  "Scheduled",
+			Usage:     "cron",
+			UsageText: "Run GoCron Implmentation",
+			Action:    cron.Action,
+		},
+		cli.Command{
+			Name:     "hack",
+			Category: "Hacking",
+			Action:   hack.Action,
 		},
 	}
 

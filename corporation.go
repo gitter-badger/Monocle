@@ -3,11 +3,11 @@ package monocle
 import "time"
 
 type Corporation struct {
-	ID            uint      `db:"id" json:"id"`
+	ID            uint64    `db:"id" json:"id"`
 	Name          string    `db:"name" json:"name"`
 	Ticker        string    `db:"ticker" json:"ticker"`
-	MemberCount   uint      `db:"member_count" json:"member_count"`
-	CeoID         uint      `db:"ceo_id" json:"ceo_id"`
+	MemberCount   uint64    `db:"member_count" json:"member_count"`
+	CeoID         uint64    `db:"ceo_id" json:"ceo_id"`
 	AllianceID    NullInt64 `db:"alliance_id" json:"alliance_id"`
 	DateFounded   NullTime  `db:"date_founded" json:"date_founded"`
 	CreatorID     uint64    `db:"creator_id" json:"creator_id"`
@@ -20,7 +20,6 @@ type Corporation struct {
 	Etag          string    `db:"etag" json:"etag"`
 	CreatedAt     time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
-	Exists        bool
 }
 
 func (c Corporation) IsExpired() bool {

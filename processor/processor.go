@@ -14,13 +14,13 @@ type Processor struct {
 }
 
 var (
-	workers    int
-	threshold  int
-	errorCount int
-	records    int
-	sleep      int
-	begin      int
-	done       int
+	workers    uint64
+	threshold  uint64
+	errorCount uint64
+	records    uint64
+	sleep      uint64
+	begin      uint64
+	done       uint64
 	scope      string
 	wg         sync.WaitGroup
 )
@@ -38,17 +38,24 @@ func Action(c *cli.Context) error {
 	}
 
 	scope = c.String("scope")
-	workers = c.Int("workers")
-	records = c.Int("records")
-	begin = c.Int("begin")
+	workers = c.Uint64("workers")
+	records = c.Uint64("records")
+	begin = c.Uint64("begin")
 
-	done = c.Int("done")
-	sleep = c.Int("sleep")
+	done = c.Uint64("done")
+	sleep = c.Uint64("sleep")
 
 	p.Logger.Infof("Starting process with %d workers", workers)
 
 	switch scope {
-
+	case "charHunter":
+		p.charHunter()
+	case "charUpdater":
+		p.charUpdater()
+	case "corpHunter":
+		p.corpHunter()
+	default:
+		return cli.NewExitError(errors.New("scope not specified"), 1)
 	}
 
 	return nil

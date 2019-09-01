@@ -9,7 +9,6 @@ import (
 
 	"github.com/apsdehal/go-logger"
 	"github.com/ddouglas/monocle/esi"
-	"github.com/ddouglas/monocle/evewho"
 	"github.com/ddouglas/monocle/mysql"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -20,7 +19,6 @@ type (
 	App struct {
 		Config Config
 		ESI    *esi.Client
-		Who    *evewho.Client
 		DB     *mysql.DB
 		DGO    *discordgo.Session
 		Logger *logger.Logger
@@ -89,10 +87,6 @@ func New() (*App, error) {
 		logging.Fatalf("Encoutered Error Attempting to setup ESI Client: %s", err)
 	}
 
-	evewhoClient, err := evewho.New("monocle")
-	if err != nil {
-		logging.Fatalf("Encoutered Error Attempting to setup ESI Client: %s", err)
-	}
 	token := fmt.Sprintf("Bot %s", config.DiscordToken)
 	discord, err := discordgo.New(token)
 	if err != nil {
@@ -103,7 +97,6 @@ func New() (*App, error) {
 	return &App{
 		Config: config,
 		ESI:    esiClient,
-		Who:    evewhoClient,
 		DB:     db,
 		DGO:    discord,
 		Logger: logging,

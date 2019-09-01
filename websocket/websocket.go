@@ -219,11 +219,11 @@ func (l *Listener) processStream(kill []byte) {
 	}
 
 	if killmail.CorporationID > 0 {
-		l.processCorporation(killmail.CorporationID)
+		l.processCorporation(uint64(killmail.CorporationID))
 	}
 
 	if killmail.AllianceID > 0 {
-		l.processAlliance(killmail.AllianceID)
+		l.processAlliance(uint64(killmail.AllianceID))
 	}
 
 	return
@@ -273,7 +273,7 @@ func (l *Listener) processCharacter(id uint64) {
 	}
 }
 
-func (l *Listener) processCorporation(id uint) {
+func (l *Listener) processCorporation(id uint64) {
 
 	var newCorporation bool
 
@@ -317,7 +317,7 @@ func (l *Listener) processCorporation(id uint) {
 	}
 }
 
-func (l *Listener) processAlliance(id uint) {
+func (l *Listener) processAlliance(id uint64) {
 	var newAlliance bool
 
 	alliance, err := l.DB.SelectAllianceByAllianceID(id)
