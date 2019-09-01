@@ -205,6 +205,10 @@ func (p *Processor) processCharacter(id uint64) {
 
 	character = response.Data.(monocle.Character)
 
+	if character.CorporationID == 1000001 {
+		character.Ignored = true
+	}
+
 	p.Logger.Debugf("\tCharacter: %d:%s\tNew Character: %t", character.ID, character.Name, newCharacter)
 
 	switch newCharacter {
