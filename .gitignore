@@ -1,3 +1,4 @@
 cmd/.env
 cmd/.env-docker
 cmd/cli/cli
+sqlboiler.json
