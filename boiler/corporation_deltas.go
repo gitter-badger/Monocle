@@ -21,18 +21,18 @@ import (
 	"github.com/volatiletech/sqlboiler/strmangle"
 )
 
-// CorporationDeltas is an object representing the database table.
-type CorporationDeltas struct {
-	ID            uint64 `boil:"id" json:"id" toml:"id" yaml:"id"`
-	CorporationID uint64 `boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
-	MemberCount   uint64 `boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
-	CreatedAt     uint64 `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+// CorporationDelta is an object representing the database table.
+type CorporationDelta struct {
+	ID            uint64    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	CorporationID uint64    `boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
+	MemberCount   uint64    `boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
+	CreatedAt     time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 
-	R *corporationDeltasR `boil:"-" json:"-" toml:"-" yaml:"-"`
-	L corporationDeltasL  `boil:"-" json:"-" toml:"-" yaml:"-"`
+	R *corporationDeltaR `boil:"-" json:"-" toml:"-" yaml:"-"`
+	L corporationDeltaL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
-var CorporationDeltasColumns = struct {
+var CorporationDeltaColumns = struct {
 	ID            string
 	CorporationID string
 	MemberCount   string
@@ -46,64 +46,64 @@ var CorporationDeltasColumns = struct {
 
 // Generated where
 
-var CorporationDeltasWhere = struct {
+var CorporationDeltaWhere = struct {
 	ID            whereHelperuint64
 	CorporationID whereHelperuint64
 	MemberCount   whereHelperuint64
-	CreatedAt     whereHelperuint64
+	CreatedAt     whereHelpertime_Time
 }{
 	ID:            whereHelperuint64{field: "`corporation_deltas`.`id`"},
 	CorporationID: whereHelperuint64{field: "`corporation_deltas`.`corporation_id`"},
 	MemberCount:   whereHelperuint64{field: "`corporation_deltas`.`member_count`"},
-	CreatedAt:     whereHelperuint64{field: "`corporation_deltas`.`created_at`"},
+	CreatedAt:     whereHelpertime_Time{field: "`corporation_deltas`.`created_at`"},
 }
 
-// CorporationDeltasRels is where relationship names are stored.
-var CorporationDeltasRels = struct {
+// CorporationDeltaRels is where relationship names are stored.
+var CorporationDeltaRels = struct {
 }{}
 
-// corporationDeltasR is where relationships are stored.
-type corporationDeltasR struct {
+// corporationDeltaR is where relationships are stored.
+type corporationDeltaR struct {
 }
 
 // NewStruct creates a new relationship struct
-func (*corporationDeltasR) NewStruct() *corporationDeltasR {
-	return &corporationDeltasR{}
+func (*corporationDeltaR) NewStruct() *corporationDeltaR {
+	return &corporationDeltaR{}
 }
 
-// corporationDeltasL is where Load methods for each relationship are stored.
-type corporationDeltasL struct{}
+// corporationDeltaL is where Load methods for each relationship are stored.
+type corporationDeltaL struct{}
 
 var (
-	corporationDeltasAllColumns            = []string{"id", "corporation_id", "member_count", "created_at"}
-	corporationDeltasColumnsWithoutDefault = []string{"corporation_id", "member_count", "created_at"}
-	corporationDeltasColumnsWithDefault    = []string{"id"}
-	corporationDeltasPrimaryKeyColumns     = []string{"id"}
+	corporationDeltaAllColumns            = []string{"id", "corporation_id", "member_count", "created_at"}
+	corporationDeltaColumnsWithoutDefault = []string{"corporation_id", "member_count", "created_at"}
+	corporationDeltaColumnsWithDefault    = []string{"id"}
+	corporationDeltaPrimaryKeyColumns     = []string{"id"}
 )
 
 type (
-	// CorporationDeltasSlice is an alias for a slice of pointers to CorporationDeltas.
-	// This should generally be used opposed to []CorporationDeltas.
-	CorporationDeltasSlice []*CorporationDeltas
-	// CorporationDeltasHook is the signature for custom CorporationDeltas hook methods
-	CorporationDeltasHook func(context.Context, boil.ContextExecutor, *CorporationDeltas) error
+	// CorporationDeltaSlice is an alias for a slice of pointers to CorporationDelta.
+	// This should generally be used opposed to []CorporationDelta.
+	CorporationDeltaSlice []*CorporationDelta
+	// CorporationDeltaHook is the signature for custom CorporationDelta hook methods
+	CorporationDeltaHook func(context.Context, boil.ContextExecutor, *CorporationDelta) error
 
-	corporationDeltasQuery struct {
+	corporationDeltaQuery struct {
 		*queries.Query
 	}
 )
 
 // Cache for insert, update and upsert
 var (
-	corporationDeltasType                 = reflect.TypeOf(&CorporationDeltas{})
-	corporationDeltasMapping              = queries.MakeStructMapping(corporationDeltasType)
-	corporationDeltasPrimaryKeyMapping, _ = queries.BindMapping(corporationDeltasType, corporationDeltasMapping, corporationDeltasPrimaryKeyColumns)
-	corporationDeltasInsertCacheMut       sync.RWMutex
-	corporationDeltasInsertCache          = make(map[string]insertCache)
-	corporationDeltasUpdateCacheMut       sync.RWMutex
-	corporationDeltasUpdateCache          = make(map[string]updateCache)
-	corporationDeltasUpsertCacheMut       sync.RWMutex
-	corporationDeltasUpsertCache          = make(map[string]insertCache)
+	corporationDeltaType                 = reflect.TypeOf(&CorporationDelta{})
+	corporationDeltaMapping              = queries.MakeStructMapping(corporationDeltaType)
+	corporationDeltaPrimaryKeyMapping, _ = queries.BindMapping(corporationDeltaType, corporationDeltaMapping, corporationDeltaPrimaryKeyColumns)
+	corporationDeltaInsertCacheMut       sync.RWMutex
+	corporationDeltaInsertCache          = make(map[string]insertCache)
+	corporationDeltaUpdateCacheMut       sync.RWMutex
+	corporationDeltaUpdateCache          = make(map[string]updateCache)
+	corporationDeltaUpsertCacheMut       sync.RWMutex
+	corporationDeltaUpsertCache          = make(map[string]insertCache)
 )
 
 var (
@@ -114,24 +114,24 @@ var (
 	_ = qmhelper.Where
 )
 
-var corporationDeltasBeforeInsertHooks []CorporationDeltasHook
-var corporationDeltasBeforeUpdateHooks []CorporationDeltasHook
-var corporationDeltasBeforeDeleteHooks []CorporationDeltasHook
-var corporationDeltasBeforeUpsertHooks []CorporationDeltasHook
+var corporationDeltaBeforeInsertHooks []CorporationDeltaHook
+var corporationDeltaBeforeUpdateHooks []CorporationDeltaHook
+var corporationDeltaBeforeDeleteHooks []CorporationDeltaHook
+var corporationDeltaBeforeUpsertHooks []CorporationDeltaHook
 
-var corporationDeltasAfterInsertHooks []CorporationDeltasHook
-var corporationDeltasAfterSelectHooks []CorporationDeltasHook
-var corporationDeltasAfterUpdateHooks []CorporationDeltasHook
-var corporationDeltasAfterDeleteHooks []CorporationDeltasHook
-var corporationDeltasAfterUpsertHooks []CorporationDeltasHook
+var corporationDeltaAfterInsertHooks []CorporationDeltaHook
+var corporationDeltaAfterSelectHooks []CorporationDeltaHook
+var corporationDeltaAfterUpdateHooks []CorporationDeltaHook
+var corporationDeltaAfterDeleteHooks []CorporationDeltaHook
+var corporationDeltaAfterUpsertHooks []CorporationDeltaHook
 
 // doBeforeInsertHooks executes all "before insert" hooks.
-func (o *CorporationDeltas) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *CorporationDelta) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range corporationDeltasBeforeInsertHooks {
+	for _, hook := range corporationDeltaBeforeInsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -141,12 +141,12 @@ func (o *CorporationDeltas) doBeforeInsertHooks(ctx context.Context, exec boil.C
 }
 
 // doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *CorporationDeltas) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *CorporationDelta) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range corporationDeltasBeforeUpdateHooks {
+	for _, hook := range corporationDeltaBeforeUpdateHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -156,12 +156,12 @@ func (o *CorporationDeltas) doBeforeUpdateHooks(ctx context.Context, exec boil.C
 }
 
 // doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *CorporationDeltas) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *CorporationDelta) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range corporationDeltasBeforeDeleteHooks {
+	for _, hook := range corporationDeltaBeforeDeleteHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -171,12 +171,12 @@ func (o *CorporationDeltas) doBeforeDeleteHooks(ctx context.Context, exec boil.C
 }
 
 // doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *CorporationDeltas) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *CorporationDelta) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range corporationDeltasBeforeUpsertHooks {
+	for _, hook := range corporationDeltaBeforeUpsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -186,12 +186,12 @@ func (o *CorporationDeltas) doBeforeUpsertHooks(ctx context.Context, exec boil.C
 }
 
 // doAfterInsertHooks executes all "after Insert" hooks.
-func (o *CorporationDeltas) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *CorporationDelta) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range corporationDeltasAfterInsertHooks {
+	for _, hook := range corporationDeltaAfterInsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -201,12 +201,12 @@ func (o *CorporationDeltas) doAfterInsertHooks(ctx context.Context, exec boil.Co
 }
 
 // doAfterSelectHooks executes all "after Select" hooks.
-func (o *CorporationDeltas) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *CorporationDelta) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range corporationDeltasAfterSelectHooks {
+	for _, hook := range corporationDeltaAfterSelectHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -216,12 +216,12 @@ func (o *CorporationDeltas) doAfterSelectHooks(ctx context.Context, exec boil.Co
 }
 
 // doAfterUpdateHooks executes all "after Update" hooks.
-func (o *CorporationDeltas) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *CorporationDelta) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range corporationDeltasAfterUpdateHooks {
+	for _, hook := range corporationDeltaAfterUpdateHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -231,12 +231,12 @@ func (o *CorporationDeltas) doAfterUpdateHooks(ctx context.Context, exec boil.Co
 }
 
 // doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *CorporationDeltas) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *CorporationDelta) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range corporationDeltasAfterDeleteHooks {
+	for _, hook := range corporationDeltaAfterDeleteHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -246,12 +246,12 @@ func (o *CorporationDeltas) doAfterDeleteHooks(ctx context.Context, exec boil.Co
 }
 
 // doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *CorporationDeltas) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *CorporationDelta) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range corporationDeltasAfterUpsertHooks {
+	for _, hook := range corporationDeltaAfterUpsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -260,33 +260,33 @@ func (o *CorporationDeltas) doAfterUpsertHooks(ctx context.Context, exec boil.Co
 	return nil
 }
 
-// AddCorporationDeltasHook registers your hook function for all future operations.
-func AddCorporationDeltasHook(hookPoint boil.HookPoint, corporationDeltasHook CorporationDeltasHook) {
+// AddCorporationDeltaHook registers your hook function for all future operations.
+func AddCorporationDeltaHook(hookPoint boil.HookPoint, corporationDeltaHook CorporationDeltaHook) {
 	switch hookPoint {
 	case boil.BeforeInsertHook:
-		corporationDeltasBeforeInsertHooks = append(corporationDeltasBeforeInsertHooks, corporationDeltasHook)
+		corporationDeltaBeforeInsertHooks = append(corporationDeltaBeforeInsertHooks, corporationDeltaHook)
 	case boil.BeforeUpdateHook:
-		corporationDeltasBeforeUpdateHooks = append(corporationDeltasBeforeUpdateHooks, corporationDeltasHook)
+		corporationDeltaBeforeUpdateHooks = append(corporationDeltaBeforeUpdateHooks, corporationDeltaHook)
 	case boil.BeforeDeleteHook:
-		corporationDeltasBeforeDeleteHooks = append(corporationDeltasBeforeDeleteHooks, corporationDeltasHook)
+		corporationDeltaBeforeDeleteHooks = append(corporationDeltaBeforeDeleteHooks, corporationDeltaHook)
 	case boil.BeforeUpsertHook:
-		corporationDeltasBeforeUpsertHooks = append(corporationDeltasBeforeUpsertHooks, corporationDeltasHook)
+		corporationDeltaBeforeUpsertHooks = append(corporationDeltaBeforeUpsertHooks, corporationDeltaHook)
 	case boil.AfterInsertHook:
-		corporationDeltasAfterInsertHooks = append(corporationDeltasAfterInsertHooks, corporationDeltasHook)
+		corporationDeltaAfterInsertHooks = append(corporationDeltaAfterInsertHooks, corporationDeltaHook)
 	case boil.AfterSelectHook:
-		corporationDeltasAfterSelectHooks = append(corporationDeltasAfterSelectHooks, corporationDeltasHook)
+		corporationDeltaAfterSelectHooks = append(corporationDeltaAfterSelectHooks, corporationDeltaHook)
 	case boil.AfterUpdateHook:
-		corporationDeltasAfterUpdateHooks = append(corporationDeltasAfterUpdateHooks, corporationDeltasHook)
+		corporationDeltaAfterUpdateHooks = append(corporationDeltaAfterUpdateHooks, corporationDeltaHook)
 	case boil.AfterDeleteHook:
-		corporationDeltasAfterDeleteHooks = append(corporationDeltasAfterDeleteHooks, corporationDeltasHook)
+		corporationDeltaAfterDeleteHooks = append(corporationDeltaAfterDeleteHooks, corporationDeltaHook)
 	case boil.AfterUpsertHook:
-		corporationDeltasAfterUpsertHooks = append(corporationDeltasAfterUpsertHooks, corporationDeltasHook)
+		corporationDeltaAfterUpsertHooks = append(corporationDeltaAfterUpsertHooks, corporationDeltaHook)
 	}
 }
 
-// One returns a single corporationDeltas record from the query.
-func (q corporationDeltasQuery) One(ctx context.Context, exec boil.ContextExecutor) (*CorporationDeltas, error) {
-	o := &CorporationDeltas{}
+// One returns a single corporationDelta record from the query.
+func (q corporationDeltaQuery) One(ctx context.Context, exec boil.ContextExecutor) (*CorporationDelta, error) {
+	o := &CorporationDelta{}
 
 	queries.SetLimit(q.Query, 1)
 
@@ -305,16 +305,16 @@ func (q corporationDeltasQuery) One(ctx context.Context, exec boil.ContextExecut
 	return o, nil
 }
 
-// All returns all CorporationDeltas records from the query.
-func (q corporationDeltasQuery) All(ctx context.Context, exec boil.ContextExecutor) (CorporationDeltasSlice, error) {
-	var o []*CorporationDeltas
+// All returns all CorporationDelta records from the query.
+func (q corporationDeltaQuery) All(ctx context.Context, exec boil.ContextExecutor) (CorporationDeltaSlice, error) {
+	var o []*CorporationDelta
 
 	err := q.Bind(ctx, exec, &o)
 	if err != nil {
-		return nil, errors.Wrap(err, "models: failed to assign all query results to CorporationDeltas slice")
+		return nil, errors.Wrap(err, "models: failed to assign all query results to CorporationDelta slice")
 	}
 
-	if len(corporationDeltasAfterSelectHooks) != 0 {
+	if len(corporationDeltaAfterSelectHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
 				return o, err
@@ -325,8 +325,8 @@ func (q corporationDeltasQuery) All(ctx context.Context, exec boil.ContextExecut
 	return o, nil
 }
 
-// Count returns the count of all CorporationDeltas records in the query.
-func (q corporationDeltasQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+// Count returns the count of all CorporationDelta records in the query.
+func (q corporationDeltaQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
@@ -341,7 +341,7 @@ func (q corporationDeltasQuery) Count(ctx context.Context, exec boil.ContextExec
 }
 
 // Exists checks if the row exists in the table.
-func (q corporationDeltasQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
+func (q corporationDeltaQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
@@ -357,15 +357,15 @@ func (q corporationDeltasQuery) Exists(ctx context.Context, exec boil.ContextExe
 }
 
 // CorporationDeltas retrieves all the records using an executor.
-func CorporationDeltas(mods ...qm.QueryMod) corporationDeltasQuery {
+func CorporationDeltas(mods ...qm.QueryMod) corporationDeltaQuery {
 	mods = append(mods, qm.From("`corporation_deltas`"))
-	return corporationDeltasQuery{NewQuery(mods...)}
+	return corporationDeltaQuery{NewQuery(mods...)}
 }
 
-// FindCorporationDeltas retrieves a single record by ID with an executor.
+// FindCorporationDelta retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindCorporationDeltas(ctx context.Context, exec boil.ContextExecutor, iD uint64, selectCols ...string) (*CorporationDeltas, error) {
-	corporationDeltasObj := &CorporationDeltas{}
+func FindCorporationDelta(ctx context.Context, exec boil.ContextExecutor, iD uint64, selectCols ...string) (*CorporationDelta, error) {
+	corporationDeltaObj := &CorporationDelta{}
 
 	sel := "*"
 	if len(selectCols) > 0 {
@@ -377,7 +377,7 @@ func FindCorporationDeltas(ctx context.Context, exec boil.ContextExecutor, iD ui
 
 	q := queries.Raw(query, iD)
 
-	err := q.Bind(ctx, exec, corporationDeltasObj)
+	err := q.Bind(ctx, exec, corporationDeltaObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -385,12 +385,12 @@ func FindCorporationDeltas(ctx context.Context, exec boil.ContextExecutor, iD ui
 		return nil, errors.Wrap(err, "models: unable to select from corporation_deltas")
 	}
 
-	return corporationDeltasObj, nil
+	return corporationDeltaObj, nil
 }
 
 // Insert a single record using an executor.
 // See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
-func (o *CorporationDeltas) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
+func (o *CorporationDelta) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no corporation_deltas provided for insertion")
 	}
@@ -399,8 +399,8 @@ func (o *CorporationDeltas) Insert(ctx context.Context, exec boil.ContextExecuto
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
-		if queries.MustTime(o.CreatedAt).IsZero() {
-			queries.SetScanner(&o.CreatedAt, currTime)
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
 		}
 	}
 
@@ -408,26 +408,26 @@ func (o *CorporationDeltas) Insert(ctx context.Context, exec boil.ContextExecuto
 		return err
 	}
 
-	nzDefaults := queries.NonZeroDefaultSet(corporationDeltasColumnsWithDefault, o)
+	nzDefaults := queries.NonZeroDefaultSet(corporationDeltaColumnsWithDefault, o)
 
 	key := makeCacheKey(columns, nzDefaults)
-	corporationDeltasInsertCacheMut.RLock()
-	cache, cached := corporationDeltasInsertCache[key]
-	corporationDeltasInsertCacheMut.RUnlock()
+	corporationDeltaInsertCacheMut.RLock()
+	cache, cached := corporationDeltaInsertCache[key]
+	corporationDeltaInsertCacheMut.RUnlock()
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			corporationDeltasAllColumns,
-			corporationDeltasColumnsWithDefault,
-			corporationDeltasColumnsWithoutDefault,
+			corporationDeltaAllColumns,
+			corporationDeltaColumnsWithDefault,
+			corporationDeltaColumnsWithoutDefault,
 			nzDefaults,
 		)
 
-		cache.valueMapping, err = queries.BindMapping(corporationDeltasType, corporationDeltasMapping, wl)
+		cache.valueMapping, err = queries.BindMapping(corporationDeltaType, corporationDeltaMapping, wl)
 		if err != nil {
 			return err
 		}
-		cache.retMapping, err = queries.BindMapping(corporationDeltasType, corporationDeltasMapping, returnColumns)
+		cache.retMapping, err = queries.BindMapping(corporationDeltaType, corporationDeltaMapping, returnColumns)
 		if err != nil {
 			return err
 		}
@@ -440,7 +440,7 @@ func (o *CorporationDeltas) Insert(ctx context.Context, exec boil.ContextExecuto
 		var queryOutput, queryReturning string
 
 		if len(cache.retMapping) != 0 {
-			cache.retQuery = fmt.Sprintf("SELECT `%s` FROM `corporation_deltas` WHERE %s", strings.Join(returnColumns, "`,`"), strmangle.WhereClause("`", "`", 0, corporationDeltasPrimaryKeyColumns))
+			cache.retQuery = fmt.Sprintf("SELECT `%s` FROM `corporation_deltas` WHERE %s", strings.Join(returnColumns, "`,`"), strmangle.WhereClause("`", "`", 0, corporationDeltaPrimaryKeyColumns))
 		}
 
 		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
@@ -473,7 +473,7 @@ func (o *CorporationDeltas) Insert(ctx context.Context, exec boil.ContextExecuto
 	}
 
 	o.ID = uint64(lastID)
-	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == corporationDeltasMapping["ID"] {
+	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == corporationDeltaMapping["ID"] {
 		goto CacheNoHooks
 	}
 
@@ -493,31 +493,31 @@ func (o *CorporationDeltas) Insert(ctx context.Context, exec boil.ContextExecuto
 
 CacheNoHooks:
 	if !cached {
-		corporationDeltasInsertCacheMut.Lock()
-		corporationDeltasInsertCache[key] = cache
-		corporationDeltasInsertCacheMut.Unlock()
+		corporationDeltaInsertCacheMut.Lock()
+		corporationDeltaInsertCache[key] = cache
+		corporationDeltaInsertCacheMut.Unlock()
 	}
 
 	return o.doAfterInsertHooks(ctx, exec)
 }
 
-// Update uses an executor to update the CorporationDeltas.
+// Update uses an executor to update the CorporationDelta.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *CorporationDeltas) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *CorporationDelta) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
 	var err error
 	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
 		return 0, err
 	}
 	key := makeCacheKey(columns, nil)
-	corporationDeltasUpdateCacheMut.RLock()
-	cache, cached := corporationDeltasUpdateCache[key]
-	corporationDeltasUpdateCacheMut.RUnlock()
+	corporationDeltaUpdateCacheMut.RLock()
+	cache, cached := corporationDeltaUpdateCache[key]
+	corporationDeltaUpdateCacheMut.RUnlock()
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			corporationDeltasAllColumns,
-			corporationDeltasPrimaryKeyColumns,
+			corporationDeltaAllColumns,
+			corporationDeltaPrimaryKeyColumns,
 		)
 
 		if !columns.IsWhitelist() {
@@ -529,9 +529,9 @@ func (o *CorporationDeltas) Update(ctx context.Context, exec boil.ContextExecuto
 
 		cache.query = fmt.Sprintf("UPDATE `corporation_deltas` SET %s WHERE %s",
 			strmangle.SetParamNames("`", "`", 0, wl),
-			strmangle.WhereClause("`", "`", 0, corporationDeltasPrimaryKeyColumns),
+			strmangle.WhereClause("`", "`", 0, corporationDeltaPrimaryKeyColumns),
 		)
-		cache.valueMapping, err = queries.BindMapping(corporationDeltasType, corporationDeltasMapping, append(wl, corporationDeltasPrimaryKeyColumns...))
+		cache.valueMapping, err = queries.BindMapping(corporationDeltaType, corporationDeltaMapping, append(wl, corporationDeltaPrimaryKeyColumns...))
 		if err != nil {
 			return 0, err
 		}
@@ -556,16 +556,16 @@ func (o *CorporationDeltas) Update(ctx context.Context, exec boil.ContextExecuto
 	}
 
 	if !cached {
-		corporationDeltasUpdateCacheMut.Lock()
-		corporationDeltasUpdateCache[key] = cache
-		corporationDeltasUpdateCacheMut.Unlock()
+		corporationDeltaUpdateCacheMut.Lock()
+		corporationDeltaUpdateCache[key] = cache
+		corporationDeltaUpdateCacheMut.Unlock()
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q corporationDeltasQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q corporationDeltaQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
 	result, err := q.Query.ExecContext(ctx, exec)
@@ -582,7 +582,7 @@ func (q corporationDeltasQuery) UpdateAll(ctx context.Context, exec boil.Context
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o CorporationDeltasSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o CorporationDeltaSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
 		return 0, nil
@@ -604,13 +604,13 @@ func (o CorporationDeltasSlice) UpdateAll(ctx context.Context, exec boil.Context
 
 	// Append all of the primary key values for each column
 	for _, obj := range o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), corporationDeltasPrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), corporationDeltaPrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
 	sql := fmt.Sprintf("UPDATE `corporation_deltas` SET %s WHERE %s",
 		strmangle.SetParamNames("`", "`", 0, colNames),
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, corporationDeltasPrimaryKeyColumns, len(o)))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, corporationDeltaPrimaryKeyColumns, len(o)))
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
@@ -619,31 +619,31 @@ func (o CorporationDeltasSlice) UpdateAll(ctx context.Context, exec boil.Context
 
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to update all in corporationDeltas slice")
+		return 0, errors.Wrap(err, "models: unable to update all in corporationDelta slice")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all corporationDeltas")
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all corporationDelta")
 	}
 	return rowsAff, nil
 }
 
-var mySQLCorporationDeltasUniqueColumns = []string{
+var mySQLCorporationDeltaUniqueColumns = []string{
 	"id",
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
 // See boil.Columns documentation for how to properly use updateColumns and insertColumns.
-func (o *CorporationDeltas) Upsert(ctx context.Context, exec boil.ContextExecutor, updateColumns, insertColumns boil.Columns) error {
+func (o *CorporationDelta) Upsert(ctx context.Context, exec boil.ContextExecutor, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no corporation_deltas provided for upsert")
 	}
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
-		if queries.MustTime(o.CreatedAt).IsZero() {
-			queries.SetScanner(&o.CreatedAt, currTime)
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
 		}
 	}
 
@@ -651,8 +651,8 @@ func (o *CorporationDeltas) Upsert(ctx context.Context, exec boil.ContextExecuto
 		return err
 	}
 
-	nzDefaults := queries.NonZeroDefaultSet(corporationDeltasColumnsWithDefault, o)
-	nzUniques := queries.NonZeroDefaultSet(mySQLCorporationDeltasUniqueColumns, o)
+	nzDefaults := queries.NonZeroDefaultSet(corporationDeltaColumnsWithDefault, o)
+	nzUniques := queries.NonZeroDefaultSet(mySQLCorporationDeltaUniqueColumns, o)
 
 	if len(nzUniques) == 0 {
 		return errors.New("cannot upsert with a table that cannot conflict on a unique column")
@@ -680,22 +680,22 @@ func (o *CorporationDeltas) Upsert(ctx context.Context, exec boil.ContextExecuto
 	key := buf.String()
 	strmangle.PutBuffer(buf)
 
-	corporationDeltasUpsertCacheMut.RLock()
-	cache, cached := corporationDeltasUpsertCache[key]
-	corporationDeltasUpsertCacheMut.RUnlock()
+	corporationDeltaUpsertCacheMut.RLock()
+	cache, cached := corporationDeltaUpsertCache[key]
+	corporationDeltaUpsertCacheMut.RUnlock()
 
 	var err error
 
 	if !cached {
 		insert, ret := insertColumns.InsertColumnSet(
-			corporationDeltasAllColumns,
-			corporationDeltasColumnsWithDefault,
-			corporationDeltasColumnsWithoutDefault,
+			corporationDeltaAllColumns,
+			corporationDeltaColumnsWithDefault,
+			corporationDeltaColumnsWithoutDefault,
 			nzDefaults,
 		)
 		update := updateColumns.UpdateColumnSet(
-			corporationDeltasAllColumns,
-			corporationDeltasPrimaryKeyColumns,
+			corporationDeltaAllColumns,
+			corporationDeltaPrimaryKeyColumns,
 		)
 
 		if len(update) == 0 {
@@ -710,12 +710,12 @@ func (o *CorporationDeltas) Upsert(ctx context.Context, exec boil.ContextExecuto
 			strmangle.WhereClause("`", "`", 0, nzUniques),
 		)
 
-		cache.valueMapping, err = queries.BindMapping(corporationDeltasType, corporationDeltasMapping, insert)
+		cache.valueMapping, err = queries.BindMapping(corporationDeltaType, corporationDeltaMapping, insert)
 		if err != nil {
 			return err
 		}
 		if len(ret) != 0 {
-			cache.retMapping, err = queries.BindMapping(corporationDeltasType, corporationDeltasMapping, ret)
+			cache.retMapping, err = queries.BindMapping(corporationDeltaType, corporationDeltaMapping, ret)
 			if err != nil {
 				return err
 			}
@@ -754,11 +754,11 @@ func (o *CorporationDeltas) Upsert(ctx context.Context, exec boil.ContextExecuto
 	}
 
 	o.ID = uint64(lastID)
-	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == corporationDeltasMapping["id"] {
+	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == corporationDeltaMapping["id"] {
 		goto CacheNoHooks
 	}
 
-	uniqueMap, err = queries.BindMapping(corporationDeltasType, corporationDeltasMapping, nzUniques)
+	uniqueMap, err = queries.BindMapping(corporationDeltaType, corporationDeltaMapping, nzUniques)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to retrieve unique values for corporation_deltas")
 	}
@@ -776,26 +776,26 @@ func (o *CorporationDeltas) Upsert(ctx context.Context, exec boil.ContextExecuto
 
 CacheNoHooks:
 	if !cached {
-		corporationDeltasUpsertCacheMut.Lock()
-		corporationDeltasUpsertCache[key] = cache
-		corporationDeltasUpsertCacheMut.Unlock()
+		corporationDeltaUpsertCacheMut.Lock()
+		corporationDeltaUpsertCache[key] = cache
+		corporationDeltaUpsertCacheMut.Unlock()
 	}
 
 	return o.doAfterUpsertHooks(ctx, exec)
 }
 
-// Delete deletes a single CorporationDeltas record with an executor.
+// Delete deletes a single CorporationDelta record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *CorporationDeltas) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o *CorporationDelta) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	if o == nil {
-		return 0, errors.New("models: no CorporationDeltas provided for delete")
+		return 0, errors.New("models: no CorporationDelta provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
 		return 0, err
 	}
 
-	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), corporationDeltasPrimaryKeyMapping)
+	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), corporationDeltaPrimaryKeyMapping)
 	sql := "DELETE FROM `corporation_deltas` WHERE `id`=?"
 
 	if boil.DebugMode {
@@ -821,9 +821,9 @@ func (o *CorporationDeltas) Delete(ctx context.Context, exec boil.ContextExecuto
 }
 
 // DeleteAll deletes all matching rows.
-func (q corporationDeltasQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q corporationDeltaQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	if q.Query == nil {
-		return 0, errors.New("models: no corporationDeltasQuery provided for delete all")
+		return 0, errors.New("models: no corporationDeltaQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
@@ -842,12 +842,12 @@ func (q corporationDeltasQuery) DeleteAll(ctx context.Context, exec boil.Context
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o CorporationDeltasSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o CorporationDeltaSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	if len(o) == 0 {
 		return 0, nil
 	}
 
-	if len(corporationDeltasBeforeDeleteHooks) != 0 {
+	if len(corporationDeltaBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
 				return 0, err
@@ -857,12 +857,12 @@ func (o CorporationDeltasSlice) DeleteAll(ctx context.Context, exec boil.Context
 
 	var args []interface{}
 	for _, obj := range o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), corporationDeltasPrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), corporationDeltaPrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
 	sql := "DELETE FROM `corporation_deltas` WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, corporationDeltasPrimaryKeyColumns, len(o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, corporationDeltaPrimaryKeyColumns, len(o))
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
@@ -871,7 +871,7 @@ func (o CorporationDeltasSlice) DeleteAll(ctx context.Context, exec boil.Context
 
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to delete all from corporationDeltas slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from corporationDelta slice")
 	}
 
 	rowsAff, err := result.RowsAffected()
@@ -879,7 +879,7 @@ func (o CorporationDeltasSlice) DeleteAll(ctx context.Context, exec boil.Context
 		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for corporation_deltas")
 	}
 
-	if len(corporationDeltasAfterDeleteHooks) != 0 {
+	if len(corporationDeltaAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
 				return 0, err
@@ -892,8 +892,8 @@ func (o CorporationDeltasSlice) DeleteAll(ctx context.Context, exec boil.Context
 
 // Reload refetches the object from the database
 // using the primary keys with an executor.
-func (o *CorporationDeltas) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindCorporationDeltas(ctx, exec, o.ID)
+func (o *CorporationDelta) Reload(ctx context.Context, exec boil.ContextExecutor) error {
+	ret, err := FindCorporationDelta(ctx, exec, o.ID)
 	if err != nil {
 		return err
 	}
@@ -904,26 +904,26 @@ func (o *CorporationDeltas) Reload(ctx context.Context, exec boil.ContextExecuto
 
 // ReloadAll refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
-func (o *CorporationDeltasSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) error {
+func (o *CorporationDeltaSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if o == nil || len(*o) == 0 {
 		return nil
 	}
 
-	slice := CorporationDeltasSlice{}
+	slice := CorporationDeltaSlice{}
 	var args []interface{}
 	for _, obj := range *o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), corporationDeltasPrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), corporationDeltaPrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
 	sql := "SELECT `corporation_deltas`.* FROM `corporation_deltas` WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, corporationDeltasPrimaryKeyColumns, len(*o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, corporationDeltaPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
 
 	err := q.Bind(ctx, exec, &slice)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to reload all in CorporationDeltasSlice")
+		return errors.Wrap(err, "models: unable to reload all in CorporationDeltaSlice")
 	}
 
 	*o = slice
@@ -931,8 +931,8 @@ func (o *CorporationDeltasSlice) ReloadAll(ctx context.Context, exec boil.Contex
 	return nil
 }
 
-// CorporationDeltasExists checks if the CorporationDeltas row exists.
-func CorporationDeltasExists(ctx context.Context, exec boil.ContextExecutor, iD uint64) (bool, error) {
+// CorporationDeltaExists checks if the CorporationDelta row exists.
+func CorporationDeltaExists(ctx context.Context, exec boil.ContextExecutor, iD uint64) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from `corporation_deltas` where `id`=? limit 1)"
 
