@@ -1,10 +1,15 @@
 package processor
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/volatiletech/sqlboiler/queries/qm"
+
+	"github.com/ddouglas/monocle/models"
 
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/esi"
@@ -61,8 +66,9 @@ func (p *Processor) corpHunter() {
 				continue
 			}
 
-			p.processCorporation(x)
-			p.processCorporationAllianceHistory(x)
+			corporation := monocle.Corporation{ID: uint64(x)}
+			p.processCorporation(corporation)
+			p.processCorporationAllianceHistory(corporation)
 			break
 		}
 
@@ -90,69 +96,67 @@ func (p *Processor) corpHunter() {
 	return
 }
 
-// func (p *Processor) corpUpdater() {
-// 	for {
-// 		p.Logger.DebugF("Current Error Count: %d Remain: %d", p.ESI.Remain, p.ESI.Reset)
-// 		if p.ESI.Remain < 20 {
-// 			p.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
-// 			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-// 		}
+func (p *Processor) corpUpdater() {
+	for {
 
-// 		characters, err := p.DB.SelectExpiredCharacterEtags(records * workers)
-// 		if err != nil {
-// 			if err != sql.ErrNoRows {
-// 				p.Logger.Fatalf("Unable to query for characters: %s", err)
-// 			}
-// 			continue
-// 		}
+		var corporations []monocle.Corporation
+		p.Logger.DebugF("Current Error Count: %d Remain: %d", p.ESI.Remain, p.ESI.Reset)
+		if p.ESI.Remain < 20 {
+			p.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
+			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
+		}
+		err := models.Corporations(
+			qm.Where(models.CorporationColumns.Expires+"<NOW()"),
+			qm.And(models.CorporationColumns.Ignored+"=?", 0),
+			qm.And(models.CorporationColumns.Closed+"=?", 0),
+			qm.OrderBy(models.CorporationColumns.Expires),
+			qm.Limit(int(records+workers)),
+		).Bind(context.Background(), p.DB, &corporations)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				p.Logger.Fatalf("Unable to query for characters: %s", err)
+			}
+			continue
+		}
 
-// 		if len(characters) < threshold {
-// 			p.Logger.Infof("Minimum threshold of %d for job not met. Sleeping for %d seconds", threshold, sleep)
-// 			time.Sleep(time.Second * time.Duration(sleep))
-// 			continue
-// 		}
+		if len(corporations) < int(threshold) {
+			p.Logger.Infof("Minimum threshold of %d for job not met. Sleeping for %d seconds", threshold, sleep)
+			time.Sleep(time.Second * time.Duration(sleep))
+			continue
+		}
 
-// 		p.Logger.Infof("Successfully Queried %d Characters", len(characters))
+		p.Logger.Infof("Successfully Queried %d Corporations", len(corporations))
 
-// 		charChunk := chunkCharacterSlice(records, characters)
+		corpChunk := chunkCorporationSlice(int(records), corporations)
 
-// 		for _, characters := range charChunk {
-// 			wg.Add(1)
-// 			go func(characters []monocle.Character) {
-// 				for _, character := range characters {
-// 					p.processCharacter(character.ID)
-// 					p.processCharacterCorpHistory(character.ID)
-// 				}
-// 				wg.Done()
-// 			}(characters)
-// 		}
+		for _, corporations := range corpChunk {
+			wg.Add(1)
+			go func(corporations []monocle.Corporation) {
+				for _, corporation := range corporations {
+					corporation.Exists = true
+					p.processCorporation(corporation)
+					p.processCorporationAllianceHistory(corporation)
+				}
+				wg.Done()
+			}(corporations)
+		}
 
-// 		p.Logger.Info("Waiting")
-// 		wg.Wait()
-// 		p.Logger.Info("Done")
-// 	}
-// }
+		p.Logger.Info("Waiting")
+		wg.Wait()
+		p.Logger.Info("Done")
+	}
+}
 
-func (p *Processor) processCorporation(id uint64) {
+func (p *Processor) processCorporation(corporation monocle.Corporation) {
 
 	var response esi.Response
-	var new bool
+	var err error
 	if p.ESI.Remain < 20 {
 		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
 		p.Logger.Errorf("%s", msg)
 		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
 		// p.DGO.ChannelMessageSend("394991263344230411", msg)
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-	}
-
-	corporation, err := p.DB.SelectCorporationByCorporationID(id)
-	if err != nil {
-		if err != sql.ErrNoRows {
-			p.Logger.Errorf("DB Query for Corporation ID %d Failed with Error %s", id, err)
-			return
-		}
-		corporation.ID = id
-		new = true
 	}
 
 	if !corporation.IsExpired() {
@@ -188,9 +192,9 @@ func (p *Processor) processCorporation(id uint64) {
 		corporation.Closed = true
 	}
 
-	p.Logger.Debugf("Corporation: %d:%s\tNew Corporation: %t", corporation.ID, corporation.Name, new)
+	p.Logger.Debugf("Corporation: %d:%s\tNew Corporation: %t", corporation.ID, corporation.Name, corporation.Exists)
 
-	switch new {
+	switch !corporation.Exists {
 	case true:
 		_, err := p.DB.InsertCorporation(corporation)
 		if err != nil {
@@ -206,8 +210,7 @@ func (p *Processor) processCorporation(id uint64) {
 	}
 }
 
-func (p *Processor) processCorporationAllianceHistory(id uint64) {
-	var newEtag bool
+func (p *Processor) processCorporationAllianceHistory(corporation monocle.Corporation) {
 	var history []monocle.CorporationAllianceHistory
 	var response esi.Response
 
@@ -219,17 +222,24 @@ func (p *Processor) processCorporationAllianceHistory(id uint64) {
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
-	historyEtag, err := p.DB.SelectEtagByIDAndResource(id, "corporation_alliance_history")
+	historyEtag, err := p.DB.SelectEtagByIDAndResource(corporation.ID, "corporation_alliance_history")
+	historyEtag.Exists = true
 	if err != nil {
 		if err != sql.ErrNoRows {
-			p.Logger.Errorf("Unable to query corporation_alliance_history etag resource for Character %d due to SQL Error: %s", id, err)
+			p.Logger.Errorf("Unable to query corporation_alliance_history etag resource for Character %d due to SQL Error: %s", corporation.ID, err)
 			return
 		}
 
-		newEtag = true
-		historyEtag.ID = id
+		historyEtag.ID = corporation.ID
 		historyEtag.Resource = "corporation_alliance_history"
+		historyEtag.Exists = false
 	}
+
+	if !historyEtag.IsExpired() {
+		return
+	}
+
+	p.Logger.Debugf("Processing CorpHistory: %d", historyEtag.ID)
 
 	attempts := 0
 	for {
@@ -256,6 +266,8 @@ func (p *Processor) processCorporationAllianceHistory(id uint64) {
 	history = data["history"].([]monocle.CorporationAllianceHistory)
 	historyEtag = data["etag"].(monocle.EtagResource)
 
+	p.Logger.Debugf("Corporation History: %d\tNew Etag: %t", historyEtag.ID, historyEtag.Exists)
+
 	existing, err := p.DB.SelectCorporationAllianceHistoryByID(historyEtag.ID)
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -265,7 +277,7 @@ func (p *Processor) processCorporationAllianceHistory(id uint64) {
 	}
 
 	diff := diffExistingCorpAlliHistory(existing, history)
-	switch newEtag {
+	switch !historyEtag.Exists {
 	case true:
 		_, err := p.DB.InsertEtag(historyEtag)
 		if err != nil {

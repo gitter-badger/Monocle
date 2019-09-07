@@ -6,7 +6,7 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
-    updater_char:
+    charUpdater:
         image: core
         logging:
             driver: "json-file"
@@ -15,10 +15,10 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=charUpdater --workers=25 --records=250
         network_mode: "host"
-        container_name: updater_char
+        container_name: charUpdater
         env_file:
             - ./cmd/.env-docker
-    hunter_char:
+    charHunter:
         image: core
         logging:
             driver: "json-file"
@@ -27,10 +27,10 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=charHunter --records=10
         network_mode: "host"
-        container_name: hunter_char
+        container_name: charHunter
         env_file:
             - ./cmd/.env-docker
-    hunter_corp:
+    corpHunter:
         image: core
         logging:
             driver: "json-file"
@@ -39,6 +39,18 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=corpHunter
         network_mode: "host"
-        container_name: hunter_corp
+        container_name: corpHunter
+        env_file:
+            - ./cmd/.env-docker
+    corpUpdater:
+        image: core
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli processor --scope=corpUpdater
+        network_mode: "host"
+        container_name: corpUpdater
         env_file:
             - ./cmd/.env-docker

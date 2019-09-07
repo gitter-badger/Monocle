@@ -232,22 +232,21 @@ func (l *Listener) processStream(kill []byte) {
 
 func (l *Listener) processCharacter(id uint64) {
 
-	var newCharacter bool
-
 	character, err := l.DB.SelectCharacterByCharacterID(id)
+	character.Exists = true
 	if err != nil {
 		if err != sql.ErrNoRows {
 			l.Logger.Errorf("DB Query for Character ID %d Failed with Error %s", id, err)
 			return
 		}
 		character.ID = id
-		newCharacter = true
+		character.Exists = false
 	}
 	if !character.IsExpired() {
 		return
 	}
 
-	response, err := l.ESI.GetCharactersCharacterID(character)
+	response, err := l.ESI.GetCharactersCharacterID(character.ID, character.Etag)
 	if err != nil {
 		l.Logger.Errorf(err.Error())
 		return
@@ -255,9 +254,9 @@ func (l *Listener) processCharacter(id uint64) {
 
 	character = response.Data.(monocle.Character)
 
-	l.Logger.Debugf("\tCharacter: %d:%s\tNew Character: %t", character.ID, character.Name, newCharacter)
+	l.Logger.Debugf("\tCharacter: %d:%s\tNew Character: %t", character.ID, character.Name, character.Exists)
 
-	switch newCharacter {
+	switch !character.Exists {
 	case true:
 		_, err := l.DB.InsertCharacter(character)
 		if err != nil {
@@ -275,23 +274,22 @@ func (l *Listener) processCharacter(id uint64) {
 
 func (l *Listener) processCorporation(id uint64) {
 
-	var newCorporation bool
-
 	corporation, err := l.DB.SelectCorporationByCorporationID(id)
+	corporation.Exists = true
 	if err != nil {
 		if err != sql.ErrNoRows {
 			l.Logger.Errorf("DB Query for Corporation ID %d Failed with Error %s", id, err)
 			return
 		}
 		corporation.ID = id
-		newCorporation = true
+		corporation.Exists = false
 	}
 
 	if !corporation.IsExpired() {
 		return
 	}
 
-	response, err := l.ESI.GetCorporationsCorporationID(corporation)
+	response, err := l.ESI.GetCorporationsCorporationID(corporation.ID, corporation.Etag)
 	if err != nil {
 		l.Logger.Errorf("Error completing request to ESI for Character information: %s", err)
 		return
@@ -299,9 +297,9 @@ func (l *Listener) processCorporation(id uint64) {
 
 	corporation = response.Data.(monocle.Corporation)
 
-	l.Logger.Debugf("\tCorporation: %d:%s\tNew Corporation: %t", corporation.ID, corporation.Name, newCorporation)
+	l.Logger.Debugf("\tCorporation: %d:%s\tNew Corporation: %t", corporation.ID, corporation.Name, corporation.Exists)
 
-	switch newCorporation {
+	switch !corporation.Exists {
 	case true:
 		_, err := l.DB.InsertCorporation(corporation)
 		if err != nil {
@@ -318,23 +316,23 @@ func (l *Listener) processCorporation(id uint64) {
 }
 
 func (l *Listener) processAlliance(id uint64) {
-	var newAlliance bool
 
 	alliance, err := l.DB.SelectAllianceByAllianceID(id)
+	alliance.Exists = true
 	if err != nil {
 		if err != sql.ErrNoRows {
 			l.Logger.Errorf("DB Query for Alliance ID %d Failed with Error %s", id, err)
 			return
 		}
 		alliance.ID = id
-		newAlliance = true
+		alliance.Exists = false
 	}
 
 	if !alliance.IsExpired() {
 		return
 	}
 
-	response, err := l.ESI.GetAlliancesAllianceID(alliance)
+	response, err := l.ESI.GetAlliancesAllianceID(alliance.ID, alliance.Etag)
 	if err != nil {
 		l.Logger.Errorf("Error completing request to ESI for Alliance information: %s", err)
 		return
@@ -342,9 +340,9 @@ func (l *Listener) processAlliance(id uint64) {
 
 	alliance = response.Data.(monocle.Alliance)
 
-	l.Logger.Debugf("\tAlliance: %d:%s\tNew Alliance: %t", alliance.ID, alliance.Name, newAlliance)
+	l.Logger.Debugf("\tAlliance: %d:%s\tNew Alliance: %t", alliance.ID, alliance.Name, alliance.Exists)
 
-	switch newAlliance {
+	switch !alliance.Exists {
 	case true:
 		_, err := l.DB.InsertAlliance(alliance)
 		if err != nil {
