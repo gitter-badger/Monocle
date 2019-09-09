@@ -1,6 +1,10 @@
 package monocle
 
-import "time"
+import (
+	"time"
+
+	"github.com/volatiletech/null"
+)
 
 type Alliance struct {
 	ID                    uint64    `db:"id" json:"id"`
@@ -8,7 +12,7 @@ type Alliance struct {
 	Ticker                string    `db:"ticker" json:"ticker"`
 	CreatorCorporationID  uint64    `db:"creator_corporation_id" json:"creator_corporation_id"`
 	CreatorID             uint64    `db:"creator_id" json:"creator_id"`
-	DateFounded           NullTime  `db:"date_founded" json:"date_founded"`
+	DateFounded           null.Time `db:"date_founded" json:"date_founded"`
 	ExecutorCorporationID uint64    `db:"executor_corporation_id" json:"executor_corporation_id"`
 	Ignored               bool      `db:"ignored" json:"ignored"`
 	Closed                bool      `db:"closed" json:"closed"`

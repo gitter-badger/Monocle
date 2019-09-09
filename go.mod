@@ -3,6 +3,7 @@ module github.com/ddouglas/monocle
 go 1.12
 
 require (
+	github.com/99designs/gqlgen v0.9.3
 	github.com/DATA-DOG/go-sqlmock v1.3.3 // indirect
 	github.com/apsdehal/go-logger v0.0.0-20190515212710-b0d6ccfee0e6
 	github.com/bwmarrin/discordgo v0.19.0
@@ -18,6 +19,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/urfave/cli v1.21.0
+	github.com/vektah/gqlparser v1.1.2
 	github.com/volatiletech/inflect v0.0.0-20170731032912-e7201282ae8d // indirect
 	github.com/volatiletech/null v8.0.0+incompatible
 	github.com/volatiletech/sqlboiler v3.5.0+incompatible

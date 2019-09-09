@@ -1,0 +1,48 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+schema:
+    - "graph/schema/*.graphql"
+exec:
+    filename: graph/service/generated.go
+    package: generated
+model:
+    filename: graph/models/generated.go
+    package: models
+resolver:
+    filename: graph/resolvers/resolver.go # where to write them
+    type: Resolver # what's the resolver root implementation type called?
+
+autobind: []
+
+models:
+    ID: # The GraphQL type ID is backed by
+        model:
+            - github.com/99designs/gqlgen/graphql.IntID # An go integer
+            - github.com/99designs/gqlgen/graphql.ID # or a go string
+    Float:
+        model:
+            - github.com/99designs/gqlgen/graphql.Float
+            - github.com/ddouglas/monocle.NullFloat64
+            - github.com/ddouglas/monocle/graphql/scalar.Float32
+    String:
+        model:
+            - github.com/99designs/gqlgen/graphql.String
+            - github.com/ddouglas/monocle.NullString
+    Int:
+        model:
+            - github.com/99designs/gqlgen/graphql.Int
+            - github.com/ddouglas/monocle/graphql/scalar.Uint32
+            - github.com/ddouglas/monocle.NullInt64
+    Uint64:
+        model:
+            - github.com/ddouglas/monocle/graphql/scalar.UInt64
+    Time:
+        model:
+            - github.com/99designs/gqlgen/graphql.Time
+            - github.com/ddouglas/monocle.NullTime
+    Character:
+        model:
+            - github.com/ddouglas/monocle.Character
