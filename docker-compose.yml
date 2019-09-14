@@ -1,11 +1,15 @@
 version: "3.7"
 
 services:
-    charUpdater:
-        image: image
+    master:
+        image: core
         build:
             context: .
             dockerfile: Dockerfile
+    charUpdater:
+        image: core
+        depends_on:
+            - master
         logging:
             driver: "json-file"
             options:
@@ -17,10 +21,9 @@ services:
         env_file:
             - ./.env-docker
     charHunter:
-        image: image
-        build:
-            context: .
-            dockerfile: Dockerfile
+        image: core
+        depends_on:
+            - master
         logging:
             driver: "json-file"
             options:
@@ -32,10 +35,9 @@ services:
         env_file:
             - ./.env-docker
     corpHunter:
-        image: image
-        build:
-            context: .
-            dockerfile: Dockerfile
+        image: core
+        depends_on:
+            - master
         logging:
             driver: "json-file"
             options:
@@ -47,10 +49,9 @@ services:
         env_file:
             - ./.env-docker
     corpUpdater:
-        image: image
-        build:
-            context: .
-            dockerfile: Dockerfile
+        image: core
+        depends_on:
+            - master
         logging:
             driver: "json-file"
             options:

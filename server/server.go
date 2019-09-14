@@ -17,7 +17,6 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/ddouglas/monocle/core"
-	// "github.com/ddouglas/monocle/graph/dataloaders"
 	"github.com/ddouglas/monocle/graph/dataloaders"
 	"github.com/ddouglas/monocle/graph/resolvers"
 	"github.com/ddouglas/monocle/graph/service"
@@ -97,7 +96,7 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 
 	// Handler for local dev UI
 	// Note leaving this endpoint in but commented out since it has value for local dev
-	r.Handle("/", dataloaders.Dataloader(s.App.DB.DB, handler.Playground("Common GraphQL playground", "/query")))
+	r.Handle("/pg", dataloaders.Dataloader(s.App.DB.DB, handler.Playground("Common GraphQL playground", "/query")))
 	// r.Handle("/", handler.Playground("Common GraphQL playground", "/query"))
 
 	// Production query route

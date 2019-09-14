@@ -137,7 +137,6 @@ func (p *Processor) charUpdater() {
 		err := boiler.Characters(
 			qm.Where(boiler.CharacterColumns.Expires+"<NOW()"),
 			qm.And(boiler.CharacterColumns.Ignored+"=?", 0),
-			qm.And(boiler.CharacterColumns.CorporationID+"!=?", 1000001),
 			qm.OrderBy(boiler.CharacterColumns.Expires),
 			qm.Limit(int(records*workers)),
 		).Bind(context.Background(), p.DB, &characters)

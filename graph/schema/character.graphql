@@ -1,6 +1,7 @@
 type Query {
     character(id: Int!): Character!
-    characters(limit: Int! = 5): [Character]!
+    charactersByID(limit: Int! = 5, order: Sort! = ASC): [Character]!
+    charactersByBirthday(limt: Int! = 100, order: Sort! = DESC) [Character]!
 }
 
 type Character {
@@ -19,3 +20,8 @@ type Character {
 }
 
 scalar Time
+
+enum Sort {
+    ASC
+    DESC
+}

@@ -119,7 +119,7 @@ func (p *Processor) corpUpdater() {
 			qm.And(boiler.CorporationColumns.Ignored+"=?", 0),
 			qm.And(boiler.CorporationColumns.Closed+"=?", 0),
 			qm.OrderBy(boiler.CorporationColumns.Expires),
-			qm.Limit(int(records+workers)),
+			qm.Limit(int(records*workers)),
 		).Bind(context.Background(), p.DB, &corporations)
 		if err != nil {
 			if err != sql.ErrNoRows {
