@@ -6,8 +6,8 @@
 schema:
     - "graph/schema/*.graphql"
 exec:
-    filename: graph/service/generated.go
-    package: generated
+    filename: graph/service/service.go
+    package: service
 model:
     filename: graph/models/generated.go
     package: models
@@ -25,24 +25,24 @@ models:
     Float:
         model:
             - github.com/99designs/gqlgen/graphql.Float
-            - github.com/ddouglas/monocle.NullFloat64
-            - github.com/ddouglas/monocle/graphql/scalar.Float32
+            - github.com/ddouglas/monocle/graph/scalar.Float32
     String:
         model:
             - github.com/99designs/gqlgen/graphql.String
-            - github.com/ddouglas/monocle.NullString
+            - github.com/ddouglas/monocle/graph/scalar.NullString
     Int:
         model:
             - github.com/99designs/gqlgen/graphql.Int
-            - github.com/ddouglas/monocle/graphql/scalar.Uint32
-            - github.com/ddouglas/monocle.NullInt64
-    Uint64:
-        model:
-            - github.com/ddouglas/monocle/graphql/scalar.UInt64
+            - github.com/ddouglas/monocle/graph/scalar.Uint
+            - github.com/99designs/gqlgen/graphql.Int32
+            - github.com/ddouglas/monocle/graph/scalar.Uint32
+            - github.com/ddouglas/monocle/graph/scalar.NullUint32
+            - github.com/99designs/gqlgen/graphql.Int64
+            - github.com/ddouglas/monocle/graph/scalar.Uint64
     Time:
         model:
             - github.com/99designs/gqlgen/graphql.Time
-            - github.com/ddouglas/monocle.NullTime
+            - github.com/ddouglas/monocle/graph/scalar.NullTime
     Character:
         model:
             - github.com/ddouglas/monocle.Character

@@ -11,11 +11,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/99designs/gqlgen/handler"
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 
 	"github.com/ddouglas/monocle/core"
+	// "github.com/ddouglas/monocle/graph/dataloaders"
+	"github.com/ddouglas/monocle/graph/resolvers"
+	"github.com/ddouglas/monocle/graph/service"
 )
 
 var (
@@ -79,15 +83,25 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 	r.Use(Cors)
 	r.Use(s.RequestLogger)
 
-	r.Route("/v1", func(r chi.Router) {
-		r.Get("/characters", s.handleGetCharacters)
-		r.Get("/characters/{id}", s.handleGetCharacter)
-		r.Get("/corporations", s.handleGetCorporations)
-		r.Get("/corporations/{id}", s.handleGetCorporation)
+	// Build the graph schema interface using our store dependencies
+	graphSchema := service.NewExecutableSchema(service.Config{
+		Resolvers: &resolvers.Common{DB: s.App.DB.DB},
 	})
 
-	// r.Get("/alliances", s.handleGetAlliances)
-	// r.Get("/alliances/{id}", s.handleGetAlliance)
+	// One handler to process graphQL queries
+	queryHandler := handler.GraphQL(
+		graphSchema,
+		handler.IntrospectionEnabled(true),
+	)
+
+	// Handler for local dev UI
+	// Note leaving this endpoint in but commented out since it has value for local dev
+	// r.Handle("/", dataloaders.Dataloader(s.DB, handler.Playground("Common GraphQL playground", "/query")))
+	r.Handle("/", handler.Playground("Common GraphQL playground", "/query"))
+
+	// Production query route
+	// r.Handle("/query", dataloaders.Dataloader(s.DB, queryHandler))
+	r.Handle("/query", queryHandler)
 
 	return r
 }

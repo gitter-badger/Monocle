@@ -4,49 +4,31 @@ import (
 	"context"
 
 	"github.com/ddouglas/monocle"
+	"github.com/ddouglas/monocle/boiler"
 	generated "github.com/ddouglas/monocle/graph/service"
+	"github.com/jmoiron/sqlx"
+	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
 // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 
-type Resolver struct{}
-
-func (r *Resolver) Character() generated.CharacterResolver {
-	return &characterResolver{r}
+type Common struct {
+	DB *sqlx.DB
 }
-func (r *Resolver) Query() generated.QueryResolver {
+
+func (r *Common) Query() generated.QueryResolver {
 	return &queryResolver{r}
 }
 
-type characterResolver struct{ *Resolver }
-
-func (r *characterResolver) ID(ctx context.Context, obj *monocle.Character) (string, error) {
-	panic("not implemented")
-}
-func (r *characterResolver) SecurityStatus(ctx context.Context, obj *monocle.Character) (string, error) {
-	panic("not implemented")
-}
-func (r *characterResolver) AllianceID(ctx context.Context, obj *monocle.Character) (*string, error) {
-	panic("not implemented")
-}
-func (r *characterResolver) CorporationID(ctx context.Context, obj *monocle.Character) (string, error) {
-	panic("not implemented")
-}
-func (r *characterResolver) FactionID(ctx context.Context, obj *monocle.Character) (*string, error) {
-	panic("not implemented")
-}
-func (r *characterResolver) AncestryID(ctx context.Context, obj *monocle.Character) (string, error) {
-	panic("not implemented")
-}
-func (r *characterResolver) BloodlineID(ctx context.Context, obj *monocle.Character) (string, error) {
-	panic("not implemented")
-}
-func (r *characterResolver) RaceID(ctx context.Context, obj *monocle.Character) (string, error) {
-	panic("not implemented")
-}
-
-type queryResolver struct{ *Resolver }
+type queryResolver struct{ *Common }
 
 func (r *queryResolver) Character(ctx context.Context, id int) (*monocle.Character, error) {
-	panic("not implemented")
+
+	var character monocle.Character
+
+	err := boiler.Characters(
+		qm.Where(boiler.CharacterColumns.ID+"=?", id),
+	).Bind(ctx, r.DB, &character)
+
+	return &character, err
 }

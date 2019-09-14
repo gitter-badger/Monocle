@@ -1,4 +1,4 @@
-cmd/.env
-cmd/.env-docker
+.env
+.env-docker
 cmd/cli/cli
-sqlboiler.json
+sqlboiler.toml

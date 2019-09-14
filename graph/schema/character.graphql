@@ -1,22 +1,24 @@
+type Query {
+  character(id: Int!): Character!
+}
+
 type Character {
-    id: UInt64!
+    id: Int!
     name: String!
     birthday: Time
     gender: String!
-    securityStatus: Float32!
-    allianceID: UInt64
-    corporationID: Uint32!
-    factionID: Uint32
-    ancestryID: Uint32!
-    bloodlineID: Uint32!
-    raceID: Uint32!
+    security_status: Float
+    alliance_id: Int
+    corporation_id: Int!
+    faction_id: Int
+    ancestry_id: Int!
+    bloodline_id: Int!
+    race_id: Int!
     ignored: Boolean!
     expires: Time
     etag: String
-    createdAt: Time!
-    updatedAt: Time!
+    created_at: Time!
+    updated_at: Time!
 }
 
-scalar Uint32
-scalar UInt64
-scalar Float32
+scalar Time
