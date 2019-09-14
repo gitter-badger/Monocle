@@ -46,3 +46,9 @@ models:
     Character:
         model:
             - github.com/ddouglas/monocle.Character
+    Corporation:
+        model:
+            - github.com/ddouglas/monocle.Corporation
+    Alliance:
+        model:
+            - github.com/ddouglas/monocle.Alliance

@@ -1,5 +1,6 @@
 type Query {
-  character(id: Int!): Character!
+    character(id: Int!): Character!
+    characters(limit: Int! = 5): [Character]!
 }
 
 type Character {
@@ -14,11 +15,7 @@ type Character {
     ancestry_id: Int!
     bloodline_id: Int!
     race_id: Int!
-    ignored: Boolean!
-    expires: Time
-    etag: String
-    created_at: Time!
-    updated_at: Time!
+    corporation: Corporation!
 }
 
 scalar Time

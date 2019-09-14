@@ -18,6 +18,7 @@ import (
 
 	"github.com/ddouglas/monocle/core"
 	// "github.com/ddouglas/monocle/graph/dataloaders"
+	"github.com/ddouglas/monocle/graph/dataloaders"
 	"github.com/ddouglas/monocle/graph/resolvers"
 	"github.com/ddouglas/monocle/graph/service"
 )
@@ -96,12 +97,12 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 
 	// Handler for local dev UI
 	// Note leaving this endpoint in but commented out since it has value for local dev
-	// r.Handle("/", dataloaders.Dataloader(s.DB, handler.Playground("Common GraphQL playground", "/query")))
-	r.Handle("/", handler.Playground("Common GraphQL playground", "/query"))
+	r.Handle("/", dataloaders.Dataloader(s.App.DB.DB, handler.Playground("Common GraphQL playground", "/query")))
+	// r.Handle("/", handler.Playground("Common GraphQL playground", "/query"))
 
 	// Production query route
-	// r.Handle("/query", dataloaders.Dataloader(s.DB, queryHandler))
-	r.Handle("/query", queryHandler)
+	r.Handle("/query", dataloaders.Dataloader(s.App.DB.DB, queryHandler))
+	// r.Handle("/query", queryHandler)
 
 	return r
 }

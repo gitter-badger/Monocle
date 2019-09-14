@@ -1,0 +1,18 @@
+extend type Query {
+    corporation(id: Int!): Corporation!
+}
+
+type Corporation {
+    id: Int!
+    name: String!
+    ticker: String!
+    member_count: Int!
+    ceo_id: Int!
+    alliance_id: Int
+    date_founded: Time
+    creator_id: Int!
+    home_station_id: Int
+    tax_rate: Float!
+    war_eligible: Boolean!
+    closed: Boolean!
+}

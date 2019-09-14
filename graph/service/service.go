@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -38,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Character() CharacterResolver
 	Query() QueryResolver
 }
 
@@ -50,27 +50,45 @@ type ComplexityRoot struct {
 		AncestryID     func(childComplexity int) int
 		Birthday       func(childComplexity int) int
 		BloodlineID    func(childComplexity int) int
+		Corporation    func(childComplexity int) int
 		CorporationID  func(childComplexity int) int
-		CreatedAt      func(childComplexity int) int
-		Etag           func(childComplexity int) int
-		Expires        func(childComplexity int) int
 		FactionID      func(childComplexity int) int
 		Gender         func(childComplexity int) int
 		ID             func(childComplexity int) int
-		Ignored        func(childComplexity int) int
 		Name           func(childComplexity int) int
 		RaceID         func(childComplexity int) int
 		SecurityStatus func(childComplexity int) int
-		UpdatedAt      func(childComplexity int) int
+	}
+
+	Corporation struct {
+		AllianceID    func(childComplexity int) int
+		CeoID         func(childComplexity int) int
+		Closed        func(childComplexity int) int
+		CreatorID     func(childComplexity int) int
+		DateFounded   func(childComplexity int) int
+		HomeStationID func(childComplexity int) int
+		ID            func(childComplexity int) int
+		MemberCount   func(childComplexity int) int
+		Name          func(childComplexity int) int
+		TaxRate       func(childComplexity int) int
+		Ticker        func(childComplexity int) int
+		WarEligible   func(childComplexity int) int
 	}
 
 	Query struct {
-		Character func(childComplexity int, id int) int
+		Character   func(childComplexity int, id int) int
+		Characters  func(childComplexity int, limit int) int
+		Corporation func(childComplexity int, id int) int
 	}
 }
 
+type CharacterResolver interface {
+	Corporation(ctx context.Context, obj *monocle.Character) (*monocle.Corporation, error)
+}
 type QueryResolver interface {
 	Character(ctx context.Context, id int) (*monocle.Character, error)
+	Characters(ctx context.Context, limit int) ([]*monocle.Character, error)
+	Corporation(ctx context.Context, id int) (*monocle.Corporation, error)
 }
 
 type executableSchema struct {
@@ -116,33 +134,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Character.BloodlineID(childComplexity), true
 
+	case "Character.corporation":
+		if e.complexity.Character.Corporation == nil {
+			break
+		}
+
+		return e.complexity.Character.Corporation(childComplexity), true
+
 	case "Character.corporation_id":
 		if e.complexity.Character.CorporationID == nil {
 			break
 		}
 
 		return e.complexity.Character.CorporationID(childComplexity), true
-
-	case "Character.created_at":
-		if e.complexity.Character.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.Character.CreatedAt(childComplexity), true
-
-	case "Character.etag":
-		if e.complexity.Character.Etag == nil {
-			break
-		}
-
-		return e.complexity.Character.Etag(childComplexity), true
-
-	case "Character.expires":
-		if e.complexity.Character.Expires == nil {
-			break
-		}
-
-		return e.complexity.Character.Expires(childComplexity), true
 
 	case "Character.faction_id":
 		if e.complexity.Character.FactionID == nil {
@@ -165,13 +169,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Character.ID(childComplexity), true
 
-	case "Character.ignored":
-		if e.complexity.Character.Ignored == nil {
-			break
-		}
-
-		return e.complexity.Character.Ignored(childComplexity), true
-
 	case "Character.name":
 		if e.complexity.Character.Name == nil {
 			break
@@ -193,12 +190,89 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Character.SecurityStatus(childComplexity), true
 
-	case "Character.updated_at":
-		if e.complexity.Character.UpdatedAt == nil {
+	case "Corporation.alliance_id":
+		if e.complexity.Corporation.AllianceID == nil {
 			break
 		}
 
-		return e.complexity.Character.UpdatedAt(childComplexity), true
+		return e.complexity.Corporation.AllianceID(childComplexity), true
+
+	case "Corporation.ceo_id":
+		if e.complexity.Corporation.CeoID == nil {
+			break
+		}
+
+		return e.complexity.Corporation.CeoID(childComplexity), true
+
+	case "Corporation.closed":
+		if e.complexity.Corporation.Closed == nil {
+			break
+		}
+
+		return e.complexity.Corporation.Closed(childComplexity), true
+
+	case "Corporation.creator_id":
+		if e.complexity.Corporation.CreatorID == nil {
+			break
+		}
+
+		return e.complexity.Corporation.CreatorID(childComplexity), true
+
+	case "Corporation.date_founded":
+		if e.complexity.Corporation.DateFounded == nil {
+			break
+		}
+
+		return e.complexity.Corporation.DateFounded(childComplexity), true
+
+	case "Corporation.home_station_id":
+		if e.complexity.Corporation.HomeStationID == nil {
+			break
+		}
+
+		return e.complexity.Corporation.HomeStationID(childComplexity), true
+
+	case "Corporation.id":
+		if e.complexity.Corporation.ID == nil {
+			break
+		}
+
+		return e.complexity.Corporation.ID(childComplexity), true
+
+	case "Corporation.member_count":
+		if e.complexity.Corporation.MemberCount == nil {
+			break
+		}
+
+		return e.complexity.Corporation.MemberCount(childComplexity), true
+
+	case "Corporation.name":
+		if e.complexity.Corporation.Name == nil {
+			break
+		}
+
+		return e.complexity.Corporation.Name(childComplexity), true
+
+	case "Corporation.tax_rate":
+		if e.complexity.Corporation.TaxRate == nil {
+			break
+		}
+
+		return e.complexity.Corporation.TaxRate(childComplexity), true
+
+	case "Corporation.ticker":
+		if e.complexity.Corporation.Ticker == nil {
+			break
+		}
+
+		return e.complexity.Corporation.Ticker(childComplexity), true
+
+	case "Corporation.war_eligible":
+		if e.complexity.Corporation.WarEligible == nil {
+			break
+		}
+
+		return e.complexity.Corporation.WarEligible(childComplexity), true
 
 	case "Query.character":
 		if e.complexity.Query.Character == nil {
@@ -211,6 +285,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Character(childComplexity, args["id"].(int)), true
+
+	case "Query.characters":
+		if e.complexity.Query.Characters == nil {
+			break
+		}
+
+		args, err := ec.field_Query_characters_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Characters(childComplexity, args["limit"].(int)), true
+
+	case "Query.corporation":
+		if e.complexity.Query.Corporation == nil {
+			break
+		}
+
+		args, err := ec.field_Query_corporation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Corporation(childComplexity, args["id"].(int)), true
 
 	}
 	return 0, false
@@ -262,7 +360,8 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var parsedSchema = gqlparser.MustLoadSchema(
 	&ast.Source{Name: "graph/schema/character.graphql", Input: `type Query {
-  character(id: Int!): Character!
+    character(id: Int!): Character!
+    characters(limit: Int! = 5): [Character]!
 }
 
 type Character {
@@ -277,14 +376,30 @@ type Character {
     ancestry_id: Int!
     bloodline_id: Int!
     race_id: Int!
-    ignored: Boolean!
-    expires: Time
-    etag: String
-    created_at: Time!
-    updated_at: Time!
+    corporation: Corporation!
 }
 
-scalar Time`},
+scalar Time
+`},
+	&ast.Source{Name: "graph/schema/corporation.graphql", Input: `extend type Query {
+    corporation(id: Int!): Corporation!
+}
+
+type Corporation {
+    id: Int!
+    name: String!
+    ticker: String!
+    member_count: Int!
+    ceo_id: Int!
+    alliance_id: Int
+    date_founded: Time
+    creator_id: Int!
+    home_station_id: Int
+    tax_rate: Float!
+    war_eligible: Boolean!
+    closed: Boolean!
+}
+`},
 )
 
 // endregion ************************** generated!.gotpl **************************
@@ -306,6 +421,34 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 }
 
 func (ec *executionContext) field_Query_character_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_characters_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_corporation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -750,7 +893,7 @@ func (ec *executionContext) _Character_race_id(ctx context.Context, field graphq
 	return ec.marshalNInt2uint32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Character_ignored(ctx context.Context, field graphql.CollectedField, obj *monocle.Character) (ret graphql.Marshaler) {
+func (ec *executionContext) _Character_corporation(ctx context.Context, field graphql.CollectedField, obj *monocle.Character) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -763,13 +906,411 @@ func (ec *executionContext) _Character_ignored(ctx context.Context, field graphq
 		Object:   "Character",
 		Field:    field,
 		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Character().Corporation(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*monocle.Corporation)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCorporation2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCorporation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
 		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Ignored, nil
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uint64)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2uint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_name(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_ticker(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ticker, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_member_count(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MemberCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uint64)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2uint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_ceo_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CeoID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uint64)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2uint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_alliance_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AllianceID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(null.Uint32)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOInt2githubᚗcomᚋvolatiletechᚋnullᚐUint32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_date_founded(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DateFounded, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(null.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTime2githubᚗcomᚋvolatiletechᚋnullᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_creator_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatorID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uint64)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2uint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_home_station_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HomeStationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(null.Uint32)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOInt2githubᚗcomᚋvolatiletechᚋnullᚐUint32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_tax_rate(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaxRate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float32)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNFloat2float32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Corporation_war_eligible(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Corporation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WarEligible, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -787,7 +1328,7 @@ func (ec *executionContext) _Character_ignored(ctx context.Context, field graphq
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Character_expires(ctx context.Context, field graphql.CollectedField, obj *monocle.Character) (ret graphql.Marshaler) {
+func (ec *executionContext) _Corporation_closed(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -797,7 +1338,7 @@ func (ec *executionContext) _Character_expires(ctx context.Context, field graphq
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "Character",
+		Object:   "Corporation",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -806,75 +1347,7 @@ func (ec *executionContext) _Character_expires(ctx context.Context, field graphq
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Expires, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Character_etag(ctx context.Context, field graphql.CollectedField, obj *monocle.Character) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Character",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Etag, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Character_created_at(ctx context.Context, field graphql.CollectedField, obj *monocle.Character) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Character",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
+		return obj.Closed, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -886,47 +1359,10 @@ func (ec *executionContext) _Character_created_at(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(bool)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Character_updated_at(ctx context.Context, field graphql.CollectedField, obj *monocle.Character) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Character",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_character(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -971,6 +1407,94 @@ func (ec *executionContext) _Query_character(ctx context.Context, field graphql.
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNCharacter2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_characters(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_characters_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Characters(rctx, args["limit"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*monocle.Character)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCharacter2ᚕᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_corporation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_corporation_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Corporation(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*monocle.Corporation)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCorporation2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCorporation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2221,19 +2745,19 @@ func (ec *executionContext) _Character(ctx context.Context, sel ast.SelectionSet
 		case "id":
 			out.Values[i] = ec._Character_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Character_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "birthday":
 			out.Values[i] = ec._Character_birthday(ctx, field, obj)
 		case "gender":
 			out.Values[i] = ec._Character_gender(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "security_status":
 			out.Values[i] = ec._Character_security_status(ctx, field, obj)
@@ -2242,41 +2766,109 @@ func (ec *executionContext) _Character(ctx context.Context, sel ast.SelectionSet
 		case "corporation_id":
 			out.Values[i] = ec._Character_corporation_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "faction_id":
 			out.Values[i] = ec._Character_faction_id(ctx, field, obj)
 		case "ancestry_id":
 			out.Values[i] = ec._Character_ancestry_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "bloodline_id":
 			out.Values[i] = ec._Character_bloodline_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "race_id":
 			out.Values[i] = ec._Character_race_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
-		case "ignored":
-			out.Values[i] = ec._Character_ignored(ctx, field, obj)
+		case "corporation":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Character_corporation(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var corporationImplementors = []string{"Corporation"}
+
+func (ec *executionContext) _Corporation(ctx context.Context, sel ast.SelectionSet, obj *monocle.Corporation) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, corporationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Corporation")
+		case "id":
+			out.Values[i] = ec._Corporation_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "expires":
-			out.Values[i] = ec._Character_expires(ctx, field, obj)
-		case "etag":
-			out.Values[i] = ec._Character_etag(ctx, field, obj)
-		case "created_at":
-			out.Values[i] = ec._Character_created_at(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._Corporation_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "updated_at":
-			out.Values[i] = ec._Character_updated_at(ctx, field, obj)
+		case "ticker":
+			out.Values[i] = ec._Corporation_ticker(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "member_count":
+			out.Values[i] = ec._Corporation_member_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "ceo_id":
+			out.Values[i] = ec._Corporation_ceo_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "alliance_id":
+			out.Values[i] = ec._Corporation_alliance_id(ctx, field, obj)
+		case "date_founded":
+			out.Values[i] = ec._Corporation_date_founded(ctx, field, obj)
+		case "creator_id":
+			out.Values[i] = ec._Corporation_creator_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "home_station_id":
+			out.Values[i] = ec._Corporation_home_station_id(ctx, field, obj)
+		case "tax_rate":
+			out.Values[i] = ec._Corporation_tax_rate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "war_eligible":
+			out.Values[i] = ec._Corporation_war_eligible(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "closed":
+			out.Values[i] = ec._Corporation_closed(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2315,6 +2907,34 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_character(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "characters":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_characters(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "corporation":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_corporation(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -2598,6 +3218,43 @@ func (ec *executionContext) marshalNCharacter2githubᚗcomᚋddouglasᚋmonocle�
 	return ec._Character(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNCharacter2ᚕᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx context.Context, sel ast.SelectionSet, v []*monocle.Character) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOCharacter2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) marshalNCharacter2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx context.Context, sel ast.SelectionSet, v *monocle.Character) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
@@ -2606,6 +3263,34 @@ func (ec *executionContext) marshalNCharacter2ᚖgithubᚗcomᚋddouglasᚋmonoc
 		return graphql.Null
 	}
 	return ec._Character(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCorporation2githubᚗcomᚋddouglasᚋmonocleᚐCorporation(ctx context.Context, sel ast.SelectionSet, v monocle.Corporation) graphql.Marshaler {
+	return ec._Corporation(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCorporation2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCorporation(ctx context.Context, sel ast.SelectionSet, v *monocle.Corporation) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Corporation(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNFloat2float32(ctx context.Context, v interface{}) (float32, error) {
+	return scalar.UnmarshalFloat32(v)
+}
+
+func (ec *executionContext) marshalNFloat2float32(ctx context.Context, sel ast.SelectionSet, v float32) graphql.Marshaler {
+	res := scalar.MarshalFloat32(v)
+	if res == graphql.Null {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
@@ -2656,20 +3341,6 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
-	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
-	return graphql.UnmarshalTime(v)
-}
-
-func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
-	res := graphql.MarshalTime(v)
 	if res == graphql.Null {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2927,6 +3598,17 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
+func (ec *executionContext) marshalOCharacter2githubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx context.Context, sel ast.SelectionSet, v monocle.Character) graphql.Marshaler {
+	return ec._Character(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOCharacter2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx context.Context, sel ast.SelectionSet, v *monocle.Character) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Character(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOFloat2float32(ctx context.Context, v interface{}) (float32, error) {
 	return scalar.UnmarshalFloat32(v)
 }
@@ -2972,14 +3654,6 @@ func (ec *executionContext) unmarshalOTime2githubᚗcomᚋvolatiletechᚋnullᚐ
 
 func (ec *executionContext) marshalOTime2githubᚗcomᚋvolatiletechᚋnullᚐTime(ctx context.Context, sel ast.SelectionSet, v null.Time) graphql.Marshaler {
 	return scalar.MarshalNullTime(v)
-}
-
-func (ec *executionContext) unmarshalOTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
-	return graphql.UnmarshalTime(v)
-}
-
-func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
-	return graphql.MarshalTime(v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

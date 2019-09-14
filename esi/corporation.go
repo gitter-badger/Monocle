@@ -52,9 +52,9 @@ func (e *Client) HeadCorporationsCorporationID(id uint) (Response, error) {
 	return response, err
 }
 
-func (e *Client) GetCorporationsCorporationID(id uint64, etag string) (Response, error) {
+func (e *Client) GetCorporationsCorporationID(corporation monocle.Corporation) (Response, error) {
 
-	path := fmt.Sprintf("/v4/corporations/%d/", id)
+	path := fmt.Sprintf("/v4/corporations/%d/", corporation.ID)
 
 	url := url.URL{
 		Scheme: "https",
@@ -64,8 +64,8 @@ func (e *Client) GetCorporationsCorporationID(id uint64, etag string) (Response,
 
 	headers := make(map[string]string)
 
-	if etag != "" {
-		headers["If-None-Match"] = etag
+	if corporation.Etag != "" {
+		headers["If-None-Match"] = corporation.Etag
 	}
 
 	request := Request{
@@ -85,30 +85,31 @@ func (e *Client) GetCorporationsCorporationID(id uint64, etag string) (Response,
 	e.Remain = RetrieveErrorCountFromResponse(response)
 	mx.Unlock()
 
-	var corporation monocle.Corporation
-	corporation.ID = id
-
 	switch response.Code {
 	case 200:
-		err := json.Unmarshal(response.Data.([]byte), &corporation)
+		var newCorp monocle.Corporation
+
+		err := json.Unmarshal(response.Data.([]byte), &newCorp)
 		if err != nil {
 			err = errors.Wrap(err, "unable to unmarshel response body")
 			return response, err
 		}
-		corporation.ID = id
+		newCorp.ID = corporation.ID
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrap(err, "Error Encountered attempting to parse expires header")
 			return response, err
 		}
-		corporation.Expires = expires
+		newCorp.Expires = expires
 
 		etag, err := RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
 			return response, err
 		}
-		corporation.Etag = etag
+		newCorp.Etag = etag
+
+		corporation = newCorp
 
 		break
 	case 304:

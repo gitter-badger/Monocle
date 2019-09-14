@@ -14,15 +14,14 @@ type Processor struct {
 }
 
 var (
-	workers    uint64
-	threshold  uint64
-	errorCount uint64
-	records    uint64
-	sleep      uint64
-	begin      uint64
-	done       uint64
-	scope      string
-	wg         sync.WaitGroup
+	workers   uint64
+	threshold uint64
+	records   uint64
+	sleep     uint64
+	begin     uint64
+	done      uint64
+	scope     string
+	wg        sync.WaitGroup
 )
 
 func Action(c *cli.Context) error {

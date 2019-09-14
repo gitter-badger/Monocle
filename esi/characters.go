@@ -52,9 +52,9 @@ func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
 	return response, err
 }
 
-func (e *Client) GetCharactersCharacterID(id uint64, etag string) (Response, error) {
+func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response, error) {
 
-	path := fmt.Sprintf("/v4/characters/%d/", id)
+	path := fmt.Sprintf("/v4/characters/%d/", character.ID)
 
 	url := url.URL{
 		Scheme: "https",
@@ -64,8 +64,8 @@ func (e *Client) GetCharactersCharacterID(id uint64, etag string) (Response, err
 
 	headers := make(map[string]string)
 
-	if etag != "" {
-		headers["If-None-Match"] = etag
+	if character.Etag != "" {
+		headers["If-None-Match"] = character.Etag
 	}
 
 	request := Request{
@@ -85,19 +85,18 @@ func (e *Client) GetCharactersCharacterID(id uint64, etag string) (Response, err
 	e.Remain = RetrieveErrorCountFromResponse(response)
 	mx.Unlock()
 
-	var character monocle.Character
-	character.ID = id
-
 	switch response.Code {
 	case 200:
-		err := json.Unmarshal(response.Data.([]byte), &character)
+		var newChar monocle.Character
+		err := json.Unmarshal(response.Data.([]byte), &newChar)
 		if err != nil {
 			err = errors.Wrap(err, "unable to unmarshel response body")
 			return response, err
 		}
+		newChar.ID = character.ID
 
 		if character.CorporationID == 1000001 {
-			character.Ignored = true
+			newChar.Ignored = true
 		}
 
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
@@ -105,14 +104,16 @@ func (e *Client) GetCharactersCharacterID(id uint64, etag string) (Response, err
 			err = errors.Wrap(err, "Error Encountered attempting to parse expires header")
 			return response, err
 		}
-		character.Expires = expires
+		newChar.Expires = expires
 
 		etag, err := RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
 			return response, err
 		}
-		character.Etag = etag
+		newChar.Etag = etag
+
+		character = newChar
 
 		break
 	case 304:

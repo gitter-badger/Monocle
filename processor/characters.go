@@ -8,10 +8,15 @@ import (
 	"time"
 
 	"github.com/ddouglas/monocle"
+	"github.com/ddouglas/monocle/boiler"
 	"github.com/ddouglas/monocle/esi"
-	"github.com/ddouglas/monocle/models"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
+
+type Character struct {
+	model  monocle.Character
+	exists bool
+}
 
 func (p *Processor) charHunter() {
 	var value struct {
@@ -81,9 +86,13 @@ func (p *Processor) charHunter() {
 			wg.Add(1)
 
 			character := monocle.Character{ID: uint64(y)}
-			go func(c monocle.Character) {
-				p.processCharacter(c)
-				p.processCharacterCorpHistory(c)
+			go func(model monocle.Character) {
+				character := Character{
+					model:  model,
+					exists: false,
+				}
+				p.processCharacter(character)
+				p.processCharacterCorpHistory(character)
 				wg.Done()
 				return
 			}(character)
@@ -125,11 +134,11 @@ func (p *Processor) charUpdater() {
 			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 		}
 
-		err := models.Characters(
-			qm.Where(models.CharacterColumns.Expires+"<NOW()"),
-			qm.And(models.CharacterColumns.Ignored+"=?", 0),
-			qm.And(models.CharacterColumns.CorporationID+"!=?", 1000001),
-			qm.OrderBy(models.CharacterColumns.Expires),
+		err := boiler.Characters(
+			qm.Where(boiler.CharacterColumns.Expires+"<NOW()"),
+			qm.And(boiler.CharacterColumns.Ignored+"=?", 0),
+			qm.And(boiler.CharacterColumns.CorporationID+"!=?", 1000001),
+			qm.OrderBy(boiler.CharacterColumns.Expires),
 			qm.Limit(int(records*workers)),
 		).Bind(context.Background(), p.DB, &characters)
 
@@ -152,8 +161,11 @@ func (p *Processor) charUpdater() {
 		for _, characters := range charChunk {
 			wg.Add(1)
 			go func(characters []monocle.Character) {
-				for _, character := range characters {
-					character.Exists = true
+				for _, model := range characters {
+					character := Character{
+						model:  model,
+						exists: true,
+					}
 					p.processCharacter(character)
 					p.processCharacterCorpHistory(character)
 				}
@@ -167,7 +179,7 @@ func (p *Processor) charUpdater() {
 	}
 }
 
-func (p *Processor) processCharacter(character monocle.Character) {
+func (p *Processor) processCharacter(character Character) {
 	var response esi.Response
 	var err error
 
@@ -179,21 +191,21 @@ func (p *Processor) processCharacter(character monocle.Character) {
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
-	if !character.IsExpired() {
+	if !character.model.IsExpired() {
 		return
 	}
 
-	p.Logger.Debugf("\tProcessing Char %d", character.ID)
+	p.Logger.Debugf("\tProcessing Char %d", character.model.ID)
 
 	attempts := 0
 	for {
 		if attempts >= 3 {
-			p.Logger.Errorf("All Attempts exhuasted for Character %d", character.ID)
+			p.Logger.Errorf("All Attempts exhuasted for Character %d", character.model.ID)
 			return
 		}
-		response, err = p.ESI.GetCharactersCharacterID(character.ID, character.Etag)
+		response, err = p.ESI.GetCharactersCharacterID(character.model)
 		if err != nil {
-			p.Logger.Errorf("Error completing request to ESI for Character %d information: %s", character.ID, err)
+			p.Logger.Errorf("Error completing request to ESI for Character %d information: %s", character.model.ID, err)
 			return
 		}
 
@@ -206,23 +218,23 @@ func (p *Processor) processCharacter(character monocle.Character) {
 		time.Sleep(1 * time.Second)
 	}
 
-	character = response.Data.(monocle.Character)
+	character.model = response.Data.(monocle.Character)
 
-	if character.CorporationID == 1000001 {
-		character.Ignored = true
+	if character.model.CorporationID == 1000001 {
+		character.model.Ignored = true
 	}
 
-	p.Logger.Debugf("\tCharacter: %d:%s\tNew Character: %t", character.ID, character.Name, character.Exists)
+	p.Logger.Debugf("\tCharacter: %d:%s\tNew Character: %t", character.model.ID, character.model.Name, !character.exists)
 
-	switch !character.Exists {
+	switch !character.exists {
 	case true:
-		_, err := p.DB.InsertCharacter(character)
+		_, err := p.DB.InsertCharacter(character.model)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to insert new character into database: %s", err)
 			return
 		}
 	case false:
-		_, err := p.DB.UpdateCharacterByID(character)
+		_, err := p.DB.UpdateCharacterByID(character.model)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to update character in database: %s", err)
 			return
@@ -231,7 +243,7 @@ func (p *Processor) processCharacter(character monocle.Character) {
 
 }
 
-func (p *Processor) processCharacterCorpHistory(character monocle.Character) {
+func (p *Processor) processCharacterCorpHistory(character Character) {
 	var history []monocle.CharacterCorporationHistory
 	var response esi.Response
 
@@ -243,15 +255,15 @@ func (p *Processor) processCharacterCorpHistory(character monocle.Character) {
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
-	historyEtag, err := p.DB.SelectEtagByIDAndResource(character.ID, "character_corporation_history")
+	historyEtag, err := p.DB.SelectEtagByIDAndResource(character.model.ID, "character_corporation_history")
 	historyEtag.Exists = true
 	if err != nil {
 		if err != sql.ErrNoRows {
-			p.Logger.Errorf("Unable to query character_corporation_history etag resource for Character %d due to SQL Error: %s", character.ID, err)
+			p.Logger.Errorf("Unable to query character_corporation_history etag resource for Character %d due to SQL Error: %s", character.model.ID, err)
 			return
 		}
 
-		historyEtag.ID = character.ID
+		historyEtag.ID = character.model.ID
 		historyEtag.Resource = "character_corporation_history"
 		historyEtag.Exists = false
 	}

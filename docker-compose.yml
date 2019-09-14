@@ -2,12 +2,11 @@ version: "3.7"
 
 services:
     image:
-        image: core
         build:
             context: .
             dockerfile: Dockerfile
     charUpdater:
-        image: core
+        image: image
         logging:
             driver: "json-file"
             options:
@@ -17,9 +16,9 @@ services:
         network_mode: "host"
         container_name: charUpdater
         env_file:
-            - ./cmd/.env-docker
+            - ./.env-docker
     charHunter:
-        image: core
+        image: image
         logging:
             driver: "json-file"
             options:
@@ -29,9 +28,9 @@ services:
         network_mode: "host"
         container_name: charHunter
         env_file:
-            - ./cmd/.env-docker
+            - ./.env-docker
     corpHunter:
-        image: core
+        image: image
         logging:
             driver: "json-file"
             options:
@@ -41,9 +40,9 @@ services:
         network_mode: "host"
         container_name: corpHunter
         env_file:
-            - ./cmd/.env-docker
+            - ./.env-docker
     corpUpdater:
-        image: core
+        image: image
         logging:
             driver: "json-file"
             options:
@@ -53,4 +52,4 @@ services:
         network_mode: "host"
         container_name: corpUpdater
         env_file:
-            - ./cmd/.env-docker
+            - ./.env-docker

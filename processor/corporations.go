@@ -5,15 +5,20 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
-	"github.com/ddouglas/monocle/models"
-
 	"github.com/ddouglas/monocle"
+	"github.com/ddouglas/monocle/boiler"
 	"github.com/ddouglas/monocle/esi"
 )
+
+type Corporation struct {
+	model  monocle.Corporation
+	exists bool
+}
 
 func (p *Processor) corpHunter() {
 	var value struct {
@@ -66,7 +71,12 @@ func (p *Processor) corpHunter() {
 				continue
 			}
 
-			corporation := monocle.Corporation{ID: uint64(x)}
+			corporation := Corporation{
+				model: monocle.Corporation{
+					ID: uint64(x),
+				},
+				exists: false,
+			}
 			p.processCorporation(corporation)
 			p.processCorporationAllianceHistory(corporation)
 			break
@@ -88,8 +98,8 @@ func (p *Processor) corpHunter() {
 			}
 		}
 
-		p.Logger.InfoF("Completed, sleep for %d seconds", 2)
-		time.Sleep(time.Second * 1)
+		p.Logger.InfoF("Completed, sleep for %d seconds", sleep)
+		time.Sleep(time.Second * time.Duration(sleep))
 
 	}
 
@@ -105,11 +115,12 @@ func (p *Processor) corpUpdater() {
 			p.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
 			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 		}
-		err := models.Corporations(
-			qm.Where(models.CorporationColumns.Expires+"<NOW()"),
-			qm.And(models.CorporationColumns.Ignored+"=?", 0),
-			qm.And(models.CorporationColumns.Closed+"=?", 0),
-			qm.OrderBy(models.CorporationColumns.Expires),
+		err := boiler.Corporations(
+			qm.Where(boiler.CorporationColumns.Expires+"<NOW()"),
+			qm.And(boiler.CorporationColumns.ID+"=?", 98542870),
+			qm.And(boiler.CorporationColumns.Ignored+"=?", 0),
+			qm.And(boiler.CorporationColumns.Closed+"=?", 0),
+			qm.OrderBy(boiler.CorporationColumns.Expires),
 			qm.Limit(int(records+workers)),
 		).Bind(context.Background(), p.DB, &corporations)
 		if err != nil {
@@ -132,8 +143,11 @@ func (p *Processor) corpUpdater() {
 		for _, corporations := range corpChunk {
 			wg.Add(1)
 			go func(corporations []monocle.Corporation) {
-				for _, corporation := range corporations {
-					corporation.Exists = true
+				for _, model := range corporations {
+					corporation := Corporation{
+						model:  model,
+						exists: true,
+					}
 					p.processCorporation(corporation)
 					p.processCorporationAllianceHistory(corporation)
 				}
@@ -144,10 +158,11 @@ func (p *Processor) corpUpdater() {
 		p.Logger.Info("Waiting")
 		wg.Wait()
 		p.Logger.Info("Done")
+		os.Exit(1)
 	}
 }
 
-func (p *Processor) processCorporation(corporation monocle.Corporation) {
+func (p *Processor) processCorporation(corporation Corporation) {
 
 	var response esi.Response
 	var err error
@@ -159,21 +174,21 @@ func (p *Processor) processCorporation(corporation monocle.Corporation) {
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
-	if !corporation.IsExpired() {
+	if !corporation.model.IsExpired() {
 		return
 	}
 
-	p.Logger.Debugf("Processing Corp %d", corporation.ID)
+	p.Logger.Debugf("Processing Corp %d", corporation.model.ID)
 
 	attempts := 0
 	for {
 		if attempts >= 3 {
-			p.Logger.Errorf("All Attempts exhuasted for Corporation %d", corporation.ID)
+			p.Logger.Errorf("All Attempts exhuasted for Corporation %d", corporation.model.ID)
 			return
 		}
-		response, err = p.ESI.GetCorporationsCorporationID(corporation.ID, corporation.Etag)
+		response, err = p.ESI.GetCorporationsCorporationID(corporation.model)
 		if err != nil {
-			p.Logger.Errorf("Error completing request to ESI for Corporation %d information: %s", corporation.ID, err)
+			p.Logger.Errorf("Error completing request to ESI for Corporation %d information: %s", corporation.model.ID, err)
 			return
 		}
 
@@ -186,23 +201,23 @@ func (p *Processor) processCorporation(corporation monocle.Corporation) {
 		time.Sleep(1 * time.Second)
 	}
 
-	corporation = response.Data.(monocle.Corporation)
+	corporation.model = response.Data.(monocle.Corporation)
 
-	if corporation.MemberCount == 0 {
-		corporation.Closed = true
+	if corporation.model.MemberCount == 0 {
+		corporation.model.Closed = true
 	}
 
-	p.Logger.Debugf("Corporation: %d:%s\tNew Corporation: %t", corporation.ID, corporation.Name, corporation.Exists)
+	p.Logger.Debugf("Corporation: %d:%s\tNew Corporation: %t", corporation.model.ID, corporation.model.Name, !corporation.exists)
 
-	switch !corporation.Exists {
+	switch !corporation.exists {
 	case true:
-		_, err := p.DB.InsertCorporation(corporation)
+		_, err := p.DB.InsertCorporation(corporation.model)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to insert new corporation into database: %s", err)
 			return
 		}
 	case false:
-		_, err := p.DB.UpdateCorporationByID(corporation)
+		_, err := p.DB.UpdateCorporationByID(corporation.model)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to update corporation in database: %s", err)
 			return
@@ -210,7 +225,7 @@ func (p *Processor) processCorporation(corporation monocle.Corporation) {
 	}
 }
 
-func (p *Processor) processCorporationAllianceHistory(corporation monocle.Corporation) {
+func (p *Processor) processCorporationAllianceHistory(corporation Corporation) {
 	var history []monocle.CorporationAllianceHistory
 	var response esi.Response
 
@@ -222,15 +237,15 @@ func (p *Processor) processCorporationAllianceHistory(corporation monocle.Corpor
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
-	historyEtag, err := p.DB.SelectEtagByIDAndResource(corporation.ID, "corporation_alliance_history")
+	historyEtag, err := p.DB.SelectEtagByIDAndResource(corporation.model.ID, "corporation_alliance_history")
 	historyEtag.Exists = true
 	if err != nil {
 		if err != sql.ErrNoRows {
-			p.Logger.Errorf("Unable to query corporation_alliance_history etag resource for Character %d due to SQL Error: %s", corporation.ID, err)
+			p.Logger.Errorf("Unable to query corporation_alliance_history etag resource for Character %d due to SQL Error: %s", corporation.model.ID, err)
 			return
 		}
 
-		historyEtag.ID = corporation.ID
+		historyEtag.ID = corporation.model.ID
 		historyEtag.Resource = "corporation_alliance_history"
 		historyEtag.Exists = false
 	}
