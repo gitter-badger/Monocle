@@ -1,12 +1,11 @@
 version: "3.7"
 
 services:
-    image:
+    charUpdater:
+        image: image
         build:
             context: .
             dockerfile: Dockerfile
-    charUpdater:
-        image: image
         logging:
             driver: "json-file"
             options:
@@ -19,6 +18,9 @@ services:
             - ./.env-docker
     charHunter:
         image: image
+        build:
+            context: .
+            dockerfile: Dockerfile
         logging:
             driver: "json-file"
             options:
@@ -31,6 +33,9 @@ services:
             - ./.env-docker
     corpHunter:
         image: image
+        build:
+            context: .
+            dockerfile: Dockerfile
         logging:
             driver: "json-file"
             options:
@@ -43,6 +48,9 @@ services:
             - ./.env-docker
     corpUpdater:
         image: image
+        build:
+            context: .
+            dockerfile: Dockerfile
         logging:
             driver: "json-file"
             options:

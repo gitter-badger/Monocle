@@ -2,3 +2,4 @@
 .env-docker
 cmd/cli/cli
 sqlboiler.toml
+vendor/

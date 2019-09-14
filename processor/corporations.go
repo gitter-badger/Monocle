@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -117,7 +116,6 @@ func (p *Processor) corpUpdater() {
 		}
 		err := boiler.Corporations(
 			qm.Where(boiler.CorporationColumns.Expires+"<NOW()"),
-			qm.And(boiler.CorporationColumns.ID+"=?", 98542870),
 			qm.And(boiler.CorporationColumns.Ignored+"=?", 0),
 			qm.And(boiler.CorporationColumns.Closed+"=?", 0),
 			qm.OrderBy(boiler.CorporationColumns.Expires),
@@ -158,7 +156,6 @@ func (p *Processor) corpUpdater() {
 		p.Logger.Info("Waiting")
 		wg.Wait()
 		p.Logger.Info("Done")
-		os.Exit(1)
 	}
 }
 

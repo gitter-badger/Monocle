@@ -3,7 +3,6 @@ package mysql
 import (
 	"fmt"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ddouglas/monocle"
 	sb "github.com/huandu/go-sqlbuilder"
 	"github.com/pkg/errors"
@@ -328,9 +327,6 @@ func (db *DB) UpdateCorporationByID(corporation monocle.Corporation) (monocle.Co
 	)
 
 	query, args := u.Build()
-
-	fmt.Println(query)
-	spew.Dump(args)
 
 	_, err := db.Exec(query, args...)
 	if err != nil {
