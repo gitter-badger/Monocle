@@ -1,0 +1,28 @@
+{
+    "output": "boiler",
+    "pkgname": "boiler",
+    "mysql": {
+        "dbname": "<dbname>",
+        "host": "localhost",
+        "post": 3306,
+        "user": "<username>",
+        "pass": "<password>",
+        "sslmode": "false",
+        "whitelist": [
+            "characters",
+            "corporations",
+            "corporation_deltas",
+            "alliances"
+        ]
+    },
+    "aliases": {
+        "tables": {
+            "corporation_deltas": {
+                "up_plural": "CorporationDeltas",
+                "up_singular": "CorporationDelta",
+                "down_plural": "corporationDeltas",
+                "down_singular": "corporationDelta"
+            }
+        }
+    }
+}

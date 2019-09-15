@@ -9,6 +9,10 @@ import (
 	"github.com/urfave/cli"
 )
 
+type Handler struct {
+	*core.App
+}
+
 func Action(c *cli.Context) error {
 
 	core, err := core.New()
@@ -18,12 +22,39 @@ func Action(c *cli.Context) error {
 		return cli.NewExitError(err, 1)
 	}
 
+	h := Handler{
+		core,
+	}
+
 	gocron.Every(5).Seconds().Do(func() {
-		core.DGO.ChannelMessageSend("394991263344230411", "Hello There from GoCron")
+		h.Deltas()
 	})
 
 	<-gocron.Start()
 
 	return nil
 
+}
+
+func (h *Handler) Deltas() {
+
+	query := `
+		INSERT INTO corporation_deltas (
+			corporation_id, 
+			member_count, 
+			created_at
+		) SELECT 
+			id, 
+			member_count, 
+			NOW() 
+		FROM corporations 
+		WHERE 
+			closed = 0;
+	`
+
+	_, err := h.DB.Exec(query)
+	if err != nil {
+		h.Logger.Error(err.Error())
+	}
+	return
 }

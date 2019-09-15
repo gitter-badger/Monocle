@@ -1,2 +1,2 @@
 sql-boiler:
-	sqlboiler --wipe --no-tests mysql
+	sqlboiler mysql --wipe --no-tests

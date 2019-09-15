@@ -4,9 +4,13 @@
 package boiler
 
 var TableNames = struct {
-	Characters   string
-	Corporations string
+	Alliances         string
+	Characters        string
+	CorporationDeltas string
+	Corporations      string
 }{
-	Characters:   "characters",
-	Corporations: "corporations",
+	Alliances:         "alliances",
+	Characters:        "characters",
+	CorporationDeltas: "corporation_deltas",
+	Corporations:      "corporations",
 }

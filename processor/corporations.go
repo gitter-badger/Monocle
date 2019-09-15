@@ -128,7 +128,7 @@ func (p *Processor) corpUpdater() {
 			continue
 		}
 
-		if len(corporations) < int(threshold) {
+		if len(corporations) <= int(threshold) {
 			p.Logger.Infof("Minimum threshold of %d for job not met. Sleeping for %d seconds", threshold, sleep)
 			time.Sleep(time.Second * time.Duration(sleep))
 			continue
