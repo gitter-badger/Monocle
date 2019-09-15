@@ -154,8 +154,8 @@ func (p *Processor) charUpdater() {
 			continue
 		}
 
-		if len(characters) < int(threshold) {
-			p.Logger.Infof("Minimum threshold of %d for job not met. Sleeping for %d seconds", threshold, sleep)
+		if len(characters) <= 0 {
+			p.Logger.Infof("No characters were queried. Sleeping for %d seconds", sleep)
 			time.Sleep(time.Second * time.Duration(sleep))
 			continue
 		}

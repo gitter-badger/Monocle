@@ -54,11 +54,6 @@ var expired = cli.BoolFlag{
 var save = cli.BoolFlag{
 	Name: "save",
 }
-var threshold = cli.IntFlag{
-	Name:  "threshold",
-	Usage: "The minimum number of records that should be returned from the query in order for the job to run",
-	Value: 100,
-}
 
 func init() {
 	app = cli.NewApp()

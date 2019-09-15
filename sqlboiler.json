@@ -2,11 +2,11 @@
     "output": "boiler",
     "pkgname": "boiler",
     "mysql": {
-        "dbname": "<dbname>",
+        "dbname": "monocle",
         "host": "localhost",
         "post": 3306,
-        "user": "<username>",
-        "pass": "<password>",
+        "user": "monocle",
+        "pass": "2i4aFivojo",
         "sslmode": "false",
         "whitelist": [
             "characters",
