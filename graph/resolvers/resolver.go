@@ -40,6 +40,13 @@ func (r *queryResolver) Character(ctx context.Context, id int) (*monocle.Charact
 	return &character, err
 }
 
+func (r *queryResolver) CharactersByBirthday(ctx context.Context, limt int, order models.Sort) ([]*monocle.Character, error) {
+	return nil, nil
+}
+func (r *queryResolver) CharactersByID(ctx context.Context, limit int, order models.Sort) ([]*monocle.Character, error) {
+	return nil, nil
+}
+
 func (r *queryResolver) Characters(ctx context.Context, limit int, order models.Sort) ([]*monocle.Character, error) {
 	var characters []*monocle.Character
 
