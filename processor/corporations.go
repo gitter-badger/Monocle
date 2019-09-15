@@ -1,13 +1,16 @@
 package processor
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/ddouglas/monocle"
+	"github.com/ddouglas/monocle/boiler"
 	"github.com/ddouglas/monocle/esi"
+	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
 type Corporation struct {
@@ -110,22 +113,22 @@ func (p *Processor) corpUpdater() {
 			p.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
 			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 		}
-		corporations = make([]monocle.Corporation, 0)
-		// err := boiler.Corporations(
-		// 	qm.Where(boiler.CorporationColumns.Expires+"<NOW()"),
-		// 	qm.And(boiler.CorporationColumns.Ignored+"=?", 0),
-		// 	qm.And(boiler.CorporationColumns.Closed+"=?", 0),
-		// 	qm.OrderBy(boiler.CorporationColumns.Expires),
-		// 	qm.Limit(int(records*workers)),
-		// ).Bind(context.Background(), p.DB, &corporations)
-		// if err != nil {
-		// 	if err != sql.ErrNoRows {
-		// 		p.Logger.Fatalf("Unable to query for characters: %s", err)
-		// 	}
-		// 	continue
-		// }
 
-		if len(corporations) = 0  {
+		err := boiler.Corporations(
+			qm.Where(boiler.CorporationColumns.Expires+"<NOW()"),
+			qm.And(boiler.CorporationColumns.Ignored+"=?", 0),
+			qm.And(boiler.CorporationColumns.Closed+"=?", 0),
+			qm.OrderBy(boiler.CorporationColumns.Expires),
+			qm.Limit(int(records*workers)),
+		).Bind(context.Background(), p.DB, &corporations)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				p.Logger.Fatalf("Unable to query for characters: %s", err)
+			}
+			continue
+		}
+
+		if len(corporations) <= 0 {
 			p.Logger.Infof("No corporations were queried. Sleeping for %d seconds", sleep)
 			time.Sleep(time.Second * time.Duration(sleep))
 			continue
