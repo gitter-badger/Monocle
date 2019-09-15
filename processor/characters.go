@@ -133,13 +133,20 @@ func (p *Processor) charUpdater() {
 			p.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
 			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 		}
+		p.Logger.Info("Start")
 
-		err := boiler.Characters(
+		query := boiler.Characters(
 			qm.Where(boiler.CharacterColumns.Expires+"<NOW()"),
 			qm.And(boiler.CharacterColumns.Ignored+"=?", 0),
 			qm.OrderBy(boiler.CharacterColumns.Expires),
 			qm.Limit(int(records*workers)),
-		).Bind(context.Background(), p.DB, &characters)
+		)
+
+		// queryStr, args := queries.BuildQuery(query.Query)
+		// fmt.Println(queryStr)
+		// fmt.Println(args...)
+
+		err := query.Bind(context.Background(), p.DB, &characters)
 
 		if err != nil {
 			p.Logger.Errorf("No records returned from database", p.ESI.Reset)
