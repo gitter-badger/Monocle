@@ -39,7 +39,7 @@ func Action(c *cli.Context) error {
 	msg = "Registering Deltas func with GoCron"
 	h.Logger.Info(msg)
 	h.SendDicoMsg(msg)
-	gocron.Every(1).Day().At("11:00").Do(h.Counts)
+	gocron.Every(1).Day().At("11:00").Do(h.Deltas)
 
 	msg = "Start GoCron"
 	h.Logger.Info(msg)
