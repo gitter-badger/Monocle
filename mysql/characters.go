@@ -73,8 +73,6 @@ func (db *DB) SelectCharactersFromRange(start int, end int) ([]monocle.Character
 
 	query, args := q.Build()
 
-	fmt.Println(query)
-
 	err := db.Select(&characters, query, args...)
 	return characters, err
 }

@@ -12,7 +12,8 @@
             "characters",
             "corporations",
             "corporation_deltas",
-            "alliances"
+            "alliances",
+            "kv"
         ]
     },
     "aliases": {

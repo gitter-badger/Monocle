@@ -1,15 +1,9 @@
 version: "3.7"
 
 services:
-    master:
-        image: core
-        build:
-            context: .
-            dockerfile: Dockerfile
+
     charUpdater:
-        image: core
-        depends_on:
-            - master
+        image: monocle:dev
         logging:
             driver: "json-file"
             options:
@@ -21,9 +15,7 @@ services:
         env_file:
             - ./.env-docker
     charHunter:
-        image: core
-        depends_on:
-            - master
+        image: monocle:dev
         logging:
             driver: "json-file"
             options:
@@ -35,9 +27,7 @@ services:
         env_file:
             - ./.env-docker
     corpHunter:
-        image: core
-        depends_on:
-            - master
+        image: monocle:dev
         logging:
             driver: "json-file"
             options:
@@ -49,9 +39,7 @@ services:
         env_file:
             - ./.env-docker
     corpUpdater:
-        image: core
-        depends_on:
-            - master
+        image: monocle:dev
         logging:
             driver: "json-file"
             options:
@@ -60,5 +48,17 @@ services:
         command: ./cli processor --scope=corpUpdater
         network_mode: "host"
         container_name: corpUpdater
+        env_file:
+            - ./.env-docker
+    cron:
+        image: monocle:dev
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli cron
+        network_mode: "host"
+        container_name: cron
         env_file:
             - ./.env-docker

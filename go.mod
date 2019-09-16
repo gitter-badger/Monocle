@@ -7,6 +7,7 @@ require (
 	github.com/apsdehal/go-logger v0.0.0-20190515212710-b0d6ccfee0e6
 	github.com/bwmarrin/discordgo v0.19.0
 	github.com/davecgh/go-spew v1.1.1
+	github.com/ericlagergren/decimal v0.0.0-20190912144844-2c3e3e1ef942 // indirect
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect

@@ -8,9 +8,11 @@ var TableNames = struct {
 	Characters        string
 	CorporationDeltas string
 	Corporations      string
+	KV                string
 }{
 	Alliances:         "alliances",
 	Characters:        "characters",
 	CorporationDeltas: "corporation_deltas",
 	Corporations:      "corporations",
+	KV:                "kv",
 }
