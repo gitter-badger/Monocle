@@ -58,6 +58,9 @@ func (h *Handler) SendDicoMsg(s string) {
 
 func (h *Handler) Deltas() {
 
+	msg := "Starting Deltas Logger"
+	h.Logger.Info(msg)
+	h.SendDicoMsg(msg)
 	query := `
 		INSERT INTO corporation_deltas (
 			corporation_id,
@@ -76,6 +79,10 @@ func (h *Handler) Deltas() {
 	if err != nil {
 		h.Logger.Error(err.Error())
 	}
+
+	msg := "Finish Deltas Logger"
+	h.Logger.Info(msg)
+	h.SendDicoMsg(msg)
 	return
 }
 
