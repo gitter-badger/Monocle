@@ -36,6 +36,11 @@ func Action(c *cli.Context) error {
 	h.SendDicoMsg(msg)
 	gocron.Every(1).Hour().Do(h.Counts)
 
+	msg = "Registering Deltas func with GoCron"
+	h.Logger.Info(msg)
+	h.SendDicoMsg(msg)
+	gocron.Every(1).Day().At("11:00").Do(h.Counts)
+
 	msg = "Start GoCron"
 	h.Logger.Info(msg)
 	h.SendDicoMsg(msg)
@@ -51,28 +56,28 @@ func (h *Handler) SendDicoMsg(s string) {
 	h.DGO.ChannelMessageSend("394991263344230411", s)
 }
 
-// func (h *Handler) Deltas() {
+func (h *Handler) Deltas() {
 
-// 	query := `
-// 		INSERT INTO corporation_deltas (
-// 			corporation_id,
-// 			member_count,
-// 			created_at
-// 		) SELECT
-// 			id,
-// 			member_count,
-// 			NOW()
-// 		FROM corporations
-// 		WHERE
-// 			closed = 0;
-// 	`
+	query := `
+		INSERT INTO corporation_deltas (
+			corporation_id,
+			member_count,
+			created_at
+		) SELECT
+			id,
+			member_count,
+			NOW()
+		FROM corporations
+		WHERE
+			closed = 0;
+	`
 
-// 	_, err := h.DB.Exec(query)
-// 	if err != nil {
-// 		h.Logger.Error(err.Error())
-// 	}
-// 	return
-// }
+	_, err := h.DB.Exec(query)
+	if err != nil {
+		h.Logger.Error(err.Error())
+	}
+	return
+}
 
 func (h *Handler) Counts() {
 
