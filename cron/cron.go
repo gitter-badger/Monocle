@@ -80,7 +80,7 @@ func (h *Handler) Deltas() {
 		h.Logger.Error(err.Error())
 	}
 
-	msg := "Finish Deltas Logger"
+	msg = "Finish Deltas Logger"
 	h.Logger.Info(msg)
 	h.SendDicoMsg(msg)
 	return
