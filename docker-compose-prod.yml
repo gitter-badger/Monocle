@@ -3,7 +3,7 @@ version: "3.7"
 services:
 
     charUpdater:
-        image: devoverlord93/moncole:latest
+        image: devoverlord93/monocle:latest
         logging:
             driver: "json-file"
             options:
@@ -15,7 +15,7 @@ services:
         env_file:
             - ./.env-docker
     charHunter:
-        image: devoverlord93/moncole:latest
+        image: devoverlord93/monocle:latest
         logging:
             driver: "json-file"
             options:
@@ -27,7 +27,7 @@ services:
         env_file:
             - ./.env-docker
     corpHunter:
-        image: devoverlord93/moncole:latest
+        image: devoverlord93/monocle:latest
         logging:
             driver: "json-file"
             options:
@@ -39,7 +39,7 @@ services:
         env_file:
             - ./.env-docker
     corpUpdater:
-        image: devoverlord93/moncole:latest
+        image: devoverlord93/monocle:latest
         logging:
             driver: "json-file"
             options:
@@ -51,7 +51,7 @@ services:
         env_file:
             - ./.env-docker
     cron:
-        image: devoverlord93/moncole:latest
+        image: devoverlord93/monocle:latest
         logging:
             driver: "json-file"
             options:
