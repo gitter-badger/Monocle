@@ -40,7 +40,7 @@ func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
 	mx.Unlock()
 
 	switch response.Code {
-	case 200:
+	case 200, 500, 502, 503, 504:
 		break
 	default:
 		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
