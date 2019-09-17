@@ -29,6 +29,7 @@ func Action(c *cli.Context) error {
 		core.Logger.Infof("Starting Page: %d Offset: %d", page, offset)
 
 		err := boiler.Characters(
+			qm.Where(boiler.CharacterColumns.CorporationID+"=?", 0),
 			qm.Limit(limit),
 			qm.Offset(offset),
 		).Bind(context.Background(), core.DB, &characters)
