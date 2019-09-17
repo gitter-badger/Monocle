@@ -96,7 +96,7 @@ func (e *Client) GetAlliances(etagResource monocle.EtagResource) (Response, mono
 
 }
 
-func (e *Client) GetAlliancesAllianceID(id uint64, etag string) (Response, error) {
+func (e *Client) HeadAlliancesAllianceID(id uint) (Response, error) {
 
 	path := fmt.Sprintf("/v3/alliances/%d/", id)
 
@@ -108,8 +108,47 @@ func (e *Client) GetAlliancesAllianceID(id uint64, etag string) (Response, error
 
 	headers := make(map[string]string)
 
-	if etag != "" {
-		headers["If-None-Match"] = etag
+	request := Request{
+		Method:  "HEAD",
+		Path:    url,
+		Headers: headers,
+		Body:    []byte(""),
+	}
+
+	response, err := e.Request(request)
+	if err != nil {
+		return response, err
+	}
+
+	mx.Lock()
+	e.Reset = RetrieveErrorResetFromResponse(response)
+	e.Remain = RetrieveErrorCountFromResponse(response)
+	mx.Unlock()
+
+	switch response.Code {
+	case 200:
+		break
+	default:
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
+	}
+
+	return response, err
+}
+
+func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, error) {
+
+	path := fmt.Sprintf("/v3/alliances/%d/", alliance.ID)
+
+	url := url.URL{
+		Scheme: "https",
+		Host:   e.Host,
+		Path:   path,
+	}
+
+	headers := make(map[string]string)
+
+	if alliance.Etag != "" {
+		headers["If-None-Match"] = alliance.Etag
 	}
 
 	request := Request{
@@ -129,16 +168,16 @@ func (e *Client) GetAlliancesAllianceID(id uint64, etag string) (Response, error
 	e.Remain = RetrieveErrorCountFromResponse(response)
 	mx.Unlock()
 
-	var alliance monocle.Alliance
-	alliance.ID = id
-
 	switch response.Code {
 	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &alliance)
+		var newAlliance monocle.Alliance
+		err = json.Unmarshal(response.Data.([]byte), &newAlliance)
 		if err != nil {
 			err = errors.Wrapf(err, "unable to unmarshel response body on request %s", path)
 			return response, err
 		}
+
+		newAlliance.ID = alliance.ID
 
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
@@ -147,14 +186,17 @@ func (e *Client) GetAlliancesAllianceID(id uint64, etag string) (Response, error
 			return response, err
 		}
 
-		alliance.Expires = expires
+		newAlliance.Expires = expires
 
 		etag, err := RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
 			return response, err
 		}
-		alliance.Etag = etag
+		newAlliance.Etag = etag
+
+		alliance = newAlliance
+
 		break
 	case 304:
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
@@ -163,7 +205,6 @@ func (e *Client) GetAlliancesAllianceID(id uint64, etag string) (Response, error
 
 			return response, err
 		}
-
 		alliance.Expires = expires
 
 		etag, err := RetrieveEtagHeaderFromResponse(response)
@@ -172,6 +213,7 @@ func (e *Client) GetAlliancesAllianceID(id uint64, etag string) (Response, error
 			return response, err
 		}
 		alliance.Etag = etag
+
 		break
 	default:
 		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)

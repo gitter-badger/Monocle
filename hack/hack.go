@@ -1,88 +1,102 @@
 package hack
 
 import (
-	"context"
-	"fmt"
-	"strings"
+	"sync"
+	"time"
 
-	"github.com/volatiletech/sqlboiler/queries"
-
-	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/boiler"
 	"github.com/ddouglas/monocle/core"
 	"github.com/urfave/cli"
+	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
+var wg sync.WaitGroup
+
 func Action(c *cli.Context) error {
 
-	core, err := core.New()
+	app, err := core.New()
 	if err != nil {
 		return err
 	}
-
 	page := 1
-	limit := 500
+	limit := 10000
 
 	for {
-		var characters []*monocle.Character
+		var ids []uint64
 		offset := (page * limit) - limit
 
-		core.Logger.Infof("Starting Page: %d Offset: %d", page, offset)
+		app.Logger.Infof("Starting Page: %d Offset: %d", page, offset)
 
-		charQuery := boiler.Characters(
+		charQuery := boiler.NewQuery(
+			qm.Select("id"),
+			qm.From("characters"),
 			qm.Where(boiler.CharacterColumns.CorporationID+"=?", 0),
 			qm.Limit(limit),
 			qm.Offset(offset),
 		)
 
-		queryStr, _ := queries.BuildQuery(charQuery.Query)
-		core.Logger.Infof("Executing Query: %s", queryStr)
+		queryStr, args := queries.BuildQuery(charQuery)
+		app.Logger.Infof("Executing Query: %s", queryStr)
 
-		err := charQuery.Bind(context.Background(), core.DB, &characters)
+		err := app.DB.Select(&ids, queryStr, args...)
 		if err != nil {
 			return err
 		}
 
-		length := len(characters)
+		length := len(ids)
 		if length == 0 {
 			break
 		}
 
-		core.Logger.Infof("Successfully Queried %d Characters", length)
+		app.Logger.Infof("Successfully Queried %d Characters", length)
 
-		var ids []interface{}
-		var q []string
-		for _, v := range characters {
-			q = append(q, "?")
-			ids = append(ids, v.ID)
+		chunks := chunkUint64Slice(1000, ids)
+
+		for _, chunk := range chunks {
+			wg.Add(1)
+			go func(core *core.App, chunk []uint64) {
+				for _, id := range chunk {
+					// core.Logger.Infof("Processing ID %d", id)
+					_, err := core.DB.Exec(`
+					UPDATE characters SET etag = "", ignored = 0, expires = NOW() WHERE id = ?
+					`, id)
+					if err != nil {
+						core.Logger.Error(err.Error())
+					}
+				}
+				wg.Done()
+			}(app, chunk)
 		}
-
-		qStr := strings.Join(q, ", ")
-
-		query := `
-			UPDATE 
-				characters
-			SET
-				etag = "",
-				ignored = 0,
-				expires = NOW()
-			WHERE id IN (%s)
-		`
-
-		query = fmt.Sprintf(query, qStr)
-
-		core.Logger.Infof("Executing Query: %s", query)
-
-		_, err = core.DB.Exec(query, ids...)
-		if err != nil {
-			return err
-		}
-
-		core.Logger.Infof("Finished with Page: %d Offset: %d", page, offset)
+		app.Logger.Info("Waiting")
+		wg.Wait()
+		app.Logger.Info("Done. Sleeping for 1 second")
+		time.Sleep(time.Second * 1)
 	}
 
-	core.Logger.Infof("Script Done")
 	return nil
 
+}
+
+func chunkUint64Slice(size int, slice []uint64) [][]uint64 {
+	chunk := make([][]uint64, 0)
+
+	if len(slice) <= size {
+		chunk = append(chunk, slice)
+		return chunk
+	}
+
+	for x := 0; x <= len(slice); x += size {
+
+		end := x + size
+
+		if end > len(slice) {
+			end = len(slice)
+		}
+
+		chunk = append(chunk, slice[x:end])
+
+	}
+
+	return chunk
 }

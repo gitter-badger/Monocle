@@ -53,6 +53,10 @@ func Action(c *cli.Context) error {
 		p.corpHunter()
 	case "corpUpdater":
 		p.corpUpdater()
+	case "alliHunter":
+		p.alliHunter()
+	// case "alliUpdater":
+	// 	p.alliUpdater()
 	default:
 		return cli.NewExitError(errors.New("scope not specified"), 1)
 	}
