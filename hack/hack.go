@@ -22,7 +22,7 @@ func Action(c *cli.Context) error {
 	}
 
 	page := 1
-	limit := 10000
+	limit := 500
 
 	for {
 		var characters []*monocle.Character
@@ -71,6 +71,8 @@ func Action(c *cli.Context) error {
 		`
 
 		query = fmt.Sprintf(query, qStr)
+
+		core.Logger.Infof("Executing Query: %s", query)
 
 		_, err = core.DB.Exec(query, ids...)
 		if err != nil {
