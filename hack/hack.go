@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/volatiletech/sqlboiler/queries"
+
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/boiler"
 	"github.com/ddouglas/monocle/core"
@@ -28,18 +30,26 @@ func Action(c *cli.Context) error {
 
 		core.Logger.Infof("Starting Page: %d Offset: %d", page, offset)
 
-		err := boiler.Characters(
+		charQuery := boiler.Characters(
 			qm.Where(boiler.CharacterColumns.CorporationID+"=?", 0),
 			qm.Limit(limit),
 			qm.Offset(offset),
-		).Bind(context.Background(), core.DB, &characters)
+		)
+
+		queryStr, _ := queries.BuildQuery(charQuery.Query)
+		core.Logger.Infof("Executing Query: %s", queryStr)
+
+		err := charQuery.Bind(context.Background(), core.DB, &characters)
 		if err != nil {
 			return err
 		}
 
-		if len(characters) == 0 {
+		length := len(characters)
+		if length == 0 {
 			break
 		}
+
+		core.Logger.Infof("Successfully Queried %d Characters", length)
 
 		var ids []interface{}
 		var q []string

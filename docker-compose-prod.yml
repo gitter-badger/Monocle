@@ -1,55 +1,6 @@
 version: "3.7"
 
 services:
-
-    charUpdater:
-        image: devoverlord93/monocle:latest
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "50m"
-        command: ./cli processor --scope=charUpdater --workers=25 --records=250
-        network_mode: "host"
-        container_name: charUpdater
-        env_file:
-            - ./.env-docker
-    charHunter:
-        image: devoverlord93/monocle:latest
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "50m"
-        command: ./cli processor --scope=charHunter --records=10
-        network_mode: "host"
-        container_name: charHunter
-        env_file:
-            - ./.env-docker
-    corpHunter:
-        image: devoverlord93/monocle:latest
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "50m"
-        command: ./cli processor --scope=corpHunter
-        network_mode: "host"
-        container_name: corpHunter
-        env_file:
-            - ./.env-docker
-    corpUpdater:
-        image: devoverlord93/monocle:latest
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "50m"
-        command: ./cli processor --scope=corpUpdater
-        network_mode: "host"
-        container_name: corpUpdater
-        env_file:
-            - ./.env-docker
     cron:
         image: devoverlord93/monocle:latest
         logging:
@@ -57,7 +8,7 @@ services:
             options:
                 max-file: "5"
                 max-size: "50m"
-        command: ./cli cron
+        command: ./cli hack
         network_mode: "host"
         container_name: cron
         env_file:
