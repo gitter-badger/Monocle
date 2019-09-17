@@ -61,18 +61,6 @@ services:
         container_name: corpUpdater
         env_file:
             - ./.env-docker
-    cron:
-        image: devoverlord93/monocle:latest
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "50m"
-        command: ./cli cron
-        network_mode: "host"
-        container_name: cron
-        env_file:
-            - ./.env-docker
     hack:
         image: devoverlord93/monocle:latest
         logging:
