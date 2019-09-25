@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -51,22 +51,16 @@ type (
 	}
 )
 
-func New(prefix string) (*Client, error) {
-
-	var config Config
-	err = envconfig.Process(prefix, &config)
-	if err != nil {
-		return nil, err
-	}
+func New() (*Client, error) {
 
 	http := &http.Client{
 		Timeout: 30 * time.Second,
 	}
 
 	return &Client{
-		Host:      config.Host,
+		Host:      viper.GetString("esi.host"),
 		Http:      http,
-		UserAgent: config.UserAgent,
+		UserAgent: viper.GetString("api.user_agent"),
 		Remain:    100,
 		Reset:     60,
 	}, nil
