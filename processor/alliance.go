@@ -21,7 +21,7 @@ func (p *Processor) alliHunter() {
 		Value uint64 `json:"value"`
 	}
 
-	kv, err := p.DB.SelectValueByKey("last_good_alliance_id")
+	kv, err := p.DB["slave"].SelectValueByKey("last_good_alliance_id")
 	if err != nil {
 		if err != sql.ErrNoRows {
 			p.Logger.Criticalf("Unable to query for ID: %s", err)
@@ -89,7 +89,7 @@ func (p *Processor) alliHunter() {
 			return
 		}
 
-		_, err = p.DB.UpdateValueByKey(kv)
+		_, err = p.DB["master"].UpdateValueByKey(kv)
 		if err != nil {
 			if err != sql.ErrNoRows {
 				p.Logger.Criticalf("Unable to query for ID: %s", err)
@@ -150,13 +150,13 @@ func (p *Processor) processAlliance(alliance Alliance) {
 
 	switch !alliance.exists {
 	case true:
-		_, err := p.DB.InsertAlliance(alliance.model)
+		_, err := p.DB["master"].InsertAlliance(alliance.model)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to insert new character into database: %s", err)
 			return
 		}
 	case false:
-		_, err := p.DB.UpdateAllianceByID(alliance.model)
+		_, err := p.DB["master"].UpdateAllianceByID(alliance.model)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to update character in database: %s", err)
 			return

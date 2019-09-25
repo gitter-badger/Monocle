@@ -2,17 +2,18 @@
     "output": "boiler",
     "pkgname": "boiler",
     "mysql": {
-        "dbname": "monocle",
-        "host": "localhost",
+        "dbname": "<dbname>",
+        "host": "<host>",
         "post": 3306,
-        "user": "monocle",
-        "pass": "2i4aFivojo",
+        "user": "<username>",
+        "pass": "<password>",
         "sslmode": "false",
         "whitelist": [
+            "alliances",
             "characters",
             "corporations",
             "corporation_deltas",
-            "alliances",
+            "etags",
             "kv"
         ]
     },
