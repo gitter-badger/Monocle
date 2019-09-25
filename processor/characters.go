@@ -135,19 +135,14 @@ func (p *Processor) charUpdater() {
 		}
 		p.Logger.Info("Start")
 
-		query := boiler.Characters(
-			qm.Where(boiler.CharacterColumns.Expires+"<NOW()"),
-			qm.And(boiler.CharacterColumns.Ignored+"=?", 0),
-			qm.OrderBy(boiler.CharacterColumns.Expires),
+		err := boiler.Characters(
+			qm.Where(boiler.CharacterColumns.CorporationID+"=?", 0),
 			qm.Limit(int(records*workers)),
-		)
-
-		// queryStr, args := queries.BuildQuery(query.Query)
-		// fmt.Println(queryStr)
-		// fmt.Println(args...)
-
-		err := query.Bind(context.Background(), p.DB, &characters)
-
+			// qm.Where(boiler.CharacterColumns.Expires+"<NOW()"),
+			// qm.And(boiler.CharacterColumns.Ignored+"=?", 0),
+			// qm.OrderBy(boiler.CharacterColumns.Expires),
+			// qm.Limit(int(records*workers)),
+		).Bind(context.Background(), p.DB["slave"], &characters)
 		if err != nil {
 			p.Logger.Errorf("No records returned from database", p.ESI.Reset)
 			time.Sleep(time.Minute * 1)

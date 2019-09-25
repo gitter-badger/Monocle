@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/ddouglas/monocle/hack"
+	"github.com/ddouglas/monocle/processor"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli"
 )
@@ -71,25 +72,25 @@ func init() {
 	app.Usage = "Core Application of monocle Backend. Responsibile for managing Websocket Connections and running background tasks"
 	app.Version = "0.0.2"
 	app.Commands = []cli.Command{
+		cli.Command{
+			Name:      "processor",
+			Category:  "Population",
+			Usage:     "processor",
+			UsageText: "processes records within the database and populates the database with new records from the API",
+			Action:    processor.Action,
+			Flags: []cli.Flag{
+				scope, workers, records, sleep, begin, done,
+			},
+		},
 		// cli.Command{
-		// 	Name:      "processor",
-		// 	Category:  "Population",
-		// 	Usage:     "processor",
-		// 	UsageText: "processes records within the database and populates the database with new records from the API",
-		// 	Action:    processor.Action,
+		// 	Name:      "counter",
+		// 	Category:  "Monitoring",
+		// 	Usage:     "counter",
+		// 	UsageText: "Continuous Loop that runs a query every few seconds and returns a count of expired etags",
 		// 	Flags: []cli.Flag{
-		// 		scope, workers, records, sleep, begin, done,
+		// 		sleep, expired, save,
 		// 	},
-		// },
-		// // cli.Command{
-		// // 	Name:      "counter",
-		// // 	Category:  "Monitoring",
-		// // 	Usage:     "counter",
-		// // 	UsageText: "Continuous Loop that runs a query every few seconds and returns a count of expired etags",
-		// // 	Flags: []cli.Flag{
-		// // 		sleep, expired, save,
-		// // 	},
-		// // 	Action: updater.Counter,
+		// 	Action: updater.Counter,
 		// // },
 		// cli.Command{
 		// 	Name:      "api",
