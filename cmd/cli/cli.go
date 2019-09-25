@@ -1,13 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
-	"github.com/ddouglas/monocle/cron"
 	"github.com/ddouglas/monocle/hack"
-	"github.com/ddouglas/monocle/processor"
-	"github.com/ddouglas/monocle/server"
+	"github.com/spf13/viper"
 	"github.com/urfave/cli"
 )
 
@@ -56,48 +55,59 @@ var save = cli.BoolFlag{
 }
 
 func init() {
+
+	viper.SetConfigName("env")
+	viper.SetConfigType("json")
+	viper.AddConfigPath(".")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	app = cli.NewApp()
 	app.Name = "monocle Core"
 	app.Usage = "Core Application of monocle Backend. Responsibile for managing Websocket Connections and running background tasks"
 	app.Version = "0.0.2"
 	app.Commands = []cli.Command{
-		cli.Command{
-			Name:      "processor",
-			Category:  "Population",
-			Usage:     "processor",
-			UsageText: "processes records within the database and populates the database with new records from the API",
-			Action:    processor.Action,
-			Flags: []cli.Flag{
-				scope, workers, records, sleep, begin, done,
-			},
-		},
 		// cli.Command{
-		// 	Name:      "counter",
-		// 	Category:  "Monitoring",
-		// 	Usage:     "counter",
-		// 	UsageText: "Continuous Loop that runs a query every few seconds and returns a count of expired etags",
+		// 	Name:      "processor",
+		// 	Category:  "Population",
+		// 	Usage:     "processor",
+		// 	UsageText: "processes records within the database and populates the database with new records from the API",
+		// 	Action:    processor.Action,
 		// 	Flags: []cli.Flag{
-		// 		sleep, expired, save,
+		// 		scope, workers, records, sleep, begin, done,
 		// 	},
-		// 	Action: updater.Counter,
 		// },
-		cli.Command{
-			Name:      "api",
-			Category:  "HTTP",
-			Usage:     "api",
-			UsageText: "Starts the API to serve HTTPS requests",
-			Flags: []cli.Flag{
-				port,
-			},
-			Action: server.Serve,
-		},
-		cli.Command{
-			Name:      "cron",
-			Category:  "Scheduled",
-			Usage:     "cron",
-			UsageText: "Run GoCron Implmentation",
-			Action:    cron.Action,
-		},
+		// // cli.Command{
+		// // 	Name:      "counter",
+		// // 	Category:  "Monitoring",
+		// // 	Usage:     "counter",
+		// // 	UsageText: "Continuous Loop that runs a query every few seconds and returns a count of expired etags",
+		// // 	Flags: []cli.Flag{
+		// // 		sleep, expired, save,
+		// // 	},
+		// // 	Action: updater.Counter,
+		// // },
+		// cli.Command{
+		// 	Name:      "api",
+		// 	Category:  "HTTP",
+		// 	Usage:     "api",
+		// 	UsageText: "Starts the API to serve HTTPS requests",
+		// 	Flags: []cli.Flag{
+		// 		port,
+		// 	},
+		// 	Action: server.Serve,
+		// },
+		// cli.Command{
+		// 	Name:      "cron",
+		// 	Category:  "Scheduled",
+		// 	Usage:     "cron",
+		// 	UsageText: "Run GoCron Implmentation",
+		// 	Action:    cron.Action,
+		// },
 		cli.Command{
 			Name:     "hack",
 			Category: "Hacking",

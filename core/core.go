@@ -6,59 +6,36 @@ import (
 	"os"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/spf13/viper"
 
 	"github.com/apsdehal/go-logger"
 	"github.com/ddouglas/monocle/esi"
 	"github.com/ddouglas/monocle/mysql"
-	"github.com/kelseyhightower/envconfig"
 )
 
 var err error
 
 type (
 	App struct {
-		Config Config
+		// Config Config
 		ESI    *esi.Client
-		DB     *mysql.DB
+		DB     map[string]*mysql.DB
 		DGO    *discordgo.Session
 		Logger *logger.Logger
-	}
-
-	Config struct {
-		DBDriver string `envconfig:"DB_DRIVER" required:"true"`
-		DBHost   string `envconfig:"DB_HOST" required:"true"`
-		DBPort   string `envconfig:"DB_PORT" required:"true"`
-		DBName   string `envconfig:"DB_NAME" required:"true"`
-		DBUser   string `envconfig:"DB_USER" required:"true"`
-		DBPass   string `envconfig:"DB_PASS" required:"true"`
-
-		LogLevel uint `envconfig:"LOG_LEVEL" required:"true"`
-
-		DiscordToken string `envconfig:"DISCORD_TOKEN" required:"true"`
-
-		PopulateBegin int `envconfig:"POPULATE_BEGIN"`
-
-		// HttpServerPort string `envconfig:"HTTP_SERVER_PORT" required:"true"`
 	}
 )
 
 func New() (*App, error) {
-	var config Config
-	err = envconfig.Process("MONOCLE", &config)
-	if err != nil {
-		log.Fatalf("Unable to scan environment variables into the application: %s", err)
-		os.Exit(1)
-	}
 
 	logging, err := logger.New("monocle-core", 1, os.Stdout)
 	if err != nil {
-		log.Fatal("Unable to create application logger")
+		log.Fatal("Unable to create app lication logger")
 		os.Exit(1)
 	}
 
 	logging.SetFormat("#%{id} %{time} %{file}:%{line} => %{lvl} %{message}")
 
-	switch config.LogLevel {
+	switch viper.GetInt("log.level") {
 	case 1:
 		logging.SetLogLevel(logger.CriticalLevel)
 	case 2:
@@ -76,29 +53,29 @@ func New() (*App, error) {
 		logging.SetLogLevel(logger.InfoLevel)
 	}
 
-	mysqlDSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", config.DBUser, config.DBPass, config.DBHost, config.DBPort, config.DBName)
-	db, err := mysql.Connect(mysqlDSN)
+	connections, err := mysql.Connect()
 	if err != nil {
 		logging.Fatalf("Encoutered Error Attempting to setup DB Connection: %s", err)
 	}
 
-	esiClient, err := esi.New("monocle")
+	esiClient, err := esi.New()
 	if err != nil {
 		logging.Fatalf("Encoutered Error Attempting to setup ESI Client: %s", err)
 	}
 
-	token := fmt.Sprintf("Bot %s", config.DiscordToken)
+	token := fmt.Sprintf("Bot %s", viper.GetString("discord.token"))
 	discord, err := discordgo.New(token)
 	if err != nil {
 		logging.Fatalf("Encoutered Error Attempting to setup Discord Go: %s", err)
 	}
 
 	discord.LogLevel = discordgo.LogDebug
+
 	return &App{
-		Config: config,
 		ESI:    esiClient,
-		DB:     db,
+		DB:     connections,
 		DGO:    discord,
 		Logger: logging,
 	}, nil
+
 }
