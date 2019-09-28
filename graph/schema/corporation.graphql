@@ -17,13 +17,13 @@ type Corporation {
     closed: Boolean!
     alliance: Alliance
     members: [Character]!
-    history: [AllianceHistory]!
+    #history: [AllianceHistory]!
 }
 
 type AllianceHistory {
     id: Int!
     recordID: Int!
     allianceID: Int
-    alliance: Alliance
-    startDate: Time!
+    #alliance: Alliance
+    startDate: Time
 }

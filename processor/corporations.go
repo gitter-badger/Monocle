@@ -71,7 +71,7 @@ func (p *Processor) corpHunter() {
 
 			corporation := Corporation{
 				model: monocle.Corporation{
-					ID: uint64(x),
+					ID: uint32(x),
 				},
 				exists: false,
 			}
@@ -234,7 +234,7 @@ func (p *Processor) processCorporationAllianceHistory(corporation Corporation) {
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
-	historyEtag, err := p.DB.SelectEtagByIDAndResource(corporation.model.ID, "corporation_alliance_history")
+	historyEtag, err := p.DB.SelectEtagByIDAndResource(uint64(corporation.model.ID), "corporation_alliance_history")
 	historyEtag.Exists = true
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -242,7 +242,7 @@ func (p *Processor) processCorporationAllianceHistory(corporation Corporation) {
 			return
 		}
 
-		historyEtag.ID = corporation.model.ID
+		historyEtag.ID = uint64(corporation.model.ID)
 		historyEtag.Resource = "corporation_alliance_history"
 		historyEtag.Exists = false
 	}

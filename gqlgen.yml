@@ -52,3 +52,9 @@ models:
     Alliance:
         model:
             - github.com/ddouglas/monocle.Alliance
+    AllianceHistory:
+        model:
+            - github.com/ddouglas/monocle.CorporationAllianceHistory
+    CorporationHistory:
+        model:
+            - github.com/ddouglas/monocle.CharacterCorporationHistory

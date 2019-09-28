@@ -46,9 +46,10 @@ func (r *queryResolver) CharactersByBirthday(ctx context.Context, limit int, ord
 	}
 
 	err := boiler.Characters(
+		qm.Where("birthday = DATE('%c-%d', CURDATE())"),
 		qm.Limit(limit),
 		qm.OrderBy(fmt.Sprintf(
-			"DATE('%%c-%%d', %s) %s",
+			"%s %s",
 			boiler.CharacterColumns.Birthday,
 			order.String(),
 		)),
@@ -62,5 +63,17 @@ type characterResolver struct {
 }
 
 func (q *characterResolver) Corporation(ctx context.Context, obj *monocle.Character) (*monocle.Corporation, error) {
-	return dataloaders.CtxLoader(ctx).Corporation.Load(int(obj.CorporationID))
+	return dataloaders.CtxLoader(ctx).Corporation.Load(obj.CorporationID)
+}
+
+func (q *characterResolver) History(ctx context.Context, obj *monocle.Character) ([]*monocle.CharacterCorporationHistory, error) {
+	return dataloaders.CtxLoader(ctx).CharacterCorporationHistory.Load(obj.ID)
+}
+
+type corporationHistoryResolver struct {
+	*Common
+}
+
+func (q *corporationHistoryResolver) Corporation(ctx context.Context, obj *monocle.CharacterCorporationHistory) (*monocle.Corporation, error) {
+	return dataloaders.CtxLoader(ctx).Corporation.Load(obj.CorporationID)
 }

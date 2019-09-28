@@ -9,10 +9,10 @@ import (
 	"github.com/ddouglas/monocle"
 )
 
-// AllianceLoaderConfig captures the config to create a new AllianceLoader
-type AllianceLoaderConfig struct {
+// CorporationMembersLoaderConfig captures the config to create a new CorporationMembersLoader
+type CorporationMembersLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []uint32) ([]*monocle.Alliance, []error)
+	Fetch func(keys []uint32) ([][]*monocle.Character, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -21,19 +21,19 @@ type AllianceLoaderConfig struct {
 	MaxBatch int
 }
 
-// NewAllianceLoader creates a new AllianceLoader given a fetch, wait, and maxBatch
-func NewAllianceLoader(config AllianceLoaderConfig) *AllianceLoader {
-	return &AllianceLoader{
+// NewCorporationMembersLoader creates a new CorporationMembersLoader given a fetch, wait, and maxBatch
+func NewCorporationMembersLoader(config CorporationMembersLoaderConfig) *CorporationMembersLoader {
+	return &CorporationMembersLoader{
 		fetch:    config.Fetch,
 		wait:     config.Wait,
 		maxBatch: config.MaxBatch,
 	}
 }
 
-// AllianceLoader batches and caches requests
-type AllianceLoader struct {
+// CorporationMembersLoader batches and caches requests
+type CorporationMembersLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []uint32) ([]*monocle.Alliance, []error)
+	fetch func(keys []uint32) ([][]*monocle.Character, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -44,51 +44,51 @@ type AllianceLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[uint32]*monocle.Alliance
+	cache map[uint32][]*monocle.Character
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
-	batch *allianceLoaderBatch
+	batch *corporationMembersLoaderBatch
 
 	// mutex to prevent races
 	mu sync.Mutex
 }
 
-type allianceLoaderBatch struct {
+type corporationMembersLoaderBatch struct {
 	keys    []uint32
-	data    []*monocle.Alliance
+	data    [][]*monocle.Character
 	error   []error
 	closing bool
 	done    chan struct{}
 }
 
-// Load a Alliance by key, batching and caching will be applied automatically
-func (l *AllianceLoader) Load(key uint32) (*monocle.Alliance, error) {
+// Load a Character by key, batching and caching will be applied automatically
+func (l *CorporationMembersLoader) Load(key uint32) ([]*monocle.Character, error) {
 	return l.LoadThunk(key)()
 }
 
-// LoadThunk returns a function that when called will block waiting for a Alliance.
+// LoadThunk returns a function that when called will block waiting for a Character.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *AllianceLoader) LoadThunk(key uint32) func() (*monocle.Alliance, error) {
+func (l *CorporationMembersLoader) LoadThunk(key uint32) func() ([]*monocle.Character, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
-		return func() (*monocle.Alliance, error) {
+		return func() ([]*monocle.Character, error) {
 			return it, nil
 		}
 	}
 	if l.batch == nil {
-		l.batch = &allianceLoaderBatch{done: make(chan struct{})}
+		l.batch = &corporationMembersLoaderBatch{done: make(chan struct{})}
 	}
 	batch := l.batch
 	pos := batch.keyIndex(l, key)
 	l.mu.Unlock()
 
-	return func() (*monocle.Alliance, error) {
+	return func() ([]*monocle.Character, error) {
 		<-batch.done
 
-		var data *monocle.Alliance
+		var data []*monocle.Character
 		if pos < len(batch.data) {
 			data = batch.data[pos]
 		}
@@ -113,72 +113,73 @@ func (l *AllianceLoader) LoadThunk(key uint32) func() (*monocle.Alliance, error)
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *AllianceLoader) LoadAll(keys []uint32) ([]*monocle.Alliance, []error) {
-	results := make([]func() (*monocle.Alliance, error), len(keys))
+func (l *CorporationMembersLoader) LoadAll(keys []uint32) ([][]*monocle.Character, []error) {
+	results := make([]func() ([]*monocle.Character, error), len(keys))
 
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
 
-	alliances := make([]*monocle.Alliance, len(keys))
+	characters := make([][]*monocle.Character, len(keys))
 	errors := make([]error, len(keys))
 	for i, thunk := range results {
-		alliances[i], errors[i] = thunk()
+		characters[i], errors[i] = thunk()
 	}
-	return alliances, errors
+	return characters, errors
 }
 
-// LoadAllThunk returns a function that when called will block waiting for a Alliances.
+// LoadAllThunk returns a function that when called will block waiting for a Characters.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *AllianceLoader) LoadAllThunk(keys []uint32) func() ([]*monocle.Alliance, []error) {
-	results := make([]func() (*monocle.Alliance, error), len(keys))
+func (l *CorporationMembersLoader) LoadAllThunk(keys []uint32) func() ([][]*monocle.Character, []error) {
+	results := make([]func() ([]*monocle.Character, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
-	return func() ([]*monocle.Alliance, []error) {
-		alliances := make([]*monocle.Alliance, len(keys))
+	return func() ([][]*monocle.Character, []error) {
+		characters := make([][]*monocle.Character, len(keys))
 		errors := make([]error, len(keys))
 		for i, thunk := range results {
-			alliances[i], errors[i] = thunk()
+			characters[i], errors[i] = thunk()
 		}
-		return alliances, errors
+		return characters, errors
 	}
 }
 
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *AllianceLoader) Prime(key uint32, value *monocle.Alliance) bool {
+func (l *CorporationMembersLoader) Prime(key uint32, value []*monocle.Character) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
 		// make a copy when writing to the cache, its easy to pass a pointer in from a loop var
 		// and end up with the whole cache pointing to the same value.
-		cpy := *value
-		l.unsafeSet(key, &cpy)
+		cpy := make([]*monocle.Character, len(value))
+		copy(cpy, value)
+		l.unsafeSet(key, cpy)
 	}
 	l.mu.Unlock()
 	return !found
 }
 
 // Clear the value at key from the cache, if it exists
-func (l *AllianceLoader) Clear(key uint32) {
+func (l *CorporationMembersLoader) Clear(key uint32) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
 
-func (l *AllianceLoader) unsafeSet(key uint32, value *monocle.Alliance) {
+func (l *CorporationMembersLoader) unsafeSet(key uint32, value []*monocle.Character) {
 	if l.cache == nil {
-		l.cache = map[uint32]*monocle.Alliance{}
+		l.cache = map[uint32][]*monocle.Character{}
 	}
 	l.cache[key] = value
 }
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *allianceLoaderBatch) keyIndex(l *AllianceLoader, key uint32) int {
+func (b *corporationMembersLoaderBatch) keyIndex(l *CorporationMembersLoader, key uint32) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i
@@ -202,7 +203,7 @@ func (b *allianceLoaderBatch) keyIndex(l *AllianceLoader, key uint32) int {
 	return pos
 }
 
-func (b *allianceLoaderBatch) startTimer(l *AllianceLoader) {
+func (b *corporationMembersLoaderBatch) startTimer(l *CorporationMembersLoader) {
 	time.Sleep(l.wait)
 	l.mu.Lock()
 
@@ -218,7 +219,7 @@ func (b *allianceLoaderBatch) startTimer(l *AllianceLoader) {
 	b.end(l)
 }
 
-func (b *allianceLoaderBatch) end(l *AllianceLoader) {
+func (b *corporationMembersLoaderBatch) end(l *CorporationMembersLoader) {
 	b.data, b.error = l.fetch(b.keys)
 	close(b.done)
 }

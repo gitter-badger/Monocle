@@ -7,7 +7,7 @@ import (
 )
 
 type Corporation struct {
-	ID            uint64      `db:"id" json:"id"`
+	ID            uint32      `db:"id" json:"id"`
 	Name          string      `db:"name" json:"name"`
 	Ticker        string      `db:"ticker" json:"ticker"`
 	MemberCount   uint64      `db:"member_count" json:"member_count"`

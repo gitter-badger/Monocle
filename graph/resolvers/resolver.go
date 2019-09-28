@@ -19,4 +19,14 @@ func (r *Common) Character() generated.CharacterResolver {
 	return &characterResolver{r}
 }
 
+func (r *Common) Corporation() generated.CorporationResolver {
+	return &corporationResolver{r}
+}
+
+func (r *Common) CorporationHistory() generated.CorporationHistoryResolver {
+	return &corporationHistoryResolver{r}
+}
+
 type queryResolver struct{ *Common }
+
+type mutationResolver struct{ *Common }

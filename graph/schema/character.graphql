@@ -24,7 +24,7 @@ type CorporationHistory {
     id: Int!
     recordID: Int!
     corporationID: Int!
-    startDate: Int!
+    startDate: Time!
     corporation: Corporation!
 }
 

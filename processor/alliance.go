@@ -72,7 +72,7 @@ func (p *Processor) alliHunter() {
 
 			alliance := Alliance{
 				model: monocle.Alliance{
-					ID: uint64(x),
+					ID: uint32(x),
 				},
 				exists: false,
 			}

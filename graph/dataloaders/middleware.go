@@ -13,7 +13,10 @@ type ctxKeyType struct{ name string }
 var ctxKey = ctxKeyType{"userCtx"}
 
 type Loaders struct {
-	Corporation *generated.CorporationLoader
+	Alliance                    *generated.AllianceLoader
+	Corporation                 *generated.CorporationLoader
+	CorporationMembers          *generated.CorporationMembersLoader
+	CharacterCorporationHistory *generated.CharacterCorporationHistoryLoader
 }
 
 func Dataloader(db *sqlx.DB, next http.Handler) http.Handler {
@@ -21,7 +24,10 @@ func Dataloader(db *sqlx.DB, next http.Handler) http.Handler {
 		ctx := r.Context()
 
 		loaders := Loaders{
-			Corporation: corporationsLoader(ctx, db),
+			Alliance:                    allianceLoader(ctx, db),
+			Corporation:                 corporationsLoader(ctx, db),
+			CharacterCorporationHistory: characterCorporationHistoryLoader(ctx, db),
+			CorporationMembers:          corporationMembersLoader(ctx, db),
 		}
 
 		dataloadersCtx := context.WithValue(ctx, ctxKey, loaders)

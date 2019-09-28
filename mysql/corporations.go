@@ -1,14 +1,11 @@
 package mysql
 
 import (
-	"fmt"
-
 	"github.com/ddouglas/monocle"
 	sb "github.com/huandu/go-sqlbuilder"
-	"github.com/pkg/errors"
 )
 
-func (db *DB) SelectCorporations(page, perPage uint) ([]monocle.Corporation, error) {
+func (db *DB) SelectCorporations(page, perPage uint32) ([]monocle.Corporation, error) {
 
 	corporations := make([]monocle.Corporation, 0)
 
@@ -45,7 +42,7 @@ func (db *DB) SelectCorporations(page, perPage uint) ([]monocle.Corporation, err
 	return corporations, err
 }
 
-func (db *DB) SelectCorporationByCorporationID(id uint64) (monocle.Corporation, error) {
+func (db *DB) SelectCorporationByCorporationID(id uint32) (monocle.Corporation, error) {
 
 	var corporation monocle.Corporation
 
@@ -117,62 +114,6 @@ func (db *DB) SelectIndependentCorps(page, perPage int) ([]monocle.Corporation, 
 
 	err := db.Select(&corporations, query, args...)
 	return corporations, err
-}
-
-func (db *DB) SelectMissingCorporationIdsFromList(pid int, ids []int) ([]int, error) {
-	var results []int
-	var table = "temp_ids"
-
-	d := sb.NewDeleteBuilder()
-	d.DeleteFrom(table).Where(
-		d.E("pid", pid),
-	)
-
-	query, args := d.Build()
-
-	_, err := db.Exec(query, args...)
-	if err != nil {
-		return results, err
-	}
-
-	i := sb.NewInsertBuilder()
-	i.InsertInto(table).Cols(
-		"pid", "id",
-	)
-	for _, v := range ids {
-		i.Values(pid, v)
-	}
-
-	query, args = i.Build()
-
-	_, err = db.Exec(query, args...)
-	if err != nil {
-		err = errors.Wrapf(err, "Unable to insertIds into temporary %s table", table)
-		return results, err
-	}
-
-	s := sb.NewSelectBuilder()
-	s.Select("tmp.id")
-	s.From(
-		fmt.Sprintf("%s tmp", table),
-	)
-	s.JoinWithOption(sb.LeftJoin, "corporations corps", "tmp.id = corps.id")
-	s.Where(
-		s.IsNull("corps.id"),
-	)
-
-	query, _ = s.Build()
-	err = db.Select(&results, query)
-	if err != nil {
-		err = errors.Wrapf(err, "Unable perform select operation temporary %s table", table)
-		return results, err
-	}
-
-	query, args = d.Build()
-
-	_, err = db.Exec(query, args...)
-
-	return results, err
 }
 
 func (db *DB) SelectCountOfExpiredCorporationEtags() (uint, error) {

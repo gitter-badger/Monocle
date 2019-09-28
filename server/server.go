@@ -38,6 +38,7 @@ func New(port uint) (*Server, error) {
 
 		return &Server{}, err
 	}
+
 	x := &Server{
 		App: core,
 		server: &http.Server{

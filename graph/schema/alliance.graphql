@@ -7,6 +7,6 @@ type Alliance {
     date_founded: Time
     executorCorporationID: Int!
     closed: Boolean!
-    corporation: [Corporation]!
-    characters: [Character]!
+    #corporation: [Corporation]!
+    #characters: [Character]!
 }
