@@ -2,74 +2,72 @@ version: "3.7"
 
 services:
     alliHunter:
-        image: devoverlord93/monocle:latest
+        image: monocle:latest
         logging:
             driver: "json-file"
             options:
                 max-file: "5"
                 max-size: "50m"
         command: ./cli processor --scope=alliHunter
-        network_mode: "host"
         container_name: alliHunter
-        env_file:
-            - ./.env-docker
     charUpdater:
-        image: devoverlord93/monocle:latest
+        image: monocle:latest
         logging:
             driver: "json-file"
             options:
                 max-file: "5"
                 max-size: "50m"
-        command: ./cli processor --scope=charUpdater --workers=25 --records=250
-        network_mode: "host"
+        command: ./cli processor --scope=charUpdater --workers=50 --records=2000
         container_name: charUpdater
-        env_file:
-            - ./.env-docker
     charHunter:
-        image: devoverlord93/monocle:latest
+        image: monocle:latest
         logging:
             driver: "json-file"
             options:
                 max-file: "5"
                 max-size: "50m"
         command: ./cli processor --scope=charHunter --records=10
-        network_mode: "host"
         container_name: charHunter
-        env_file:
-            - ./.env-docker
     corpHunter:
-        image: devoverlord93/monocle:latest
+        image: monocle:latest
         logging:
             driver: "json-file"
             options:
                 max-file: "5"
                 max-size: "50m"
         command: ./cli processor --scope=corpHunter
-        network_mode: "host"
         container_name: corpHunter
-        env_file:
-            - ./.env-docker
     corpUpdater:
-        image: devoverlord93/monocle:latest
+        image: monocle:latest
         logging:
             driver: "json-file"
             options:
                 max-file: "5"
                 max-size: "50m"
         command: ./cli processor --scope=corpUpdater
-        network_mode: "host"
         container_name: corpUpdater
-        env_file:
-            - ./.env-docker
-    hack:
-        image: devoverlord93/monocle:latest
+    api:
+        image: monocle:latest
         logging:
             driver: "json-file"
             options:
                 max-file: "5"
                 max-size: "50m"
-        command: ./cli hack
-        network_mode: "host"
-        container_name: hack
-        env_file:
-            - ./.env-docker
+        command: ./cli api
+        container_name: api
+        networks:
+            - host
+        expose:
+            - "8080"
+    nginx:
+        image: nginx:latest
+        container_name: nginx
+        volumes:
+            - /home/ddouglas/nginx/monocle.conf:/etc/nginx/conf.d/monocle.conf
+        ports:
+            - 80:80
+            - 443:443
+        networks:
+            - host
+networks:
+    host:

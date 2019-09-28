@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/ddouglas/monocle/hack"
 	"github.com/ddouglas/monocle/processor"
+	"github.com/ddouglas/monocle/server"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli"
 )
@@ -32,6 +32,7 @@ var records = cli.IntFlag{
 var begin = cli.IntFlag{
 	Name: "begin",
 }
+
 var done = cli.IntFlag{
 	Name:  "done",
 	Value: 98000000,
@@ -92,16 +93,16 @@ func init() {
 		// 	},
 		// 	Action: updater.Counter,
 		// // },
-		// cli.Command{
-		// 	Name:      "api",
-		// 	Category:  "HTTP",
-		// 	Usage:     "api",
-		// 	UsageText: "Starts the API to serve HTTPS requests",
-		// 	Flags: []cli.Flag{
-		// 		port,
-		// 	},
-		// 	Action: server.Serve,
-		// },
+		cli.Command{
+			Name:      "api",
+			Category:  "HTTP",
+			Usage:     "api",
+			UsageText: "Starts the API to serve HTTPS requests",
+			Flags: []cli.Flag{
+				port,
+			},
+			Action: server.Serve,
+		},
 		// cli.Command{
 		// 	Name:      "cron",
 		// 	Category:  "Scheduled",
@@ -109,11 +110,11 @@ func init() {
 		// 	UsageText: "Run GoCron Implmentation",
 		// 	Action:    cron.Action,
 		// },
-		cli.Command{
-			Name:     "hack",
-			Category: "Hacking",
-			Action:   hack.Action,
-		},
+		// cli.Command{
+		// 	Name:     "hack",
+		// 	Category: "Hacking",
+		// 	Action:   hack.Action,
+		// },
 	}
 
 }

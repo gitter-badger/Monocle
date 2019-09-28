@@ -23,7 +23,7 @@ func (p *Processor) charHunter() {
 		Value uint64 `json:"value"`
 	}
 
-	kv, err := p.DB["slave"].SelectValueByKey("last_good_character_id")
+	kv, err := p.DB.SelectValueByKey("last_good_character_id")
 	if err != nil {
 		if err != sql.ErrNoRows {
 			p.Logger.Criticalf("Unable to query for ID: %s", err)
@@ -109,7 +109,7 @@ func (p *Processor) charHunter() {
 			return
 		}
 
-		_, err = p.DB["master"].UpdateValueByKey(kv)
+		_, err = p.DB.UpdateValueByKey(kv)
 		if err != nil {
 			if err != sql.ErrNoRows {
 				p.Logger.Criticalf("Unable to query for ID: %s", err)
@@ -136,13 +136,11 @@ func (p *Processor) charUpdater() {
 		p.Logger.Info("Start")
 
 		err := boiler.Characters(
-			qm.Where(boiler.CharacterColumns.CorporationID+"=?", 0),
+			qm.Where(boiler.CharacterColumns.Expires+"<NOW()"),
+			qm.And(boiler.CharacterColumns.Ignored+"=?", 0),
+			qm.OrderBy(boiler.CharacterColumns.Expires),
 			qm.Limit(int(records*workers)),
-			// qm.Where(boiler.CharacterColumns.Expires+"<NOW()"),
-			// qm.And(boiler.CharacterColumns.Ignored+"=?", 0),
-			// qm.OrderBy(boiler.CharacterColumns.Expires),
-			// qm.Limit(int(records*workers)),
-		).Bind(context.Background(), p.DB["slave"], &characters)
+		).Bind(context.Background(), p.DB, &characters)
 		if err != nil {
 			p.Logger.Errorf("No records returned from database", p.ESI.Reset)
 			time.Sleep(time.Minute * 1)
@@ -230,13 +228,13 @@ func (p *Processor) processCharacter(character Character) {
 
 	switch !character.exists {
 	case true:
-		_, err := p.DB["master"].InsertCharacter(character.model)
+		_, err := p.DB.InsertCharacter(character.model)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to insert new character into database: %s", err)
 			return
 		}
 	case false:
-		_, err := p.DB["master"].UpdateCharacterByID(character.model)
+		_, err := p.DB.UpdateCharacterByID(character.model)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to update character in database: %s", err)
 			return
@@ -257,7 +255,7 @@ func (p *Processor) processCharacterCorpHistory(character Character) {
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
-	historyEtag, err := p.DB["slave"].SelectEtagByIDAndResource(character.model.ID, "character_corporation_history")
+	historyEtag, err := p.DB.SelectEtagByIDAndResource(character.model.ID, "character_corporation_history")
 	historyEtag.Exists = true
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -293,7 +291,7 @@ func (p *Processor) processCharacterCorpHistory(character Character) {
 
 	history = response.Data.([]monocle.CharacterCorporationHistory)
 
-	existing, err := p.DB["slave"].SelectCharacterCorporationHistoryByID(historyEtag.ID)
+	existing, err := p.DB.SelectCharacterCorporationHistoryByID(historyEtag.ID)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			p.Logger.Errorf("Unable to query character_corporation_history etag resource for Character %d due to SQL Error: %s", historyEtag.ID, err)
@@ -305,13 +303,13 @@ func (p *Processor) processCharacterCorpHistory(character Character) {
 
 	switch !historyEtag.Exists {
 	case true:
-		_, err := p.DB["master"].InsertEtag(historyEtag)
+		_, err := p.DB.InsertEtag(historyEtag)
 		if err != nil {
 			p.Logger.Errorf("error encountered attempting to insert new etag for history into database: %s", err)
 			return
 		}
 	case false:
-		_, err := p.DB["master"].UpdateEtagByIDAndResource(historyEtag)
+		_, err := p.DB.UpdateEtagByIDAndResource(historyEtag)
 		if err != nil {
 			p.Logger.Errorf("error encountered attempting to insert new etag for history into database: %s", err)
 			return
@@ -319,7 +317,7 @@ func (p *Processor) processCharacterCorpHistory(character Character) {
 	}
 
 	if len(diff) > 0 {
-		_, err := p.DB["master"].InsertCharacterCorporationHistory(historyEtag.ID, diff)
+		_, err := p.DB.InsertCharacterCorporationHistory(historyEtag.ID, diff)
 		if err != nil {
 			p.Logger.Errorf("error encountered attempting to insert new character corporation history records into database: %s", err)
 			return

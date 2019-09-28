@@ -42,13 +42,13 @@ github.com/hashicorp/hcl/hcl/scanner
 github.com/hashicorp/hcl/hcl/strconv
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
+# github.com/huandu/go-sqlbuilder v1.5.0
+github.com/huandu/go-sqlbuilder
 # github.com/jasonlvhit/gocron v0.0.0-20190829164038-7ef3bafdc25c
 github.com/jasonlvhit/gocron
 # github.com/jmoiron/sqlx v1.2.0
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
-# github.com/kelseyhightower/envconfig v1.4.0
-github.com/kelseyhightower/envconfig
 # github.com/lib/pq v1.0.0
 github.com/lib/pq/oid
 # github.com/magiconair/properties v1.8.1

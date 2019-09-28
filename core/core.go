@@ -17,9 +17,8 @@ var err error
 
 type (
 	App struct {
-		// Config Config
 		ESI    *esi.Client
-		DB     map[string]*mysql.DB
+		DB     *mysql.DB
 		DGO    *discordgo.Session
 		Logger *logger.Logger
 	}
@@ -53,7 +52,7 @@ func New() (*App, error) {
 		logging.SetLogLevel(logger.InfoLevel)
 	}
 
-	connections, err := mysql.Connect()
+	connection, err := mysql.Connect()
 	if err != nil {
 		logging.Fatalf("Encoutered Error Attempting to setup DB Connection: %s", err)
 	}
@@ -73,7 +72,7 @@ func New() (*App, error) {
 
 	return &App{
 		ESI:    esiClient,
-		DB:     connections,
+		DB:     connection,
 		DGO:    discord,
 		Logger: logging,
 	}, nil

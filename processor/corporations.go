@@ -23,7 +23,7 @@ func (p *Processor) corpHunter() {
 		Value uint64 `json:"value"`
 	}
 
-	kv, err := p.DB["slave"].SelectValueByKey("last_good_corporation_id")
+	kv, err := p.DB.SelectValueByKey("last_good_corporation_id")
 	if err != nil {
 		if err != sql.ErrNoRows {
 			p.Logger.Criticalf("Unable to query for ID: %s", err)
@@ -88,7 +88,7 @@ func (p *Processor) corpHunter() {
 			return
 		}
 
-		_, err = p.DB["master"].UpdateValueByKey(kv)
+		_, err = p.DB.UpdateValueByKey(kv)
 		if err != nil {
 			if err != sql.ErrNoRows {
 				p.Logger.Criticalf("Unable to query for ID: %s", err)
@@ -120,7 +120,7 @@ func (p *Processor) corpUpdater() {
 			qm.And(boiler.CorporationColumns.Closed+"=?", 0),
 			qm.OrderBy(boiler.CorporationColumns.Expires),
 			qm.Limit(int(records*workers)),
-		).Bind(context.Background(), p.DB["slave"], &corporations)
+		).Bind(context.Background(), p.DB, &corporations)
 		if err != nil {
 			if err != sql.ErrNoRows {
 				p.Logger.Fatalf("Unable to query for characters: %s", err)
@@ -208,13 +208,13 @@ func (p *Processor) processCorporation(corporation Corporation) {
 
 	switch !corporation.exists {
 	case true:
-		_, err := p.DB["master"].InsertCorporation(corporation.model)
+		_, err := p.DB.InsertCorporation(corporation.model)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to insert new corporation into database: %s", err)
 			return
 		}
 	case false:
-		_, err := p.DB["master"].UpdateCorporationByID(corporation.model)
+		_, err := p.DB.UpdateCorporationByID(corporation.model)
 		if err != nil {
 			p.Logger.Errorf("Error Encountered attempting to update corporation in database: %s", err)
 			return
@@ -234,7 +234,7 @@ func (p *Processor) processCorporationAllianceHistory(corporation Corporation) {
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
-	historyEtag, err := p.DB["slave"].SelectEtagByIDAndResource(corporation.model.ID, "corporation_alliance_history")
+	historyEtag, err := p.DB.SelectEtagByIDAndResource(corporation.model.ID, "corporation_alliance_history")
 	historyEtag.Exists = true
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -280,7 +280,7 @@ func (p *Processor) processCorporationAllianceHistory(corporation Corporation) {
 
 	p.Logger.Debugf("Corporation History: %d\tNew Etag: %t", historyEtag.ID, historyEtag.Exists)
 
-	existing, err := p.DB["slave"].SelectCorporationAllianceHistoryByID(historyEtag.ID)
+	existing, err := p.DB.SelectCorporationAllianceHistoryByID(historyEtag.ID)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			p.Logger.Errorf("Unable to query corporation_alliance_history etag resource for Character %d due to SQL Error: %s", historyEtag.ID, err)
@@ -291,13 +291,13 @@ func (p *Processor) processCorporationAllianceHistory(corporation Corporation) {
 	diff := diffExistingCorpAlliHistory(existing, history)
 	switch !historyEtag.Exists {
 	case true:
-		_, err := p.DB["master"].InsertEtag(historyEtag)
+		_, err := p.DB.InsertEtag(historyEtag)
 		if err != nil {
 			p.Logger.Errorf("error encountered attempting to insert new etag for history into database: %s", err)
 			return
 		}
 	case false:
-		_, err := p.DB["master"].UpdateEtagByIDAndResource(historyEtag)
+		_, err := p.DB.UpdateEtagByIDAndResource(historyEtag)
 		if err != nil {
 			p.Logger.Errorf("error encountered attempting to insert new etag for history into database: %s", err)
 			return
@@ -305,7 +305,7 @@ func (p *Processor) processCorporationAllianceHistory(corporation Corporation) {
 	}
 
 	if len(diff) > 0 {
-		_, err := p.DB["master"].InsertCorporationAllianceHistory(historyEtag.ID, diff)
+		_, err := p.DB.InsertCorporationAllianceHistory(historyEtag.ID, diff)
 		if err != nil {
 			p.Logger.Errorf("error encountered attempting to insert new character corporation history records into database: %s", err)
 			return
