@@ -17,6 +17,15 @@ type Character {
     bloodline_id: Int!
     race_id: Int!
     corporation: Corporation!
+    history: [CorporationHistory]!
+}
+
+type CorporationHistory {
+    id: Int!
+    recordID: Int!
+    corporationID: Int!
+    startDate: Int!
+    corporation: Corporation!
 }
 
 scalar Time

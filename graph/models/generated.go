@@ -6,7 +6,26 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
+
+	"github.com/ddouglas/monocle"
 )
+
+type AllianceHistory struct {
+	ID         int               `json:"id"`
+	RecordID   int               `json:"recordID"`
+	AllianceID *int              `json:"allianceID"`
+	Alliance   *monocle.Alliance `json:"alliance"`
+	StartDate  time.Time         `json:"startDate"`
+}
+
+type CorporationHistory struct {
+	ID            int                  `json:"id"`
+	RecordID      int                  `json:"recordID"`
+	CorporationID int                  `json:"corporationID"`
+	StartDate     int                  `json:"startDate"`
+	Corporation   *monocle.Corporation `json:"corporation"`
+}
 
 type Sort string
 

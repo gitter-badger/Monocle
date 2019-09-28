@@ -1,0 +1,12 @@
+type Alliance {
+    id: Int!
+    name: String!
+    ticker: String!
+    creatorCorporationID: Int!
+    creatorID: Int!
+    date_founded: Time
+    executorCorporationID: Int!
+    closed: Boolean!
+    corporation: [Corporation]!
+    characters: [Character]!
+}

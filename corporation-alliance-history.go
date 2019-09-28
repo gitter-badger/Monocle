@@ -13,5 +13,4 @@ type CorporationAllianceHistory struct {
 	StartDate  time.Time   `db:"start_date" json:"start_date"`
 	CreatedAt  time.Time   `db:"created_at" json:"created_at"`
 	UpdatedAt  time.Time   `db:"updated_at" json:"updated_at"`
-	Exists     bool
 }

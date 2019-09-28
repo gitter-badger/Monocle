@@ -2,11 +2,7 @@ package dataloaders
 
 import (
 	"context"
-	"fmt"
 	"time"
-
-	"github.com/davecgh/go-spew/spew"
-	"github.com/volatiletech/sqlboiler/queries"
 
 	"github.com/ddouglas/monocle/boiler"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -33,19 +29,12 @@ func corporationsLoader(ctx context.Context, db *sqlx.DB) *generated.Corporation
 				whereIds = append(whereIds, c)
 			}
 
-			query := boiler.Corporations(
+			err := boiler.Corporations(
 				qm.WhereIn(boiler.CorporationColumns.ID+" IN ?", whereIds...),
-			)
-
-			queryStr, args := queries.BuildQuery(query.Query)
-			fmt.Println(queryStr)
-			fmt.Println(args...)
-
-			err := query.Bind(ctx, db, &corporations)
+			).Bind(ctx, db, &corporations)
 			if err != nil {
 				errors = append(errors, err)
 			}
-			spew.Dump(corporations)
 
 			return corporations, errors
 		},

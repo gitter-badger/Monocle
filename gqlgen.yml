@@ -20,7 +20,7 @@ autobind: []
 models:
     ID: # The GraphQL type ID is backed by
         model:
-            - github.com/99designs/gqlgen/graphql.IntID # An go integer
+            - github.com/99designs/gqlgen/graphql.IntID # A go integer
             - github.com/99designs/gqlgen/graphql.ID # or a go string
     Float:
         model:

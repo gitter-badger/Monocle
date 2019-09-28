@@ -10,6 +10,10 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
+func (r *queryResolver) Corporation(ctx context.Context, id int) (*monocle.Corporation, error) {
+	return nil, nil
+}
+
 type corporationResolver struct {
 	*Common
 }
