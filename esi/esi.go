@@ -124,8 +124,11 @@ func RetrieveExpiresHeaderFromResponse(response Response) (time.Time, error) {
 	if err != nil {
 		return expires, err
 	}
-
-	expires = expires.Add(time.Hour * 12)
+	/*
+		Setting the default Etag Expiration to six hours because it is highly unlikely that somebody, unless a super malicious character, is going to jump through more than two corps (one NPC and one Player Owned)
+		in less than 6 hours
+	*/
+	expires = expires.Add(time.Hour * 6)
 
 	return expires, nil
 }
