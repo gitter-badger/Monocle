@@ -45,7 +45,7 @@ var port = cli.UintFlag{
 var sleep = cli.IntFlag{
 	Name:  "sleep",
 	Usage: "The number of seconds the loop should sleep for",
-	Value: 10,
+	Value: 5,
 }
 var expired = cli.BoolFlag{
 	Name:  "expired",

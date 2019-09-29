@@ -149,8 +149,8 @@ func (p *Processor) charUpdater() {
 		}
 
 		if len(characters) <= 0 {
-			p.Logger.Infof("No characters were queried. Sleeping for %d seconds", sleep)
-			time.Sleep(time.Second * time.Duration(sleep))
+			p.Logger.Infof("No characters were queried. Sleeping for %d minutes", sleep)
+			time.Sleep(time.Minute * 5)
 			continue
 		}
 
