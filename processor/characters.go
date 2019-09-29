@@ -196,7 +196,7 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 			return
 		}
 		response, err = p.ESI.PostCharactersAffiliation(charIds)
-		if err != nil { 
+		if err != nil {
 			p.Logger.Errorf("PostCharactersAffiliation Request for %d ids failed: %s", len(charIds), err)
 			return
 		}
@@ -369,6 +369,9 @@ func (p *Processor) processCharacterCorpHistory(character Character) {
 			return
 		}
 	}
+	p.Logger.Debug("Running findUnknownCorps")
+	p.findUnknownCorps(character, existing)
+	p.Logger.Debug("Done with findUnknownCorps")
 
 	diff := diffExistingCharCorpHistory(existing, history)
 
@@ -395,6 +398,49 @@ func (p *Processor) processCharacterCorpHistory(character Character) {
 		}
 	}
 	return
+
+}
+
+func (p *Processor) findUnknownCorps(character Character, historySlice []monocle.CharacterCorporationHistory) {
+
+	unique := map[uint32]bool{}
+	list := []interface{}{}
+
+	for _, history := range historySlice {
+		if _, v := unique[history.CorporationID]; !v {
+			unique[history.CorporationID] = true
+			list = append(list, history.CorporationID)
+		}
+	}
+
+	knowns := make([]monocle.Corporation, 0)
+	err := boiler.Corporations(
+		qm.WhereIn("id IN ?", list...),
+	).Bind(context.Background(), p.DB, &knowns)
+	if err != nil {
+		p.Logger.Errorf("Unable to query database for list of known corporations: %s", err.Error())
+		return
+	}
+
+	for _, known := range knowns {
+		if v := unique[known.ID]; v {
+			delete(unique, known.ID)
+		}
+	}
+
+	if len(unique) == 0 {
+		return
+	}
+
+	for i, _ := range unique {
+		corporation := Corporation{
+			model: monocle.Corporation{
+				ID: i,
+			},
+			exists: false,
+		}
+		p.processCorporation(corporation)
+	}
 
 }
 
