@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ddouglas/monocle"
@@ -159,24 +160,93 @@ func (p *Processor) charUpdater() {
 
 		for _, characters := range charChunk {
 			wg.Add(1)
-			go func(characters []monocle.Character) {
-				for _, model := range characters {
-					character := Character{
-						model:  model,
-						exists: true,
-					}
-					p.processCharacter(character)
-					p.processCharacterCorpHistory(character)
-				}
-				wg.Done()
-			}(characters)
+
+			go p.processCharacterChunk(characters)
+
 		}
 
-		p.Logger.Info("Waiting")
+		p.Logger.Info("Finished Loop. Waiting...")
 		wg.Wait()
-		time.Sleep(time.Second * 5)
-		p.Logger.Info("Done")
+		p.Logger.Info("Done. Sleeping....")
+		time.Sleep(time.Second * 1)
 	}
+}
+
+func (p *Processor) processCharacterChunk(characters []monocle.Character) {
+	var response esi.Response
+	var err error
+	defer wg.Done()
+
+	if p.ESI.Remain < 20 {
+		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
+		p.Logger.Errorf("\t%s", msg)
+		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
+		// p.DGO.ChannelMessageSend("394991263344230411", msg)
+		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
+	}
+
+	charMap := characterSliceToMap(characters)
+	charIds := charIdsFromSlice(characters)
+
+	attempts := 1
+	for {
+		if attempts >= 3 {
+			p.Logger.Error("All Attempts exhuasted")
+			return
+		}
+		response, err = p.ESI.PostCharactersAffiliation(charIds)
+		if err != nil { 
+			p.Logger.Errorf("PostCharactersAffiliation Request for %d ids failed: %s", len(charIds), err)
+			return
+		}
+
+		if response.Code < 400 {
+			break
+		}
+
+		attempts++
+		p.Logger.ErrorF("Code %d Method \"p.ESI.PostCharactersAffiliation\", attempting %d request again in 1 second", response.Code, attempts)
+		time.Sleep(1 * time.Second)
+	}
+
+	affiliations := response.Data.([]monocle.CharacterAffiliation)
+	updated := []monocle.Character{}
+	stale := []interface{}{}
+	args := []string{}
+	for _, affiliation := range affiliations {
+
+		selected := charMap[affiliation.CharacterID]
+		switch {
+		case affiliation.CorporationID != selected.CorporationID,
+			affiliation.AllianceID.Uint32 != selected.AllianceID.Uint32,
+			affiliation.FactionID.Uint32 != selected.FactionID.Uint32:
+			updated = append(updated, selected)
+		default:
+			stale = append(stale, selected.ID)
+			args = append(args, "?")
+		}
+	}
+
+	for _, model := range updated {
+		character := Character{
+			model:  model,
+			exists: true,
+		}
+		p.processCharacter(character)
+		p.processCharacterCorpHistory(character)
+	}
+
+	query := `UPDATE characters SET expires = '%v' WHERE id IN (%s)`
+
+	t := time.Now().Add(time.Hour * 12).Format("2006-01-02 15:04:05")
+
+	query = fmt.Sprintf(query, t, strings.Join(args, ", "))
+	_, err = p.DB.Exec(query, stale...)
+	if err != nil {
+		p.Logger.ErrorF("Failed to bulk update Etag Expiry for %d ids: %s", len(stale), err)
+	}
+
+	return
 }
 
 func (p *Processor) processCharacter(character Character) {

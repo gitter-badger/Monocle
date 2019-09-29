@@ -176,20 +176,20 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 	case 200:
 		err = json.Unmarshal(response.Data.([]byte), &history)
 		if err != nil {
-			err = errors.Wrapf(err, "unable to unmarshel response body for %d corporation history: %s", etagResource.ID, err)
+			err = errors.Wrapf(err, "unable to unmarshel response body for %d corporation history", etagResource.ID)
 			return response, etagResource, err
 		}
 
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
+			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s", response.Path)
 			return response, etagResource, err
 		}
 		etagResource.Expires = expires
 
 		etag, err := RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
+			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s", response.Path)
 			return response, etagResource, err
 		}
 		etagResource.Etag = etag
@@ -198,14 +198,14 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 	case 304:
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
+			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s", response.Path)
 			return response, etagResource, err
 		}
 		etagResource.Expires = expires
 
 		etag, err := RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
+			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s", response.Path)
 			return response, etagResource, err
 		}
 		etagResource.Etag = etag
@@ -220,4 +220,55 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 	response.Data = history
 
 	return response, etagResource, err
+}
+
+func (e *Client) PostCharactersAffiliation(ids []uint64) (Response, error) {
+	var affiliations []monocle.CharacterAffiliation
+
+	path := "/v1/characters/affiliation/"
+
+	url := url.URL{
+		Scheme: "https",
+		Host:   e.Host,
+		Path:   path,
+	}
+
+	headers := make(map[string]string, 0)
+
+	// Marshal the ids []uint64 to a []byte for the request
+	bIds, err := json.Marshal(ids)
+	if err != nil {
+		return Response{}, err
+	}
+
+	request := Request{
+		Method:  "POST",
+		Path:    url,
+		Headers: headers,
+		Body:    bIds,
+	}
+
+	response, err := e.Request(request)
+	if err != nil {
+		return response, err
+	}
+
+	switch response.Code {
+	case 200:
+		err := json.Unmarshal(response.Data.([]byte), &affiliations)
+		if err != nil {
+			err = errors.Wrap(err, "Unable to unmarshal response body for character affiliations")
+			return response, err
+		}
+
+		break
+	case 500, 502, 503, 504:
+		break
+	default:
+		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
+	}
+
+	response.Data = affiliations
+
+	return response, err
 }
