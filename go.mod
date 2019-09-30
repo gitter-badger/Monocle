@@ -15,7 +15,7 @@ require (
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/huandu/go-sqlbuilder v1.5.0
-	github.com/jasonlvhit/gocron v0.0.0-20190829164038-7ef3bafdc25c
+	github.com/jasonlvhit/gocron v0.0.0-20190829164038-7ef3bafdc25c // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/pelletier/go-toml v1.4.0 // indirect
