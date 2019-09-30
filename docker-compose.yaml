@@ -26,7 +26,7 @@ services:
             options:
                 max-file: "5"
                 max-size: "50m"
-        command: ./cli processor --scope=charUpdater --workers=50 --records=2000
+        command: ./cli processor --scope=charUpdater --workers=50 --records=1000
         container_name: charUpdater
     charHunter:
         image: monocle:latest
