@@ -22,10 +22,6 @@ import (
 	"github.com/ddouglas/monocle/graph/service"
 )
 
-var (
-	err error
-)
-
 type Server struct {
 	App    *core.App
 	server *http.Server
@@ -84,7 +80,6 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 	r.Use(Cors)
 	r.Use(s.RequestLogger)
 
-	// Build the graph schema interface using our store dependencies
 	graphSchema := service.NewExecutableSchema(service.Config{
 		Resolvers: &resolvers.Common{DB: s.App.DB.DB},
 	})
@@ -92,17 +87,12 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 	// One handler to process graphQL queries
 	queryHandler := handler.GraphQL(
 		graphSchema,
-		handler.IntrospectionEnabled(true),
+		handler.IntrospectionEnabled(false),
+		handler.ComplexityLimit(3),
 	)
 
-	// Handler for local dev UI
-	// Note leaving this endpoint in but commented out since it has value for local dev
-	r.Handle("/pg", dataloaders.Dataloader(s.App.DB.DB, handler.Playground("Common GraphQL playground", "/query")))
-	// r.Handle("/", handler.Playground("Common GraphQL playground", "/query"))
-
-	// Production query route
+	r.Handle("/pg", dataloaders.Dataloader(s.App.DB.DB, handler.Playground("GraphQL playground", "/query")))
 	r.Handle("/query", dataloaders.Dataloader(s.App.DB.DB, queryHandler))
-	// r.Handle("/query", queryHandler)
 
 	return r
 }
