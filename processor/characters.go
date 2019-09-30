@@ -369,9 +369,11 @@ func (p *Processor) processCharacterCorpHistory(character Character) {
 			return
 		}
 	}
-	p.Logger.Debug("Running findUnknownCorps")
-	p.findUnknownCorps(character, existing)
-	p.Logger.Debug("Done with findUnknownCorps")
+	if len(existing) > 0 {
+		p.Logger.Debug("Running findUnknownCorps")
+		p.findUnknownCorps(character, existing)
+		p.Logger.Debug("Done with findUnknownCorps")
+	}
 
 	diff := diffExistingCharCorpHistory(existing, history)
 
