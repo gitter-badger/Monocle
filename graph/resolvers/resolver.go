@@ -11,6 +11,8 @@ type Common struct {
 	DB *sqlx.DB
 }
 
+type queryResolver struct{ *Common }
+
 func (r *Common) Query() generated.QueryResolver {
 	return &queryResolver{r}
 }
@@ -26,7 +28,3 @@ func (r *Common) Corporation() generated.CorporationResolver {
 func (r *Common) CorporationHistory() generated.CorporationHistoryResolver {
 	return &corporationHistoryResolver{r}
 }
-
-type queryResolver struct{ *Common }
-
-type mutationResolver struct{ *Common }
