@@ -68,6 +68,15 @@ services:
             - host
         expose:
             - "8080"
+    cron:
+        image: monocle:latest
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli cron
+        container_name: cron
     nginx:
         image: nginx:latest
         container_name: nginx
