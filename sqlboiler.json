@@ -15,9 +15,13 @@
             "corporations",
             "corporation_deltas",
             "etags",
-            "kv"
+            "kv",
+            "totals"
         ]
     },
+    "tag": [
+        "db"
+    ],
     "aliases": {
         "tables": {
             "corporation_deltas": {

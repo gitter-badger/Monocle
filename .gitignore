@@ -3,3 +3,4 @@ cmd/cli/cli
 sqlboiler.json
 env.json
 .env
+.vscode/settings.json

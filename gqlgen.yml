@@ -58,3 +58,6 @@ models:
     CorporationHistory:
         model:
             - github.com/ddouglas/monocle.CharacterCorporationHistory
+    Total:
+        model:
+            - github.com/ddouglas/monocle.Total
