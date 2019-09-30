@@ -10,6 +10,15 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=alliHunter
         container_name: alliHunter
+    alliUpdater:
+        image: monocle:latest
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli processor --scope=alliUpdater --workers=2 --records=100
+        container_name: alliUpdater
     charUpdater:
         image: monocle:latest
         logging:
