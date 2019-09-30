@@ -1,15 +1,11 @@
 package cron
 
 import (
-	"context"
-	"encoding/json"
 	"log"
-	"time"
+	"sync"
 
-	"github.com/jasonlvhit/gocron"
-	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/robfig/cron/v3"
 
-	"github.com/ddouglas/monocle/boiler"
 	"github.com/ddouglas/monocle/core"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
@@ -18,6 +14,8 @@ import (
 type Handler struct {
 	*core.App
 }
+
+var wg sync.WaitGroup
 
 func Action(c *cli.Context) error {
 
@@ -31,28 +29,26 @@ func Action(c *cli.Context) error {
 	h := Handler{
 		core,
 	}
-	msg := "Registering Count func with GoCron"
+	crn := cron.New()
+	wg.Add(1)
+	msg := "Registering Count func with Cron"
+	crn.AddFunc("*/5 * * * *", h.Counts)
+
+	msg = msg + "\nRegistering Deltas func with Cron"
+	crn.AddFunc("0 */4 * * *", h.Deltas)
+
+	msg = msg + "\nStarting Cron"
 	h.Logger.Info(msg)
 	h.SendDicoMsg(msg)
-	gocron.Every(1).Hour().Do(h.Counts)
-
-	msg = "Registering Deltas func with GoCron"
-	h.Logger.Info(msg)
-	h.SendDicoMsg(msg)
-	gocron.Every(1).Day().At("11:00").Do(h.Deltas)
-
-	msg = "Start GoCron"
-	h.Logger.Info(msg)
-	h.SendDicoMsg(msg)
-	<-gocron.Start()
-
+	crn.Start()
+	wg.Wait()
 	return nil
 
 }
 
 func (h *Handler) SendDicoMsg(s string) {
 
-	// msg := fmt.Sprintf("<@!277968564827324416> %s", s)
+	// s := fmt.Sprintf("<@!277968564827324416> %s", s)
 	h.DGO.ChannelMessageSend("394991263344230411", s)
 }
 
@@ -91,45 +87,24 @@ func (h *Handler) Counts() {
 	msg := "Starting Count Logger"
 	h.Logger.Info(msg)
 	h.SendDicoMsg(msg)
+
 	query := `
-		SELECT (
+		INSERT INTO totals (
+			characters,
+			corporations,
+			alliances,
+			created_at
+		) SELECT (
 			SELECT COUNT(*) FROM characters WHERE ignored = 0
 		) AS characters, (
 			SELECT COUNT(*) FROM corporations WHERE closed = 0 AND ignored = 0
-		) AS corporations
+		) AS corporations, (
+			SELECT COUNT(*) FROM alliances WHERE closed = 0 AND ignored = 0
+		) AS alliances,
+		NOW()
 	`
 
-	var counts struct {
-		Character    uint64 `db:"characters" json:"characters"`
-		Corporations uint64 `db:"corporations" json:"corporations"`
-	}
-
-	err := h.DB.GetContext(context.Background(), &counts, query)
-
-	if err != nil {
-		h.Logger.Error(err.Error())
-		return
-	}
-
-	var kv boiler.KV
-	data, err := json.Marshal(counts)
-	if err != nil {
-		h.Logger.Error(err.Error())
-		return
-	}
-
-	kv.K = "current_table_counts"
-	kv.V = data
-	kv.CreatedAt = time.Now()
-
-	err = kv.Upsert(
-		context.Background(),
-		h.DB,
-		boil.Whitelist(
-			boiler.KVColumns.V,
-			boiler.KVColumns.UpdatedAt,
-		), boil.Infer())
-
+	_, err := h.DB.Exec(query)
 	if err != nil {
 		h.Logger.Error(err.Error())
 		return

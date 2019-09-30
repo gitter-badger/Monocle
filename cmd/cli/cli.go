@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/ddouglas/monocle/cron"
 	"github.com/ddouglas/monocle/processor"
 	"github.com/ddouglas/monocle/server"
 	"github.com/spf13/viper"
@@ -103,13 +104,13 @@ func init() {
 			},
 			Action: server.Serve,
 		},
-		// cli.Command{
-		// 	Name:      "cron",
-		// 	Category:  "Scheduled",
-		// 	Usage:     "cron",
-		// 	UsageText: "Run GoCron Implmentation",
-		// 	Action:    cron.Action,
-		// },
+		cli.Command{
+			Name:      "cron",
+			Category:  "Scheduled",
+			Usage:     "cron",
+			UsageText: "Run GoCron Implmentation",
+			Action:    cron.Action,
+		},
 		// cli.Command{
 		// 	Name:     "hack",
 		// 	Category: "Hacking",
