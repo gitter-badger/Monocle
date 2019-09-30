@@ -224,7 +224,7 @@ func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, er
 	return response, err
 }
 
-func (e *Client) GetAllianceMembersByID(etagResource monocle.EtagResource) (Response, monocle.EtagResource, error) {
+func (e *Client) GetAlliancesAllianceIDCorporations(etagResource monocle.EtagResource) (Response, error) {
 
 	path := fmt.Sprintf("/v1/alliances/%d/corporations/", etagResource.ID)
 
@@ -247,11 +247,11 @@ func (e *Client) GetAllianceMembersByID(etagResource monocle.EtagResource) (Resp
 		Body:    []byte(""),
 	}
 
-	var ids = make([]int, 0)
+	var ids = make([]uint32, 0)
 
 	response, err := e.Request(request)
 	if err != nil {
-		return response, etagResource, err
+		return response, err
 	}
 
 	mx.Lock()
@@ -264,14 +264,14 @@ func (e *Client) GetAllianceMembersByID(etagResource monocle.EtagResource) (Resp
 		err = json.Unmarshal(response.Data.([]byte), &ids)
 		if err != nil {
 			err = errors.Wrapf(err, "unable to unmarshel response body on request %s", path)
-			return response, etagResource, err
+			return response, err
 		}
 
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
 
-			return response, etagResource, err
+			return response, err
 		}
 
 		etagResource.Expires = expires
@@ -279,7 +279,7 @@ func (e *Client) GetAllianceMembersByID(etagResource monocle.EtagResource) (Resp
 		etag, err := RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-			return response, etagResource, err
+			return response, err
 		}
 		etagResource.Etag = etag
 		break
@@ -288,7 +288,7 @@ func (e *Client) GetAllianceMembersByID(etagResource monocle.EtagResource) (Resp
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
 
-			return response, etagResource, err
+			return response, err
 		}
 
 		etagResource.Expires = expires
@@ -296,7 +296,7 @@ func (e *Client) GetAllianceMembersByID(etagResource monocle.EtagResource) (Resp
 		etag, err := RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-			return response, etagResource, err
+			return response, err
 		}
 		etagResource.Etag = etag
 		break
@@ -306,7 +306,10 @@ func (e *Client) GetAllianceMembersByID(etagResource monocle.EtagResource) (Resp
 		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
 
-	response.Data = ids
+	response.Data = map[string]interface{}{
+		"ids":  ids,
+		"etag": etagResource,
+	}
 
-	return response, etagResource, err
+	return response, err
 }

@@ -75,3 +75,28 @@ func chunkCorporationSlice(size int, slice []monocle.Corporation) [][]monocle.Co
 
 	return chunk
 }
+
+func chunkAllianceSlice(size int, slice []monocle.Alliance) [][]monocle.Alliance {
+
+	var chunk [][]monocle.Alliance
+	chunk = make([][]monocle.Alliance, 0)
+
+	if len(slice) <= size {
+		chunk = append(chunk, slice)
+		return chunk
+	}
+
+	for x := 0; x <= len(slice); x += size {
+
+		end := x + size
+
+		if end > len(slice) {
+			end = len(slice)
+		}
+
+		chunk = append(chunk, slice[x:end])
+
+	}
+
+	return chunk
+}

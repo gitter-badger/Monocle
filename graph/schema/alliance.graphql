@@ -1,3 +1,7 @@
+extend type Query {
+    alliances(limit: Int!): [Alliance]!
+}
+
 type Alliance {
     id: Int!
     name: String!
@@ -7,6 +11,7 @@ type Alliance {
     date_founded: Time
     executorCorporationID: Int!
     closed: Boolean!
+    memberCount: Int!
     #corporation: [Corporation]!
     #characters: [Character]!
 }

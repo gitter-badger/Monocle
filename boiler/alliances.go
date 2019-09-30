@@ -32,6 +32,7 @@ type Alliance struct {
 	DateFounded           null.Time `db:"date_founded" boil:"date_founded" json:"date_founded,omitempty" toml:"date_founded" yaml:"date_founded,omitempty"`
 	ExecutorCorporationID uint      `db:"executor_corporation_id" boil:"executor_corporation_id" json:"executor_corporation_id" toml:"executor_corporation_id" yaml:"executor_corporation_id"`
 	Ignored               int8      `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
+	MemberCount           uint      `db:"member_count" boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
 	Closed                int8      `db:"closed" boil:"closed" json:"closed" toml:"closed" yaml:"closed"`
 	Etag                  string    `db:"etag" boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
 	Expires               time.Time `db:"expires" boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
@@ -51,6 +52,7 @@ var AllianceColumns = struct {
 	DateFounded           string
 	ExecutorCorporationID string
 	Ignored               string
+	MemberCount           string
 	Closed                string
 	Etag                  string
 	Expires               string
@@ -65,6 +67,7 @@ var AllianceColumns = struct {
 	DateFounded:           "date_founded",
 	ExecutorCorporationID: "executor_corporation_id",
 	Ignored:               "ignored",
+	MemberCount:           "member_count",
 	Closed:                "closed",
 	Etag:                  "etag",
 	Expires:               "expires",
@@ -170,6 +173,7 @@ var AllianceWhere = struct {
 	DateFounded           whereHelpernull_Time
 	ExecutorCorporationID whereHelperuint
 	Ignored               whereHelperint8
+	MemberCount           whereHelperuint
 	Closed                whereHelperint8
 	Etag                  whereHelperstring
 	Expires               whereHelpertime_Time
@@ -184,6 +188,7 @@ var AllianceWhere = struct {
 	DateFounded:           whereHelpernull_Time{field: "`alliances`.`date_founded`"},
 	ExecutorCorporationID: whereHelperuint{field: "`alliances`.`executor_corporation_id`"},
 	Ignored:               whereHelperint8{field: "`alliances`.`ignored`"},
+	MemberCount:           whereHelperuint{field: "`alliances`.`member_count`"},
 	Closed:                whereHelperint8{field: "`alliances`.`closed`"},
 	Etag:                  whereHelperstring{field: "`alliances`.`etag`"},
 	Expires:               whereHelpertime_Time{field: "`alliances`.`expires`"},
@@ -208,9 +213,9 @@ func (*allianceR) NewStruct() *allianceR {
 type allianceL struct{}
 
 var (
-	allianceAllColumns            = []string{"id", "name", "ticker", "creator_corporation_id", "creator_id", "date_founded", "executor_corporation_id", "ignored", "closed", "etag", "expires", "created_at", "updated_at"}
+	allianceAllColumns            = []string{"id", "name", "ticker", "creator_corporation_id", "creator_id", "date_founded", "executor_corporation_id", "ignored", "member_count", "closed", "etag", "expires", "created_at", "updated_at"}
 	allianceColumnsWithoutDefault = []string{"id", "name", "ticker", "creator_corporation_id", "creator_id", "date_founded", "executor_corporation_id", "etag", "expires", "created_at", "updated_at"}
-	allianceColumnsWithDefault    = []string{"ignored", "closed"}
+	allianceColumnsWithDefault    = []string{"ignored", "member_count", "closed"}
 	alliancePrimaryKeyColumns     = []string{"id"}
 )
 

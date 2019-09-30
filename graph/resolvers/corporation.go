@@ -21,6 +21,21 @@ func (r *queryResolver) Corporation(ctx context.Context, id int) (*monocle.Corpo
 
 }
 
+func (r *queryResolver) CorporationsByMemberCount(ctx context.Context, limit int) ([]*monocle.Corporation, error) {
+	corporations := make([]*monocle.Corporation, 0)
+
+	if limit > 50 {
+		limit = 50
+	}
+
+	err := boiler.Corporations(
+		qm.OrderBy("member_count DESC"),
+		qm.Limit(limit),
+	).Bind(ctx, r.DB, &corporations)
+
+	return corporations, err
+}
+
 type corporationResolver struct {
 	*Common
 }

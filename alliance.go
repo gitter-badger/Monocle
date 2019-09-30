@@ -14,6 +14,7 @@ type Alliance struct {
 	CreatorID             uint64    `db:"creator_id" json:"creator_id"`
 	DateFounded           null.Time `db:"date_founded" json:"date_founded"`
 	ExecutorCorporationID uint32    `db:"executor_corporation_id" json:"executor_corporation_id"`
+	MemberCount           uint32    `db:"member_count" json:"member_count"`
 	Ignored               bool      `db:"ignored" json:"ignored"`
 	Closed                bool      `db:"closed" json:"closed"`
 	Expires               time.Time `db:"expires" json:"expires"`

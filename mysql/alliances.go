@@ -246,6 +246,7 @@ func (db *DB) UpdateAllianceByID(alliance monocle.Alliance) (monocle.Alliance, e
 	u := sb.NewUpdateBuilder()
 	u.Update("monocle.alliances").Set(
 		u.E("executor_corporation_id", alliance.ExecutorCorporationID),
+		u.E("member_count", alliance.MemberCount),
 		u.E("ignored", alliance.Ignored),
 		u.E("closed", alliance.Closed),
 		u.E("expires", alliance.Expires),
