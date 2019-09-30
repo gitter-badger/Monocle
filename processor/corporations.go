@@ -123,7 +123,7 @@ func (p *Processor) corpUpdater() {
 		).Bind(context.Background(), p.DB, &corporations)
 		if err != nil {
 			if err != sql.ErrNoRows {
-				p.Logger.Fatalf("Unable to query for characters: %s", err)
+				p.Logger.Fatalf("Unable to query for corporations: %s", err)
 			}
 			continue
 		}
