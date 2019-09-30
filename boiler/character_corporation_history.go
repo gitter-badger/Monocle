@@ -23,15 +23,15 @@ import (
 
 // CharacterCorporationHistory is an object representing the database table.
 type CharacterCorporationHistory struct {
-	ID            uint64    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	RecordID      uint      `boil:"record_id" json:"record_id" toml:"record_id" yaml:"record_id"`
-	CorporationID uint      `boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
-	StartDate     time.Time `boil:"start_date" json:"start_date" toml:"start_date" yaml:"start_date"`
-	CreatedAt     time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt     time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID            uint64    `db:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
+	RecordID      uint      `db:"record_id" boil:"record_id" json:"record_id" toml:"record_id" yaml:"record_id"`
+	CorporationID uint      `db:"corporation_id" boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
+	StartDate     time.Time `db:"start_date" boil:"start_date" json:"start_date" toml:"start_date" yaml:"start_date"`
+	CreatedAt     time.Time `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt     time.Time `db:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
-	R *characterCorporationHistoryR `boil:"-" json:"-" toml:"-" yaml:"-"`
-	L characterCorporationHistoryL  `boil:"-" json:"-" toml:"-" yaml:"-"`
+	R *characterCorporationHistoryR `db:"-" boil:"-" json:"-" toml:"-" yaml:"-"`
+	L characterCorporationHistoryL  `db:"-" boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var CharacterCorporationHistoryColumns = struct {

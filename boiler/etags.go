@@ -23,15 +23,15 @@ import (
 
 // Etag is an object representing the database table.
 type Etag struct {
-	ID        uint      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Resource  string    `boil:"resource" json:"resource" toml:"resource" yaml:"resource"`
-	Etag      string    `boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
-	Expires   time.Time `boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
-	CreatedAt time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID        uint      `db:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
+	Resource  string    `db:"resource" boil:"resource" json:"resource" toml:"resource" yaml:"resource"`
+	Etag      string    `db:"etag" boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
+	Expires   time.Time `db:"expires" boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
+	CreatedAt time.Time `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt time.Time `db:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
-	R *etagR `boil:"-" json:"-" toml:"-" yaml:"-"`
-	L etagL  `boil:"-" json:"-" toml:"-" yaml:"-"`
+	R *etagR `db:"-" boil:"-" json:"-" toml:"-" yaml:"-"`
+	L etagL  `db:"-" boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var EtagColumns = struct {

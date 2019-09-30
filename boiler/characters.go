@@ -24,25 +24,25 @@ import (
 
 // Character is an object representing the database table.
 type Character struct {
-	ID             uint64    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Name           string    `boil:"name" json:"name" toml:"name" yaml:"name"`
-	Birthday       null.Time `boil:"birthday" json:"birthday,omitempty" toml:"birthday" yaml:"birthday,omitempty"`
-	Gender         string    `boil:"gender" json:"gender" toml:"gender" yaml:"gender"`
-	SecurityStatus float32   `boil:"security_status" json:"security_status" toml:"security_status" yaml:"security_status"`
-	AllianceID     null.Int  `boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
-	CorporationID  int       `boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
-	FactionID      null.Int  `boil:"faction_id" json:"faction_id,omitempty" toml:"faction_id" yaml:"faction_id,omitempty"`
-	AncestryID     int       `boil:"ancestry_id" json:"ancestry_id" toml:"ancestry_id" yaml:"ancestry_id"`
-	BloodlineID    int       `boil:"bloodline_id" json:"bloodline_id" toml:"bloodline_id" yaml:"bloodline_id"`
-	RaceID         int       `boil:"race_id" json:"race_id" toml:"race_id" yaml:"race_id"`
-	Ignored        int8      `boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
-	Etag           string    `boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
-	Expires        time.Time `boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
-	CreatedAt      time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt      time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID             uint64    `db:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
+	Name           string    `db:"name" boil:"name" json:"name" toml:"name" yaml:"name"`
+	Birthday       null.Time `db:"birthday" boil:"birthday" json:"birthday,omitempty" toml:"birthday" yaml:"birthday,omitempty"`
+	Gender         string    `db:"gender" boil:"gender" json:"gender" toml:"gender" yaml:"gender"`
+	SecurityStatus float32   `db:"security_status" boil:"security_status" json:"security_status" toml:"security_status" yaml:"security_status"`
+	AllianceID     null.Int  `db:"alliance_id" boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
+	CorporationID  int       `db:"corporation_id" boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
+	FactionID      null.Int  `db:"faction_id" boil:"faction_id" json:"faction_id,omitempty" toml:"faction_id" yaml:"faction_id,omitempty"`
+	AncestryID     int       `db:"ancestry_id" boil:"ancestry_id" json:"ancestry_id" toml:"ancestry_id" yaml:"ancestry_id"`
+	BloodlineID    int       `db:"bloodline_id" boil:"bloodline_id" json:"bloodline_id" toml:"bloodline_id" yaml:"bloodline_id"`
+	RaceID         int       `db:"race_id" boil:"race_id" json:"race_id" toml:"race_id" yaml:"race_id"`
+	Ignored        int8      `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
+	Etag           string    `db:"etag" boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
+	Expires        time.Time `db:"expires" boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
+	CreatedAt      time.Time `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt      time.Time `db:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
-	R *characterR `boil:"-" json:"-" toml:"-" yaml:"-"`
-	L characterL  `boil:"-" json:"-" toml:"-" yaml:"-"`
+	R *characterR `db:"-" boil:"-" json:"-" toml:"-" yaml:"-"`
+	L characterL  `db:"-" boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var CharacterColumns = struct {

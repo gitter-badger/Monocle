@@ -24,13 +24,13 @@ import (
 
 // KV is an object representing the database table.
 type KV struct {
-	K         string     `boil:"k" json:"k" toml:"k" yaml:"k"`
-	V         types.JSON `boil:"v" json:"v" toml:"v" yaml:"v"`
-	CreatedAt time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt time.Time  `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	K         string     `db:"k" boil:"k" json:"k" toml:"k" yaml:"k"`
+	V         types.JSON `db:"v" boil:"v" json:"v" toml:"v" yaml:"v"`
+	CreatedAt time.Time  `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt time.Time  `db:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
-	R *kvR `boil:"-" json:"-" toml:"-" yaml:"-"`
-	L kvL  `boil:"-" json:"-" toml:"-" yaml:"-"`
+	R *kvR `db:"-" boil:"-" json:"-" toml:"-" yaml:"-"`
+	L kvL  `db:"-" boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var KVColumns = struct {
