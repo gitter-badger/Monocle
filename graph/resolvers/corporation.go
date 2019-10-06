@@ -21,17 +21,27 @@ func (r *queryResolver) Corporation(ctx context.Context, id int) (*monocle.Corpo
 
 }
 
-func (r *queryResolver) CorporationsByMemberCount(ctx context.Context, limit int) ([]*monocle.Corporation, error) {
+func (r *queryResolver) CorporationsByMemberCount(ctx context.Context, limit int, independent bool, npc bool) ([]*monocle.Corporation, error) {
 	corporations := make([]*monocle.Corporation, 0)
 
 	if limit > 50 {
 		limit = 50
 	}
 
-	err := boiler.Corporations(
-		qm.OrderBy("member_count DESC"),
-		qm.Limit(limit),
-	).Bind(ctx, r.DB, &corporations)
+	mods := []qm.QueryMod{}
+
+	if !independent {
+		mods = append(mods, qm.Where("alliance_id IS NOT NULL"))
+	}
+
+	if !npc {
+		mods = append(mods, qm.Where("id >= 98000000"))
+	}
+
+	mods = append(mods, qm.OrderBy("member_count DESC"))
+	mods = append(mods, qm.Limit(limit))
+
+	err := boiler.Corporations(mods...).Bind(ctx, r.DB, &corporations)
 
 	return corporations, err
 }

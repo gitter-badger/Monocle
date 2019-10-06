@@ -14,7 +14,6 @@ import (
 	"github.com/99designs/gqlgen/handler"
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	"github.com/urfave/cli"
 
 	"github.com/ddouglas/monocle/core"
@@ -88,8 +87,8 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 	// One handler to process graphQL queries
 	queryHandler := handler.GraphQL(
 		graphSchema,
-		handler.IntrospectionEnabled(false),
-		handler.ComplexityLimit(viper.GetInt("api.graphql.complexity_limit")),
+		// handler.IntrospectionEnabled(false),
+		// handler.ComplexityLimit(viper.GetInt("api.graphql.complexity_limit")),
 	)
 
 	r.Handle("/pg", dataloaders.Dataloader(s.App.DB.DB, handler.Playground("GraphQL playground", "/query")))

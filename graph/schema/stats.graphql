@@ -7,4 +7,5 @@ type Total {
     characters: Int!
     corporations: Int!
     alliances: Int!
+    created_at: Time!
 }

@@ -110,12 +110,13 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Alliances                 func(childComplexity int, limit int) int
+		Alliance                  func(childComplexity int, id int) int
+		AlliancesByMemberCount    func(childComplexity int, limit int) int
 		Character                 func(childComplexity int, id int) int
 		CharactersByBirthday      func(childComplexity int, limit int, order models.Sort) int
 		CharactersByID            func(childComplexity int, limit int, order models.Sort) int
 		Corporation               func(childComplexity int, id int) int
-		CorporationsByMemberCount func(childComplexity int, limit int) int
+		CorporationsByMemberCount func(childComplexity int, limit int, independent bool, npc bool) int
 		Stat                      func(childComplexity int) int
 		Stats                     func(childComplexity int, limit int) int
 	}
@@ -124,6 +125,7 @@ type ComplexityRoot struct {
 		Alliances    func(childComplexity int) int
 		Characters   func(childComplexity int) int
 		Corporations func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
 	}
 }
 
@@ -142,9 +144,10 @@ type QueryResolver interface {
 	Character(ctx context.Context, id int) (*monocle.Character, error)
 	CharactersByID(ctx context.Context, limit int, order models.Sort) ([]*monocle.Character, error)
 	CharactersByBirthday(ctx context.Context, limit int, order models.Sort) ([]*monocle.Character, error)
-	Alliances(ctx context.Context, limit int) ([]*monocle.Alliance, error)
+	Alliance(ctx context.Context, id int) (*monocle.Alliance, error)
+	AlliancesByMemberCount(ctx context.Context, limit int) ([]*monocle.Alliance, error)
 	Corporation(ctx context.Context, id int) (*monocle.Corporation, error)
-	CorporationsByMemberCount(ctx context.Context, limit int) ([]*monocle.Corporation, error)
+	CorporationsByMemberCount(ctx context.Context, limit int, independent bool, npc bool) ([]*monocle.Corporation, error)
 	Stat(ctx context.Context) (*monocle.Total, error)
 	Stats(ctx context.Context, limit int) ([]*monocle.Total, error)
 }
@@ -479,17 +482,29 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CorporationHistory.StartDate(childComplexity), true
 
-	case "Query.alliances":
-		if e.complexity.Query.Alliances == nil {
+	case "Query.alliance":
+		if e.complexity.Query.Alliance == nil {
 			break
 		}
 
-		args, err := ec.field_Query_alliances_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_alliance_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Alliances(childComplexity, args["limit"].(int)), true
+		return e.complexity.Query.Alliance(childComplexity, args["id"].(int)), true
+
+	case "Query.alliancesByMemberCount":
+		if e.complexity.Query.AlliancesByMemberCount == nil {
+			break
+		}
+
+		args, err := ec.field_Query_alliancesByMemberCount_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AlliancesByMemberCount(childComplexity, args["limit"].(int)), true
 
 	case "Query.character":
 		if e.complexity.Query.Character == nil {
@@ -549,7 +564,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CorporationsByMemberCount(childComplexity, args["limit"].(int)), true
+		return e.complexity.Query.CorporationsByMemberCount(childComplexity, args["limit"].(int), args["independent"].(bool), args["npc"].(bool)), true
 
 	case "Query.stat":
 		if e.complexity.Query.Stat == nil {
@@ -590,6 +605,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Total.Corporations(childComplexity), true
+
+	case "Total.created_at":
+		if e.complexity.Total.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Total.CreatedAt(childComplexity), true
 
 	}
 	return 0, false
@@ -641,7 +663,8 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var parsedSchema = gqlparser.MustLoadSchema(
 	&ast.Source{Name: "graph/schema/alliance.graphql", Input: `extend type Query {
-    alliances(limit: Int!): [Alliance]!
+    alliance(id: Int!): Alliance!
+    alliancesByMemberCount(limit: Int!): [Alliance]!
 }
 
 type Alliance {
@@ -697,7 +720,7 @@ enum Sort {
 `},
 	&ast.Source{Name: "graph/schema/corporation.graphql", Input: `extend type Query {
     corporation(id: Int!): Corporation!
-    corporationsByMemberCount(limit: Int!): [Corporation]!
+    corporationsByMemberCount(limit: Int!, independent: Boolean! = false, npc: Boolean! = false): [Corporation]!
 }
 
 type Corporation {
@@ -735,6 +758,7 @@ type Total {
     characters: Int!
     corporations: Int!
     alliances: Int!
+    created_at: Time!
 }`},
 )
 
@@ -756,7 +780,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_alliances_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_alliance_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_alliancesByMemberCount_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -853,6 +891,22 @@ func (ec *executionContext) field_Query_corporationsByMemberCount_args(ctx conte
 		}
 	}
 	args["limit"] = arg0
+	var arg1 bool
+	if tmp, ok := rawArgs["independent"]; ok {
+		arg1, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["independent"] = arg1
+	var arg2 bool
+	if tmp, ok := rawArgs["npc"]; ok {
+		arg2, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["npc"] = arg2
 	return args, nil
 }
 
@@ -2670,7 +2724,7 @@ func (ec *executionContext) _Query_charactersByBirthday(ctx context.Context, fie
 	return ec.marshalNCharacter2ᚕᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_alliances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_alliance(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2687,7 +2741,7 @@ func (ec *executionContext) _Query_alliances(ctx context.Context, field graphql.
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_alliances_args(ctx, rawArgs)
+	args, err := ec.field_Query_alliance_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -2696,7 +2750,51 @@ func (ec *executionContext) _Query_alliances(ctx context.Context, field graphql.
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Alliances(rctx, args["limit"].(int))
+		return ec.resolvers.Query().Alliance(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*monocle.Alliance)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNAlliance2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐAlliance(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_alliancesByMemberCount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_alliancesByMemberCount_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AlliancesByMemberCount(rctx, args["limit"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2784,7 +2882,7 @@ func (ec *executionContext) _Query_corporationsByMemberCount(ctx context.Context
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CorporationsByMemberCount(rctx, args["limit"].(int))
+		return ec.resolvers.Query().CorporationsByMemberCount(rctx, args["limit"].(int), args["independent"].(bool), args["npc"].(bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3067,6 +3165,43 @@ func (ec *executionContext) _Total_alliances(ctx context.Context, field graphql.
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNInt2uint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Total_created_at(ctx context.Context, field graphql.CollectedField, obj *monocle.Total) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Total",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -4632,7 +4767,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "alliances":
+		case "alliance":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -4640,7 +4775,21 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_alliances(ctx, field)
+				res = ec._Query_alliance(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "alliancesByMemberCount":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_alliancesByMemberCount(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -4740,6 +4889,11 @@ func (ec *executionContext) _Total(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "alliances":
 			out.Values[i] = ec._Total_alliances(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "created_at":
+			out.Values[i] = ec._Total_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4999,6 +5153,10 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAlliance2githubᚗcomᚋddouglasᚋmonocleᚐAlliance(ctx context.Context, sel ast.SelectionSet, v monocle.Alliance) graphql.Marshaler {
+	return ec._Alliance(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNAlliance2ᚕᚖgithubᚗcomᚋddouglasᚋmonocleᚐAlliance(ctx context.Context, sel ast.SelectionSet, v []*monocle.Alliance) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -5034,6 +5192,16 @@ func (ec *executionContext) marshalNAlliance2ᚕᚖgithubᚗcomᚋddouglasᚋmon
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalNAlliance2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐAlliance(ctx context.Context, sel ast.SelectionSet, v *monocle.Alliance) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Alliance(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

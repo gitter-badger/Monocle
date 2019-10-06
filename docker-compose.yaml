@@ -3,6 +3,7 @@ version: "3.7"
 services:
     alliHunter:
         image: monocle:latest
+        network_mode: "host"
         logging:
             driver: "json-file"
             options:
@@ -12,6 +13,7 @@ services:
         container_name: alliHunter
     alliUpdater:
         image: monocle:latest
+        network_mode: "host"
         logging:
             driver: "json-file"
             options:
@@ -21,6 +23,7 @@ services:
         container_name: alliUpdater
     charUpdater:
         image: monocle:latest
+        network_mode: "host"
         logging:
             driver: "json-file"
             options:
@@ -30,6 +33,7 @@ services:
         container_name: charUpdater
     charHunter:
         image: monocle:latest
+        network_mode: "host"
         logging:
             driver: "json-file"
             options:
@@ -39,6 +43,7 @@ services:
         container_name: charHunter
     corpHunter:
         image: monocle:latest
+        network_mode: "host"
         logging:
             driver: "json-file"
             options:
@@ -48,6 +53,7 @@ services:
         container_name: corpHunter
     corpUpdater:
         image: monocle:latest
+        network_mode: "host"
         logging:
             driver: "json-file"
             options:
@@ -55,21 +61,22 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=corpUpdater
         container_name: corpUpdater
-    api:
-        image: monocle:latest
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "50m"
-        command: ./cli api
-        container_name: api
-        networks:
-            - host
-        expose:
-            - "8080"
+    # api:
+    #     image: monocle:latest
+    #     logging:
+    #         driver: "json-file"
+    #         options:
+    #             max-file: "5"
+    #             max-size: "50m"
+    #     command: ./cli api
+    #     container_name: api
+    #     networks:
+    #         - host
+    #     expose:
+    #         - "8080"
     cron:
         image: monocle:latest
+        network_mode: "host"
         logging:
             driver: "json-file"
             options:
@@ -77,15 +84,15 @@ services:
                 max-size: "50m"
         command: ./cli cron
         container_name: cron
-    nginx:
-        image: nginx:latest
-        container_name: nginx
-        volumes:
-            - /home/ddouglas/nginx/monocle.conf:/etc/nginx/conf.d/monocle.conf
-        ports:
-            - 80:80
-            - 443:443
-        networks:
-            - host
-networks:
-    host:
+    # nginx:
+    #     image: nginx:latest
+    #     container_name: nginx
+    #     volumes:
+    #         - /home/ddouglas/nginx/monocle.conf:/etc/nginx/conf.d/monocle.conf
+    #     ports:
+    #         - 80:80
+    #         - 443:443
+    #     networks:
+    #         - host
+# networks:
+#     host:
