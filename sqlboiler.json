@@ -3,10 +3,10 @@
     "pkgname": "boiler",
     "mysql": {
         "dbname": "monocle",
-        "host": "localhost",
+        "host": "10.132.228.169",
         "post": 3306,
-        "user": "root",
-        "pass": "password123",
+        "user": "MonocleReadWrite",
+        "pass": "8u8iYoWeFaMi3i7O8u4emIwopiVIQ5",
         "sslmode": "false",
         "whitelist": [
             "alliances",
@@ -16,12 +16,11 @@
             "corporation_deltas",
             "etags",
             "kv",
-            "totals"
+            "totals",
+            "unknown_corps"
         ]
     },
-    "tag": [
-        "db"
-    ],
+    "tag": ["db"],
     "aliases": {
         "tables": {
             "corporation_deltas": {

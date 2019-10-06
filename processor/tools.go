@@ -61,7 +61,7 @@ func chunkCorporationSlice(size int, slice []monocle.Corporation) [][]monocle.Co
 		return chunk
 	}
 
-	for x := 0; x <= len(slice); x += size {
+	for x := 0; x <= len(slice)-1; x += size {
 
 		end := x + size
 
