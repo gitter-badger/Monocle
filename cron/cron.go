@@ -32,7 +32,7 @@ func Action(c *cli.Context) error {
 	crn := cron.New()
 	wg.Add(1)
 	msg := "Registering Count func with Cron"
-	crn.AddFunc("*/5 * * * *", h.Counts)
+	crn.AddFunc("0 * * * *", h.Counts)
 
 	msg = msg + "\nRegistering Deltas func with Cron"
 	crn.AddFunc("0 */4 * * *", h.Deltas)

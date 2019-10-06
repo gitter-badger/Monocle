@@ -237,14 +237,16 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 		p.processCharacterCorpHistory(character)
 	}
 
-	query := `UPDATE characters SET expires = '%v' WHERE id IN (%s)`
+	if len(stale) > 0 {
+		query := `UPDATE characters SET expires = '%v' WHERE id IN (%s)`
 
-	t := time.Now().Add(time.Hour * 12).Format("2006-01-02 15:04:05")
+		t := time.Now().Add(time.Hour * 12).Format("2006-01-02 15:04:05")
 
-	query = fmt.Sprintf(query, t, strings.Join(args, ", "))
-	_, err = p.DB.Exec(query, stale...)
-	if err != nil {
-		p.Logger.ErrorF("Failed to bulk update Etag Expiry for %d ids: %s", len(stale), err)
+		query = fmt.Sprintf(query, t, strings.Join(args, ", "))
+		_, err = p.DB.Exec(query, stale...)
+		if err != nil {
+			p.Logger.ErrorF("Failed to bulk update Etag Expiry for %d ids: %s", len(stale), err)
+		}
 	}
 
 	return

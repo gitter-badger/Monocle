@@ -115,6 +115,7 @@ func (p *Processor) alliHunter() {
 }
 
 func (p *Processor) alliUpdater() {
+	sleep = 1800
 	for {
 		var alliances []monocle.Alliance
 

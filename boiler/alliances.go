@@ -31,8 +31,8 @@ type Alliance struct {
 	CreatorID             uint64    `db:"creator_id" boil:"creator_id" json:"creator_id" toml:"creator_id" yaml:"creator_id"`
 	DateFounded           null.Time `db:"date_founded" boil:"date_founded" json:"date_founded,omitempty" toml:"date_founded" yaml:"date_founded,omitempty"`
 	ExecutorCorporationID uint      `db:"executor_corporation_id" boil:"executor_corporation_id" json:"executor_corporation_id" toml:"executor_corporation_id" yaml:"executor_corporation_id"`
-	Ignored               int8      `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
 	MemberCount           uint      `db:"member_count" boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
+	Ignored               int8      `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
 	Closed                int8      `db:"closed" boil:"closed" json:"closed" toml:"closed" yaml:"closed"`
 	Etag                  string    `db:"etag" boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
 	Expires               time.Time `db:"expires" boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
@@ -51,8 +51,8 @@ var AllianceColumns = struct {
 	CreatorID             string
 	DateFounded           string
 	ExecutorCorporationID string
-	Ignored               string
 	MemberCount           string
+	Ignored               string
 	Closed                string
 	Etag                  string
 	Expires               string
@@ -66,8 +66,8 @@ var AllianceColumns = struct {
 	CreatorID:             "creator_id",
 	DateFounded:           "date_founded",
 	ExecutorCorporationID: "executor_corporation_id",
-	Ignored:               "ignored",
 	MemberCount:           "member_count",
+	Ignored:               "ignored",
 	Closed:                "closed",
 	Etag:                  "etag",
 	Expires:               "expires",
@@ -172,8 +172,8 @@ var AllianceWhere = struct {
 	CreatorID             whereHelperuint64
 	DateFounded           whereHelpernull_Time
 	ExecutorCorporationID whereHelperuint
-	Ignored               whereHelperint8
 	MemberCount           whereHelperuint
+	Ignored               whereHelperint8
 	Closed                whereHelperint8
 	Etag                  whereHelperstring
 	Expires               whereHelpertime_Time
@@ -187,8 +187,8 @@ var AllianceWhere = struct {
 	CreatorID:             whereHelperuint64{field: "`alliances`.`creator_id`"},
 	DateFounded:           whereHelpernull_Time{field: "`alliances`.`date_founded`"},
 	ExecutorCorporationID: whereHelperuint{field: "`alliances`.`executor_corporation_id`"},
-	Ignored:               whereHelperint8{field: "`alliances`.`ignored`"},
 	MemberCount:           whereHelperuint{field: "`alliances`.`member_count`"},
+	Ignored:               whereHelperint8{field: "`alliances`.`ignored`"},
 	Closed:                whereHelperint8{field: "`alliances`.`closed`"},
 	Etag:                  whereHelperstring{field: "`alliances`.`etag`"},
 	Expires:               whereHelpertime_Time{field: "`alliances`.`expires`"},
@@ -213,9 +213,9 @@ func (*allianceR) NewStruct() *allianceR {
 type allianceL struct{}
 
 var (
-	allianceAllColumns            = []string{"id", "name", "ticker", "creator_corporation_id", "creator_id", "date_founded", "executor_corporation_id", "ignored", "member_count", "closed", "etag", "expires", "created_at", "updated_at"}
+	allianceAllColumns            = []string{"id", "name", "ticker", "creator_corporation_id", "creator_id", "date_founded", "executor_corporation_id", "member_count", "ignored", "closed", "etag", "expires", "created_at", "updated_at"}
 	allianceColumnsWithoutDefault = []string{"id", "name", "ticker", "creator_corporation_id", "creator_id", "date_founded", "executor_corporation_id", "etag", "expires", "created_at", "updated_at"}
-	allianceColumnsWithDefault    = []string{"ignored", "member_count", "closed"}
+	allianceColumnsWithDefault    = []string{"member_count", "ignored", "closed"}
 	alliancePrimaryKeyColumns     = []string{"id"}
 )
 

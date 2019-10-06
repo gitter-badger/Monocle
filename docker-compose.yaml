@@ -4,6 +4,7 @@ services:
     alliHunter:
         image: monocle:latest
         network_mode: "host"
+        restart: on-failure
         logging:
             driver: "json-file"
             options:
@@ -14,6 +15,7 @@ services:
     alliUpdater:
         image: monocle:latest
         network_mode: "host"
+        restart: on-failure
         logging:
             driver: "json-file"
             options:
@@ -24,6 +26,7 @@ services:
     charUpdater:
         image: monocle:latest
         network_mode: "host"
+        restart: on-failure
         logging:
             driver: "json-file"
             options:
@@ -34,6 +37,7 @@ services:
     charHunter:
         image: monocle:latest
         network_mode: "host"
+        restart: on-failure
         logging:
             driver: "json-file"
             options:
@@ -41,9 +45,21 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=charHunter --records=10
         container_name: charHunter
+    charImport:
+        image: monocle:latest
+        network_mode: "host"
+        restart: on-failure
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli processor --scope=charImport --workers=150 --records=1000
+        container_name: charImport
     corpHunter:
         image: monocle:latest
         network_mode: "host"
+        restart: on-failure
         logging:
             driver: "json-file"
             options:
@@ -54,6 +70,7 @@ services:
     corpUpdater:
         image: monocle:latest
         network_mode: "host"
+        restart: on-failure
         logging:
             driver: "json-file"
             options:
@@ -61,8 +78,20 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=corpUpdater
         container_name: corpUpdater
+    cron:
+        image: monocle:latest
+        network_mode: "host"
+        restart: on-failure
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli cron
+        container_name: cron
     # api:
     #     image: monocle:latest
+    #     restart: on-failure
     #     logging:
     #         driver: "json-file"
     #         options:
@@ -74,18 +103,9 @@ services:
     #         - host
     #     expose:
     #         - "8080"
-    cron:
-        image: monocle:latest
-        network_mode: "host"
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "50m"
-        command: ./cli cron
-        container_name: cron
     # nginx:
     #     image: nginx:latest
+    #     restart: on-failure
     #     container_name: nginx
     #     volumes:
     #         - /home/ddouglas/nginx/monocle.conf:/etc/nginx/conf.d/monocle.conf

@@ -12,6 +12,7 @@ var TableNames = struct {
 	Etags                       string
 	KV                          string
 	Totals                      string
+	UnknownCorps                string
 }{
 	Alliances:                   "alliances",
 	CharacterCorporationHistory: "character_corporation_history",
@@ -21,4 +22,5 @@ var TableNames = struct {
 	Etags:                       "etags",
 	KV:                          "kv",
 	Totals:                      "totals",
+	UnknownCorps:                "unknown_corps",
 }
