@@ -22,9 +22,9 @@ type Character {
 
 type CorporationHistory {
     id: Int!
-    recordID: Int!
-    corporationID: Int!
-    startDate: Time!
+    record_id: Int!
+    corporation_id: Int!
+    start_date: Time!
     corporation: Corporation!
 }
 

@@ -7,12 +7,12 @@ type Alliance {
     id: Int!
     name: String!
     ticker: String!
-    creatorCorporationID: Int!
-    creatorID: Int!
+    creator_corporation_id: Int!
+    creator_id: Int!
     date_founded: Time
-    executorCorporationID: Int!
+    executor_corporation_id: Int!
     closed: Boolean!
-    memberCount: Int!
+    member_count: Int!
     #corporation: [Corporation]!
     #characters: [Character]!
 }

@@ -174,14 +174,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Alliance.Closed(childComplexity), true
 
-	case "Alliance.creatorCorporationID":
+	case "Alliance.creator_corporation_id":
 		if e.complexity.Alliance.CreatorCorporationID == nil {
 			break
 		}
 
 		return e.complexity.Alliance.CreatorCorporationID(childComplexity), true
 
-	case "Alliance.creatorID":
+	case "Alliance.creator_id":
 		if e.complexity.Alliance.CreatorID == nil {
 			break
 		}
@@ -195,7 +195,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Alliance.DateFounded(childComplexity), true
 
-	case "Alliance.executorCorporationID":
+	case "Alliance.executor_corporation_id":
 		if e.complexity.Alliance.ExecutorCorporationID == nil {
 			break
 		}
@@ -209,7 +209,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Alliance.ID(childComplexity), true
 
-	case "Alliance.memberCount":
+	case "Alliance.member_count":
 		if e.complexity.Alliance.MemberCount == nil {
 			break
 		}
@@ -454,7 +454,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CorporationHistory.Corporation(childComplexity), true
 
-	case "CorporationHistory.corporationID":
+	case "CorporationHistory.corporation_id":
 		if e.complexity.CorporationHistory.CorporationID == nil {
 			break
 		}
@@ -468,14 +468,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CorporationHistory.ID(childComplexity), true
 
-	case "CorporationHistory.recordID":
+	case "CorporationHistory.record_id":
 		if e.complexity.CorporationHistory.RecordID == nil {
 			break
 		}
 
 		return e.complexity.CorporationHistory.RecordID(childComplexity), true
 
-	case "CorporationHistory.startDate":
+	case "CorporationHistory.start_date":
 		if e.complexity.CorporationHistory.StartDate == nil {
 			break
 		}
@@ -671,12 +671,12 @@ type Alliance {
     id: Int!
     name: String!
     ticker: String!
-    creatorCorporationID: Int!
-    creatorID: Int!
+    creator_corporation_id: Int!
+    creator_id: Int!
     date_founded: Time
-    executorCorporationID: Int!
+    executor_corporation_id: Int!
     closed: Boolean!
-    memberCount: Int!
+    member_count: Int!
     #corporation: [Corporation]!
     #characters: [Character]!
 }
@@ -705,9 +705,9 @@ type Character {
 
 type CorporationHistory {
     id: Int!
-    recordID: Int!
-    corporationID: Int!
-    startDate: Time!
+    record_id: Int!
+    corporation_id: Int!
+    start_date: Time!
     corporation: Corporation!
 }
 
@@ -759,7 +759,8 @@ type Total {
     corporations: Int!
     alliances: Int!
     created_at: Time!
-}`},
+}
+`},
 )
 
 // endregion ************************** generated!.gotpl **************************
@@ -1071,7 +1072,7 @@ func (ec *executionContext) _Alliance_ticker(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Alliance_creatorCorporationID(ctx context.Context, field graphql.CollectedField, obj *monocle.Alliance) (ret graphql.Marshaler) {
+func (ec *executionContext) _Alliance_creator_corporation_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Alliance) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1108,7 +1109,7 @@ func (ec *executionContext) _Alliance_creatorCorporationID(ctx context.Context, 
 	return ec.marshalNInt2uint32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Alliance_creatorID(ctx context.Context, field graphql.CollectedField, obj *monocle.Alliance) (ret graphql.Marshaler) {
+func (ec *executionContext) _Alliance_creator_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Alliance) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1179,7 +1180,7 @@ func (ec *executionContext) _Alliance_date_founded(ctx context.Context, field gr
 	return ec.marshalOTime2githubᚗcomᚋvolatiletechᚋnullᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Alliance_executorCorporationID(ctx context.Context, field graphql.CollectedField, obj *monocle.Alliance) (ret graphql.Marshaler) {
+func (ec *executionContext) _Alliance_executor_corporation_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Alliance) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1253,7 +1254,7 @@ func (ec *executionContext) _Alliance_closed(ctx context.Context, field graphql.
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Alliance_memberCount(ctx context.Context, field graphql.CollectedField, obj *monocle.Alliance) (ret graphql.Marshaler) {
+func (ec *executionContext) _Alliance_member_count(ctx context.Context, field graphql.CollectedField, obj *monocle.Alliance) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2444,7 +2445,7 @@ func (ec *executionContext) _CorporationHistory_id(ctx context.Context, field gr
 	return ec.marshalNInt2uint64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _CorporationHistory_recordID(ctx context.Context, field graphql.CollectedField, obj *monocle.CharacterCorporationHistory) (ret graphql.Marshaler) {
+func (ec *executionContext) _CorporationHistory_record_id(ctx context.Context, field graphql.CollectedField, obj *monocle.CharacterCorporationHistory) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2481,7 +2482,7 @@ func (ec *executionContext) _CorporationHistory_recordID(ctx context.Context, fi
 	return ec.marshalNInt2uint(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _CorporationHistory_corporationID(ctx context.Context, field graphql.CollectedField, obj *monocle.CharacterCorporationHistory) (ret graphql.Marshaler) {
+func (ec *executionContext) _CorporationHistory_corporation_id(ctx context.Context, field graphql.CollectedField, obj *monocle.CharacterCorporationHistory) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2518,7 +2519,7 @@ func (ec *executionContext) _CorporationHistory_corporationID(ctx context.Contex
 	return ec.marshalNInt2uint32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _CorporationHistory_startDate(ctx context.Context, field graphql.CollectedField, obj *monocle.CharacterCorporationHistory) (ret graphql.Marshaler) {
+func (ec *executionContext) _CorporationHistory_start_date(ctx context.Context, field graphql.CollectedField, obj *monocle.CharacterCorporationHistory) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -4389,20 +4390,20 @@ func (ec *executionContext) _Alliance(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "creatorCorporationID":
-			out.Values[i] = ec._Alliance_creatorCorporationID(ctx, field, obj)
+		case "creator_corporation_id":
+			out.Values[i] = ec._Alliance_creator_corporation_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "creatorID":
-			out.Values[i] = ec._Alliance_creatorID(ctx, field, obj)
+		case "creator_id":
+			out.Values[i] = ec._Alliance_creator_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "date_founded":
 			out.Values[i] = ec._Alliance_date_founded(ctx, field, obj)
-		case "executorCorporationID":
-			out.Values[i] = ec._Alliance_executorCorporationID(ctx, field, obj)
+		case "executor_corporation_id":
+			out.Values[i] = ec._Alliance_executor_corporation_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4411,8 +4412,8 @@ func (ec *executionContext) _Alliance(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "memberCount":
-			out.Values[i] = ec._Alliance_memberCount(ctx, field, obj)
+		case "member_count":
+			out.Values[i] = ec._Alliance_member_count(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4670,18 +4671,18 @@ func (ec *executionContext) _CorporationHistory(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "recordID":
-			out.Values[i] = ec._CorporationHistory_recordID(ctx, field, obj)
+		case "record_id":
+			out.Values[i] = ec._CorporationHistory_record_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "corporationID":
-			out.Values[i] = ec._CorporationHistory_corporationID(ctx, field, obj)
+		case "corporation_id":
+			out.Values[i] = ec._CorporationHistory_corporation_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "startDate":
-			out.Values[i] = ec._CorporationHistory_startDate(ctx, field, obj)
+		case "start_date":
+			out.Values[i] = ec._CorporationHistory_start_date(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
