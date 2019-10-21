@@ -17,6 +17,14 @@ func (r *Common) Query() generated.QueryResolver {
 	return &queryResolver{r}
 }
 
+func (r *Common) Alliance() generated.AllianceResolver {
+	return &allianceResolver{r}
+}
+
+func (r *Common) AllianceHistory() generated.AllianceHistoryResolver {
+	return &allianceHistoryResolver{r}
+}
+
 func (r *Common) Character() generated.CharacterResolver {
 	return &characterResolver{r}
 }
@@ -27,4 +35,8 @@ func (r *Common) Corporation() generated.CorporationResolver {
 
 func (r *Common) CorporationHistory() generated.CorporationHistoryResolver {
 	return &corporationHistoryResolver{r}
+}
+
+func offset(page *int, limit *int) int {
+	return (*page * *limit) - *limit
 }

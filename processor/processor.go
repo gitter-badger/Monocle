@@ -53,8 +53,6 @@ func Action(c *cli.Context) error {
 		p.corpHunter()
 	case "corpUpdater":
 		p.corpUpdater()
-	case "corpImport":
-		p.corpImport()
 	case "alliHunter":
 		p.alliHunter()
 	case "alliUpdater":

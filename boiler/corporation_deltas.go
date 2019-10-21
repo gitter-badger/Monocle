@@ -85,8 +85,6 @@ type (
 	// CorporationDeltaSlice is an alias for a slice of pointers to CorporationDelta.
 	// This should generally be used opposed to []CorporationDelta.
 	CorporationDeltaSlice []*CorporationDelta
-	// CorporationDeltaHook is the signature for custom CorporationDelta hook methods
-	CorporationDeltaHook func(context.Context, boil.ContextExecutor, *CorporationDelta) error
 
 	corporationDeltaQuery struct {
 		*queries.Query
@@ -114,176 +112,6 @@ var (
 	_ = qmhelper.Where
 )
 
-var corporationDeltaBeforeInsertHooks []CorporationDeltaHook
-var corporationDeltaBeforeUpdateHooks []CorporationDeltaHook
-var corporationDeltaBeforeDeleteHooks []CorporationDeltaHook
-var corporationDeltaBeforeUpsertHooks []CorporationDeltaHook
-
-var corporationDeltaAfterInsertHooks []CorporationDeltaHook
-var corporationDeltaAfterSelectHooks []CorporationDeltaHook
-var corporationDeltaAfterUpdateHooks []CorporationDeltaHook
-var corporationDeltaAfterDeleteHooks []CorporationDeltaHook
-var corporationDeltaAfterUpsertHooks []CorporationDeltaHook
-
-// doBeforeInsertHooks executes all "before insert" hooks.
-func (o *CorporationDelta) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range corporationDeltaBeforeInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *CorporationDelta) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range corporationDeltaBeforeUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *CorporationDelta) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range corporationDeltaBeforeDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *CorporationDelta) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range corporationDeltaBeforeUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterInsertHooks executes all "after Insert" hooks.
-func (o *CorporationDelta) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range corporationDeltaAfterInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterSelectHooks executes all "after Select" hooks.
-func (o *CorporationDelta) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range corporationDeltaAfterSelectHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpdateHooks executes all "after Update" hooks.
-func (o *CorporationDelta) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range corporationDeltaAfterUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *CorporationDelta) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range corporationDeltaAfterDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *CorporationDelta) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range corporationDeltaAfterUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// AddCorporationDeltaHook registers your hook function for all future operations.
-func AddCorporationDeltaHook(hookPoint boil.HookPoint, corporationDeltaHook CorporationDeltaHook) {
-	switch hookPoint {
-	case boil.BeforeInsertHook:
-		corporationDeltaBeforeInsertHooks = append(corporationDeltaBeforeInsertHooks, corporationDeltaHook)
-	case boil.BeforeUpdateHook:
-		corporationDeltaBeforeUpdateHooks = append(corporationDeltaBeforeUpdateHooks, corporationDeltaHook)
-	case boil.BeforeDeleteHook:
-		corporationDeltaBeforeDeleteHooks = append(corporationDeltaBeforeDeleteHooks, corporationDeltaHook)
-	case boil.BeforeUpsertHook:
-		corporationDeltaBeforeUpsertHooks = append(corporationDeltaBeforeUpsertHooks, corporationDeltaHook)
-	case boil.AfterInsertHook:
-		corporationDeltaAfterInsertHooks = append(corporationDeltaAfterInsertHooks, corporationDeltaHook)
-	case boil.AfterSelectHook:
-		corporationDeltaAfterSelectHooks = append(corporationDeltaAfterSelectHooks, corporationDeltaHook)
-	case boil.AfterUpdateHook:
-		corporationDeltaAfterUpdateHooks = append(corporationDeltaAfterUpdateHooks, corporationDeltaHook)
-	case boil.AfterDeleteHook:
-		corporationDeltaAfterDeleteHooks = append(corporationDeltaAfterDeleteHooks, corporationDeltaHook)
-	case boil.AfterUpsertHook:
-		corporationDeltaAfterUpsertHooks = append(corporationDeltaAfterUpsertHooks, corporationDeltaHook)
-	}
-}
-
 // One returns a single corporationDelta record from the query.
 func (q corporationDeltaQuery) One(ctx context.Context, exec boil.ContextExecutor) (*CorporationDelta, error) {
 	o := &CorporationDelta{}
@@ -298,10 +126,6 @@ func (q corporationDeltaQuery) One(ctx context.Context, exec boil.ContextExecuto
 		return nil, errors.Wrap(err, "boiler: failed to execute a one query for corporation_deltas")
 	}
 
-	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
-		return o, err
-	}
-
 	return o, nil
 }
 
@@ -312,14 +136,6 @@ func (q corporationDeltaQuery) All(ctx context.Context, exec boil.ContextExecuto
 	err := q.Bind(ctx, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "boiler: failed to assign all query results to CorporationDelta slice")
-	}
-
-	if len(corporationDeltaAfterSelectHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
-				return o, err
-			}
-		}
 	}
 
 	return o, nil
@@ -402,10 +218,6 @@ func (o *CorporationDelta) Insert(ctx context.Context, exec boil.ContextExecutor
 		if o.CreatedAt.IsZero() {
 			o.CreatedAt = currTime
 		}
-	}
-
-	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
-		return err
 	}
 
 	nzDefaults := queries.NonZeroDefaultSet(corporationDeltaColumnsWithDefault, o)
@@ -498,17 +310,14 @@ CacheNoHooks:
 		corporationDeltaInsertCacheMut.Unlock()
 	}
 
-	return o.doAfterInsertHooks(ctx, exec)
+	return nil
 }
 
 // Update uses an executor to update the CorporationDelta.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *CorporationDelta) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *CorporationDelta) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	var err error
-	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
-		return 0, err
-	}
 	key := makeCacheKey(columns, nil)
 	corporationDeltaUpdateCacheMut.RLock()
 	cache, cached := corporationDeltaUpdateCache[key]
@@ -524,7 +333,7 @@ func (o *CorporationDelta) Update(ctx context.Context, exec boil.ContextExecutor
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("boiler: unable to update corporation_deltas, could not build whitelist")
+			return errors.New("boiler: unable to update corporation_deltas, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE `corporation_deltas` SET %s WHERE %s",
@@ -533,7 +342,7 @@ func (o *CorporationDelta) Update(ctx context.Context, exec boil.ContextExecutor
 		)
 		cache.valueMapping, err = queries.BindMapping(corporationDeltaType, corporationDeltaMapping, append(wl, corporationDeltaPrimaryKeyColumns...))
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
@@ -544,15 +353,9 @@ func (o *CorporationDelta) Update(ctx context.Context, exec boil.ContextExecutor
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	var result sql.Result
-	result, err = exec.ExecContext(ctx, cache.query, values...)
+	_, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update corporation_deltas row")
-	}
-
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by update for corporation_deltas")
+		return errors.Wrap(err, "boiler: unable to update corporation_deltas row")
 	}
 
 	if !cached {
@@ -561,35 +364,30 @@ func (o *CorporationDelta) Update(ctx context.Context, exec boil.ContextExecutor
 		corporationDeltaUpdateCacheMut.Unlock()
 	}
 
-	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q corporationDeltaQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q corporationDeltaQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all for corporation_deltas")
+		return errors.Wrap(err, "boiler: unable to update all for corporation_deltas")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected for corporation_deltas")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o CorporationDeltaSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o CorporationDeltaSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	ln := int64(len(o))
 	if ln == 0 {
-		return 0, nil
+		return nil
 	}
 
 	if len(cols) == 0 {
-		return 0, errors.New("boiler: update all requires at least one column argument")
+		return errors.New("boiler: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -617,16 +415,12 @@ func (o CorporationDeltaSlice) UpdateAll(ctx context.Context, exec boil.ContextE
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all in corporationDelta slice")
+		return errors.Wrap(err, "boiler: unable to update all in corporationDelta slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected all in update all corporationDelta")
-	}
-	return rowsAff, nil
+	return nil
 }
 
 var mySQLCorporationDeltaUniqueColumns = []string{
@@ -645,10 +439,6 @@ func (o *CorporationDelta) Upsert(ctx context.Context, exec boil.ContextExecutor
 		if o.CreatedAt.IsZero() {
 			o.CreatedAt = currTime
 		}
-	}
-
-	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
-		return err
 	}
 
 	nzDefaults := queries.NonZeroDefaultSet(corporationDeltaColumnsWithDefault, o)
@@ -781,18 +571,14 @@ CacheNoHooks:
 		corporationDeltaUpsertCacheMut.Unlock()
 	}
 
-	return o.doAfterUpsertHooks(ctx, exec)
+	return nil
 }
 
 // Delete deletes a single CorporationDelta record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *CorporationDelta) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o *CorporationDelta) Delete(ctx context.Context, exec boil.ContextExecutor) error {
 	if o == nil {
-		return 0, errors.New("boiler: no CorporationDelta provided for delete")
-	}
-
-	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
-		return 0, err
+		return errors.New("boiler: no CorporationDelta provided for delete")
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), corporationDeltaPrimaryKeyMapping)
@@ -803,56 +589,34 @@ func (o *CorporationDelta) Delete(ctx context.Context, exec boil.ContextExecutor
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete from corporation_deltas")
+		return errors.Wrap(err, "boiler: unable to delete from corporation_deltas")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by delete for corporation_deltas")
-	}
-
-	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
-		return 0, err
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q corporationDeltaQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q corporationDeltaQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if q.Query == nil {
-		return 0, errors.New("boiler: no corporationDeltaQuery provided for delete all")
+		return errors.New("boiler: no corporationDeltaQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from corporation_deltas")
+		return errors.Wrap(err, "boiler: unable to delete all from corporation_deltas")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for corporation_deltas")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o CorporationDeltaSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o CorporationDeltaSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
-		return 0, nil
-	}
-
-	if len(corporationDeltaBeforeDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
+		return nil
 	}
 
 	var args []interface{}
@@ -869,25 +633,12 @@ func (o CorporationDeltaSlice) DeleteAll(ctx context.Context, exec boil.ContextE
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from corporationDelta slice")
+		return errors.Wrap(err, "boiler: unable to delete all from corporationDelta slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for corporation_deltas")
-	}
-
-	if len(corporationDeltaAfterDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // Reload refetches the object from the database

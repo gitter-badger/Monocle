@@ -1,2 +1,2 @@
-sql-boiler:
-	sqlboiler mysql --wipe --no-tests
+sqlboiler:
+	sqlboiler --wipe --no-tests --no-hooks --no-rows-affected mysql

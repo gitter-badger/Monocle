@@ -223,8 +223,6 @@ type (
 	// AllianceSlice is an alias for a slice of pointers to Alliance.
 	// This should generally be used opposed to []Alliance.
 	AllianceSlice []*Alliance
-	// AllianceHook is the signature for custom Alliance hook methods
-	AllianceHook func(context.Context, boil.ContextExecutor, *Alliance) error
 
 	allianceQuery struct {
 		*queries.Query
@@ -252,176 +250,6 @@ var (
 	_ = qmhelper.Where
 )
 
-var allianceBeforeInsertHooks []AllianceHook
-var allianceBeforeUpdateHooks []AllianceHook
-var allianceBeforeDeleteHooks []AllianceHook
-var allianceBeforeUpsertHooks []AllianceHook
-
-var allianceAfterInsertHooks []AllianceHook
-var allianceAfterSelectHooks []AllianceHook
-var allianceAfterUpdateHooks []AllianceHook
-var allianceAfterDeleteHooks []AllianceHook
-var allianceAfterUpsertHooks []AllianceHook
-
-// doBeforeInsertHooks executes all "before insert" hooks.
-func (o *Alliance) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range allianceBeforeInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *Alliance) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range allianceBeforeUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *Alliance) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range allianceBeforeDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *Alliance) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range allianceBeforeUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterInsertHooks executes all "after Insert" hooks.
-func (o *Alliance) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range allianceAfterInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterSelectHooks executes all "after Select" hooks.
-func (o *Alliance) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range allianceAfterSelectHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpdateHooks executes all "after Update" hooks.
-func (o *Alliance) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range allianceAfterUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *Alliance) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range allianceAfterDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *Alliance) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range allianceAfterUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// AddAllianceHook registers your hook function for all future operations.
-func AddAllianceHook(hookPoint boil.HookPoint, allianceHook AllianceHook) {
-	switch hookPoint {
-	case boil.BeforeInsertHook:
-		allianceBeforeInsertHooks = append(allianceBeforeInsertHooks, allianceHook)
-	case boil.BeforeUpdateHook:
-		allianceBeforeUpdateHooks = append(allianceBeforeUpdateHooks, allianceHook)
-	case boil.BeforeDeleteHook:
-		allianceBeforeDeleteHooks = append(allianceBeforeDeleteHooks, allianceHook)
-	case boil.BeforeUpsertHook:
-		allianceBeforeUpsertHooks = append(allianceBeforeUpsertHooks, allianceHook)
-	case boil.AfterInsertHook:
-		allianceAfterInsertHooks = append(allianceAfterInsertHooks, allianceHook)
-	case boil.AfterSelectHook:
-		allianceAfterSelectHooks = append(allianceAfterSelectHooks, allianceHook)
-	case boil.AfterUpdateHook:
-		allianceAfterUpdateHooks = append(allianceAfterUpdateHooks, allianceHook)
-	case boil.AfterDeleteHook:
-		allianceAfterDeleteHooks = append(allianceAfterDeleteHooks, allianceHook)
-	case boil.AfterUpsertHook:
-		allianceAfterUpsertHooks = append(allianceAfterUpsertHooks, allianceHook)
-	}
-}
-
 // One returns a single alliance record from the query.
 func (q allianceQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Alliance, error) {
 	o := &Alliance{}
@@ -436,10 +264,6 @@ func (q allianceQuery) One(ctx context.Context, exec boil.ContextExecutor) (*All
 		return nil, errors.Wrap(err, "boiler: failed to execute a one query for alliances")
 	}
 
-	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
-		return o, err
-	}
-
 	return o, nil
 }
 
@@ -450,14 +274,6 @@ func (q allianceQuery) All(ctx context.Context, exec boil.ContextExecutor) (Alli
 	err := q.Bind(ctx, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "boiler: failed to assign all query results to Alliance slice")
-	}
-
-	if len(allianceAfterSelectHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
-				return o, err
-			}
-		}
 	}
 
 	return o, nil
@@ -545,10 +361,6 @@ func (o *Alliance) Insert(ctx context.Context, exec boil.ContextExecutor, column
 		}
 	}
 
-	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
-		return err
-	}
-
 	nzDefaults := queries.NonZeroDefaultSet(allianceColumnsWithDefault, o)
 
 	key := makeCacheKey(columns, nzDefaults)
@@ -628,13 +440,13 @@ CacheNoHooks:
 		allianceInsertCacheMut.Unlock()
 	}
 
-	return o.doAfterInsertHooks(ctx, exec)
+	return nil
 }
 
 // Update uses an executor to update the Alliance.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *Alliance) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *Alliance) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
@@ -642,9 +454,6 @@ func (o *Alliance) Update(ctx context.Context, exec boil.ContextExecutor, column
 	}
 
 	var err error
-	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
-		return 0, err
-	}
 	key := makeCacheKey(columns, nil)
 	allianceUpdateCacheMut.RLock()
 	cache, cached := allianceUpdateCache[key]
@@ -660,7 +469,7 @@ func (o *Alliance) Update(ctx context.Context, exec boil.ContextExecutor, column
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("boiler: unable to update alliances, could not build whitelist")
+			return errors.New("boiler: unable to update alliances, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE `alliances` SET %s WHERE %s",
@@ -669,7 +478,7 @@ func (o *Alliance) Update(ctx context.Context, exec boil.ContextExecutor, column
 		)
 		cache.valueMapping, err = queries.BindMapping(allianceType, allianceMapping, append(wl, alliancePrimaryKeyColumns...))
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
@@ -680,15 +489,9 @@ func (o *Alliance) Update(ctx context.Context, exec boil.ContextExecutor, column
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	var result sql.Result
-	result, err = exec.ExecContext(ctx, cache.query, values...)
+	_, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update alliances row")
-	}
-
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by update for alliances")
+		return errors.Wrap(err, "boiler: unable to update alliances row")
 	}
 
 	if !cached {
@@ -697,35 +500,30 @@ func (o *Alliance) Update(ctx context.Context, exec boil.ContextExecutor, column
 		allianceUpdateCacheMut.Unlock()
 	}
 
-	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q allianceQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q allianceQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all for alliances")
+		return errors.Wrap(err, "boiler: unable to update all for alliances")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected for alliances")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o AllianceSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o AllianceSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	ln := int64(len(o))
 	if ln == 0 {
-		return 0, nil
+		return nil
 	}
 
 	if len(cols) == 0 {
-		return 0, errors.New("boiler: update all requires at least one column argument")
+		return errors.New("boiler: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -753,16 +551,12 @@ func (o AllianceSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor,
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all in alliance slice")
+		return errors.Wrap(err, "boiler: unable to update all in alliance slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected all in update all alliance")
-	}
-	return rowsAff, nil
+	return nil
 }
 
 var mySQLAllianceUniqueColumns = []string{
@@ -782,10 +576,6 @@ func (o *Alliance) Upsert(ctx context.Context, exec boil.ContextExecutor, update
 			o.CreatedAt = currTime
 		}
 		o.UpdatedAt = currTime
-	}
-
-	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
-		return err
 	}
 
 	nzDefaults := queries.NonZeroDefaultSet(allianceColumnsWithDefault, o)
@@ -907,18 +697,14 @@ CacheNoHooks:
 		allianceUpsertCacheMut.Unlock()
 	}
 
-	return o.doAfterUpsertHooks(ctx, exec)
+	return nil
 }
 
 // Delete deletes a single Alliance record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *Alliance) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o *Alliance) Delete(ctx context.Context, exec boil.ContextExecutor) error {
 	if o == nil {
-		return 0, errors.New("boiler: no Alliance provided for delete")
-	}
-
-	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
-		return 0, err
+		return errors.New("boiler: no Alliance provided for delete")
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), alliancePrimaryKeyMapping)
@@ -929,56 +715,34 @@ func (o *Alliance) Delete(ctx context.Context, exec boil.ContextExecutor) (int64
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete from alliances")
+		return errors.Wrap(err, "boiler: unable to delete from alliances")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by delete for alliances")
-	}
-
-	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
-		return 0, err
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q allianceQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q allianceQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if q.Query == nil {
-		return 0, errors.New("boiler: no allianceQuery provided for delete all")
+		return errors.New("boiler: no allianceQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from alliances")
+		return errors.Wrap(err, "boiler: unable to delete all from alliances")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for alliances")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o AllianceSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o AllianceSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
-		return 0, nil
-	}
-
-	if len(allianceBeforeDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
+		return nil
 	}
 
 	var args []interface{}
@@ -995,25 +759,12 @@ func (o AllianceSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor)
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from alliance slice")
+		return errors.Wrap(err, "boiler: unable to delete all from alliance slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for alliances")
-	}
-
-	if len(allianceAfterDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // Reload refetches the object from the database

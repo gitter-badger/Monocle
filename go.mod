@@ -15,18 +15,19 @@ require (
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/huandu/go-sqlbuilder v1.5.0
-	github.com/jasonlvhit/gocron v0.0.0-20190829164038-7ef3bafdc25c // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/spf13/afero v1.2.2 // indirect
+	github.com/spf13/cobra v0.0.5 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/urfave/cli v1.22.1
+	github.com/vektah/dataloaden v0.3.0 // indirect
 	github.com/vektah/gqlparser v1.1.2
 	github.com/volatiletech/inflect v0.0.0-20170731032912-e7201282ae8d // indirect
 	github.com/volatiletech/null v8.0.0+incompatible

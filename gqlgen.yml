@@ -61,3 +61,6 @@ models:
     Total:
         model:
             - github.com/ddouglas/monocle.Total
+    Entity:
+        model:
+            - github.com/ddouglas/monocle.Entity

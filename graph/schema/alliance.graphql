@@ -13,6 +13,7 @@ type Alliance {
     executor_corporation_id: Int!
     closed: Boolean!
     member_count: Int!
-    #corporation: [Corporation]!
-    #characters: [Character]!
+    creator: Character
+    creator_corp: Corporation
+    executor: Corporation!
 }

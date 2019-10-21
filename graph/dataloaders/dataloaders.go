@@ -55,7 +55,45 @@ func allianceLoader(ctx context.Context, db *sqlx.DB) *generated.AllianceLoader 
 	})
 }
 
-func corporationsLoader(ctx context.Context, db *sqlx.DB) *generated.CorporationLoader {
+func characterLoader(ctx context.Context, db *sqlx.DB) *generated.CharacterLoader {
+	return generated.NewCharacterLoader(generated.CharacterLoaderConfig{
+		Wait:     defaultWait,
+		MaxBatch: defaultMaxBatch,
+		Fetch: func(ids []uint64) ([]*monocle.Character, []error) {
+
+			characters := make([]*monocle.Character, len(ids))
+			errors := make([]error, len(ids))
+
+			var whereIDs []interface{}
+			for _, c := range ids {
+				whereIDs = append(whereIDs, c)
+			}
+
+			allCharacters := make([]*monocle.Character, 0)
+			err := boiler.Characters(
+				qm.WhereIn("id IN ?", whereIDs...),
+			).Bind(ctx, db, &allCharacters)
+			if err != nil {
+				errors = append(errors, err)
+				return nil, errors
+			}
+
+			characterByCharacterID := map[uint64]*monocle.Character{}
+			for _, c := range allCharacters {
+				characterByCharacterID[c.ID] = c
+			}
+
+			for i, x := range ids {
+				characters[i] = characterByCharacterID[x]
+			}
+
+			return characters, nil
+
+		},
+	})
+}
+
+func corporationLoader(ctx context.Context, db *sqlx.DB) *generated.CorporationLoader {
 	return generated.NewCorporationLoader(generated.CorporationLoaderConfig{
 		Wait:     defaultWait,
 		MaxBatch: defaultMaxBatch,
@@ -70,7 +108,7 @@ func corporationsLoader(ctx context.Context, db *sqlx.DB) *generated.Corporation
 
 			allCorporations := make([]*monocle.Corporation, 0)
 			err := boiler.Corporations(
-				qm.WhereIn(boiler.CorporationColumns.ID+" IN ?", whereIds...),
+				qm.WhereIn("id IN ?", whereIds...),
 			).Bind(ctx, db, &allCorporations)
 			if err != nil {
 				errors = append(errors, err)
@@ -104,8 +142,6 @@ func corporationMembersLoader(ctx context.Context, db *sqlx.DB) *generated.Corpo
 				whereIDs = append(whereIDs, i)
 			}
 
-			spew.Dump(whereIDs)
-
 			allCharacters := make([]*monocle.Character, 0)
 			err := boiler.Characters(
 				qm.WhereIn("corporation_id IN ?", whereIDs...),
@@ -129,6 +165,44 @@ func corporationMembersLoader(ctx context.Context, db *sqlx.DB) *generated.Corpo
 	})
 }
 
+func corporationAllianceHistoryLoader(ctx context.Context, db *sqlx.DB) *generated.CorporationAllianceHistoryLoader {
+	return generated.NewCorporationAllianceHistoryLoader(generated.CorporationAllianceHistoryLoaderConfig{
+		Wait:     defaultWait,
+		MaxBatch: defaultMaxBatch,
+		Fetch: func(corporationIDs []uint32) ([][]*monocle.CorporationAllianceHistory, []error) {
+			histories := make([][]*monocle.CorporationAllianceHistory, len(corporationIDs))
+			errors := make([]error, len(corporationIDs))
+
+			var whereIDs []interface{}
+			for _, i := range corporationIDs {
+				whereIDs = append(whereIDs, i)
+			}
+
+			allHistories := make([]*monocle.CorporationAllianceHistory, 0)
+			err := boiler.CorporationAllianceHistories(
+				qm.WhereIn("id IN ?", whereIDs...),
+				qm.OrderBy("record_id DESC"),
+			).Bind(ctx, db, &allHistories)
+			if err != nil {
+				errors = append(errors, err)
+				spew.Dump(errors)
+				return nil, errors
+			}
+
+			historiesByCorporationID := map[uint32][]*monocle.CorporationAllianceHistory{}
+			for _, h := range allHistories {
+				historiesByCorporationID[uint32(h.ID)] = append(historiesByCorporationID[uint32(h.ID)], h)
+			}
+
+			for i, x := range corporationIDs {
+				histories[i] = historiesByCorporationID[x]
+			}
+
+			return histories, nil
+		},
+	})
+}
+
 func characterCorporationHistoryLoader(ctx context.Context, db *sqlx.DB) *generated.CharacterCorporationHistoryLoader {
 	return generated.NewCharacterCorporationHistoryLoader(generated.CharacterCorporationHistoryLoaderConfig{
 		Wait:     defaultWait,
@@ -146,6 +220,7 @@ func characterCorporationHistoryLoader(ctx context.Context, db *sqlx.DB) *genera
 			allHistories := make([]*monocle.CharacterCorporationHistory, 0)
 			err := boiler.CharacterCorporationHistories(
 				qm.WhereIn("id IN ?", whereIds...),
+				qm.OrderBy("record_id DESC"),
 			).Bind(ctx, db, &allHistories)
 			if err != nil {
 				errors = append(errors, err)

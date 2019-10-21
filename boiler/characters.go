@@ -200,8 +200,6 @@ type (
 	// CharacterSlice is an alias for a slice of pointers to Character.
 	// This should generally be used opposed to []Character.
 	CharacterSlice []*Character
-	// CharacterHook is the signature for custom Character hook methods
-	CharacterHook func(context.Context, boil.ContextExecutor, *Character) error
 
 	characterQuery struct {
 		*queries.Query
@@ -229,176 +227,6 @@ var (
 	_ = qmhelper.Where
 )
 
-var characterBeforeInsertHooks []CharacterHook
-var characterBeforeUpdateHooks []CharacterHook
-var characterBeforeDeleteHooks []CharacterHook
-var characterBeforeUpsertHooks []CharacterHook
-
-var characterAfterInsertHooks []CharacterHook
-var characterAfterSelectHooks []CharacterHook
-var characterAfterUpdateHooks []CharacterHook
-var characterAfterDeleteHooks []CharacterHook
-var characterAfterUpsertHooks []CharacterHook
-
-// doBeforeInsertHooks executes all "before insert" hooks.
-func (o *Character) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterBeforeInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *Character) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterBeforeUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *Character) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterBeforeDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *Character) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterBeforeUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterInsertHooks executes all "after Insert" hooks.
-func (o *Character) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterAfterInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterSelectHooks executes all "after Select" hooks.
-func (o *Character) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterAfterSelectHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpdateHooks executes all "after Update" hooks.
-func (o *Character) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterAfterUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *Character) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterAfterDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *Character) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterAfterUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// AddCharacterHook registers your hook function for all future operations.
-func AddCharacterHook(hookPoint boil.HookPoint, characterHook CharacterHook) {
-	switch hookPoint {
-	case boil.BeforeInsertHook:
-		characterBeforeInsertHooks = append(characterBeforeInsertHooks, characterHook)
-	case boil.BeforeUpdateHook:
-		characterBeforeUpdateHooks = append(characterBeforeUpdateHooks, characterHook)
-	case boil.BeforeDeleteHook:
-		characterBeforeDeleteHooks = append(characterBeforeDeleteHooks, characterHook)
-	case boil.BeforeUpsertHook:
-		characterBeforeUpsertHooks = append(characterBeforeUpsertHooks, characterHook)
-	case boil.AfterInsertHook:
-		characterAfterInsertHooks = append(characterAfterInsertHooks, characterHook)
-	case boil.AfterSelectHook:
-		characterAfterSelectHooks = append(characterAfterSelectHooks, characterHook)
-	case boil.AfterUpdateHook:
-		characterAfterUpdateHooks = append(characterAfterUpdateHooks, characterHook)
-	case boil.AfterDeleteHook:
-		characterAfterDeleteHooks = append(characterAfterDeleteHooks, characterHook)
-	case boil.AfterUpsertHook:
-		characterAfterUpsertHooks = append(characterAfterUpsertHooks, characterHook)
-	}
-}
-
 // One returns a single character record from the query.
 func (q characterQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Character, error) {
 	o := &Character{}
@@ -413,10 +241,6 @@ func (q characterQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Ch
 		return nil, errors.Wrap(err, "boiler: failed to execute a one query for characters")
 	}
 
-	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
-		return o, err
-	}
-
 	return o, nil
 }
 
@@ -427,14 +251,6 @@ func (q characterQuery) All(ctx context.Context, exec boil.ContextExecutor) (Cha
 	err := q.Bind(ctx, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "boiler: failed to assign all query results to Character slice")
-	}
-
-	if len(characterAfterSelectHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
-				return o, err
-			}
-		}
 	}
 
 	return o, nil
@@ -522,10 +338,6 @@ func (o *Character) Insert(ctx context.Context, exec boil.ContextExecutor, colum
 		}
 	}
 
-	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
-		return err
-	}
-
 	nzDefaults := queries.NonZeroDefaultSet(characterColumnsWithDefault, o)
 
 	key := makeCacheKey(columns, nzDefaults)
@@ -605,13 +417,13 @@ CacheNoHooks:
 		characterInsertCacheMut.Unlock()
 	}
 
-	return o.doAfterInsertHooks(ctx, exec)
+	return nil
 }
 
 // Update uses an executor to update the Character.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *Character) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *Character) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
@@ -619,9 +431,6 @@ func (o *Character) Update(ctx context.Context, exec boil.ContextExecutor, colum
 	}
 
 	var err error
-	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
-		return 0, err
-	}
 	key := makeCacheKey(columns, nil)
 	characterUpdateCacheMut.RLock()
 	cache, cached := characterUpdateCache[key]
@@ -637,7 +446,7 @@ func (o *Character) Update(ctx context.Context, exec boil.ContextExecutor, colum
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("boiler: unable to update characters, could not build whitelist")
+			return errors.New("boiler: unable to update characters, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE `characters` SET %s WHERE %s",
@@ -646,7 +455,7 @@ func (o *Character) Update(ctx context.Context, exec boil.ContextExecutor, colum
 		)
 		cache.valueMapping, err = queries.BindMapping(characterType, characterMapping, append(wl, characterPrimaryKeyColumns...))
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
@@ -657,15 +466,9 @@ func (o *Character) Update(ctx context.Context, exec boil.ContextExecutor, colum
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	var result sql.Result
-	result, err = exec.ExecContext(ctx, cache.query, values...)
+	_, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update characters row")
-	}
-
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by update for characters")
+		return errors.Wrap(err, "boiler: unable to update characters row")
 	}
 
 	if !cached {
@@ -674,35 +477,30 @@ func (o *Character) Update(ctx context.Context, exec boil.ContextExecutor, colum
 		characterUpdateCacheMut.Unlock()
 	}
 
-	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q characterQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q characterQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all for characters")
+		return errors.Wrap(err, "boiler: unable to update all for characters")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected for characters")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o CharacterSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o CharacterSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	ln := int64(len(o))
 	if ln == 0 {
-		return 0, nil
+		return nil
 	}
 
 	if len(cols) == 0 {
-		return 0, errors.New("boiler: update all requires at least one column argument")
+		return errors.New("boiler: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -730,16 +528,12 @@ func (o CharacterSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all in character slice")
+		return errors.Wrap(err, "boiler: unable to update all in character slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected all in update all character")
-	}
-	return rowsAff, nil
+	return nil
 }
 
 var mySQLCharacterUniqueColumns = []string{
@@ -759,10 +553,6 @@ func (o *Character) Upsert(ctx context.Context, exec boil.ContextExecutor, updat
 			o.CreatedAt = currTime
 		}
 		o.UpdatedAt = currTime
-	}
-
-	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
-		return err
 	}
 
 	nzDefaults := queries.NonZeroDefaultSet(characterColumnsWithDefault, o)
@@ -884,18 +674,14 @@ CacheNoHooks:
 		characterUpsertCacheMut.Unlock()
 	}
 
-	return o.doAfterUpsertHooks(ctx, exec)
+	return nil
 }
 
 // Delete deletes a single Character record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *Character) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o *Character) Delete(ctx context.Context, exec boil.ContextExecutor) error {
 	if o == nil {
-		return 0, errors.New("boiler: no Character provided for delete")
-	}
-
-	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
-		return 0, err
+		return errors.New("boiler: no Character provided for delete")
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), characterPrimaryKeyMapping)
@@ -906,56 +692,34 @@ func (o *Character) Delete(ctx context.Context, exec boil.ContextExecutor) (int6
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete from characters")
+		return errors.Wrap(err, "boiler: unable to delete from characters")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by delete for characters")
-	}
-
-	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
-		return 0, err
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q characterQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q characterQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if q.Query == nil {
-		return 0, errors.New("boiler: no characterQuery provided for delete all")
+		return errors.New("boiler: no characterQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from characters")
+		return errors.Wrap(err, "boiler: unable to delete all from characters")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for characters")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o CharacterSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o CharacterSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
-		return 0, nil
-	}
-
-	if len(characterBeforeDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
+		return nil
 	}
 
 	var args []interface{}
@@ -972,25 +736,12 @@ func (o CharacterSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from character slice")
+		return errors.Wrap(err, "boiler: unable to delete all from character slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for characters")
-	}
-
-	if len(characterAfterDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // Reload refetches the object from the database

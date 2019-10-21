@@ -95,8 +95,6 @@ type (
 	// EtagSlice is an alias for a slice of pointers to Etag.
 	// This should generally be used opposed to []Etag.
 	EtagSlice []*Etag
-	// EtagHook is the signature for custom Etag hook methods
-	EtagHook func(context.Context, boil.ContextExecutor, *Etag) error
 
 	etagQuery struct {
 		*queries.Query
@@ -124,176 +122,6 @@ var (
 	_ = qmhelper.Where
 )
 
-var etagBeforeInsertHooks []EtagHook
-var etagBeforeUpdateHooks []EtagHook
-var etagBeforeDeleteHooks []EtagHook
-var etagBeforeUpsertHooks []EtagHook
-
-var etagAfterInsertHooks []EtagHook
-var etagAfterSelectHooks []EtagHook
-var etagAfterUpdateHooks []EtagHook
-var etagAfterDeleteHooks []EtagHook
-var etagAfterUpsertHooks []EtagHook
-
-// doBeforeInsertHooks executes all "before insert" hooks.
-func (o *Etag) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range etagBeforeInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *Etag) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range etagBeforeUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *Etag) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range etagBeforeDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *Etag) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range etagBeforeUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterInsertHooks executes all "after Insert" hooks.
-func (o *Etag) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range etagAfterInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterSelectHooks executes all "after Select" hooks.
-func (o *Etag) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range etagAfterSelectHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpdateHooks executes all "after Update" hooks.
-func (o *Etag) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range etagAfterUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *Etag) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range etagAfterDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *Etag) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range etagAfterUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// AddEtagHook registers your hook function for all future operations.
-func AddEtagHook(hookPoint boil.HookPoint, etagHook EtagHook) {
-	switch hookPoint {
-	case boil.BeforeInsertHook:
-		etagBeforeInsertHooks = append(etagBeforeInsertHooks, etagHook)
-	case boil.BeforeUpdateHook:
-		etagBeforeUpdateHooks = append(etagBeforeUpdateHooks, etagHook)
-	case boil.BeforeDeleteHook:
-		etagBeforeDeleteHooks = append(etagBeforeDeleteHooks, etagHook)
-	case boil.BeforeUpsertHook:
-		etagBeforeUpsertHooks = append(etagBeforeUpsertHooks, etagHook)
-	case boil.AfterInsertHook:
-		etagAfterInsertHooks = append(etagAfterInsertHooks, etagHook)
-	case boil.AfterSelectHook:
-		etagAfterSelectHooks = append(etagAfterSelectHooks, etagHook)
-	case boil.AfterUpdateHook:
-		etagAfterUpdateHooks = append(etagAfterUpdateHooks, etagHook)
-	case boil.AfterDeleteHook:
-		etagAfterDeleteHooks = append(etagAfterDeleteHooks, etagHook)
-	case boil.AfterUpsertHook:
-		etagAfterUpsertHooks = append(etagAfterUpsertHooks, etagHook)
-	}
-}
-
 // One returns a single etag record from the query.
 func (q etagQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Etag, error) {
 	o := &Etag{}
@@ -308,10 +136,6 @@ func (q etagQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Etag, e
 		return nil, errors.Wrap(err, "boiler: failed to execute a one query for etags")
 	}
 
-	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
-		return o, err
-	}
-
 	return o, nil
 }
 
@@ -322,14 +146,6 @@ func (q etagQuery) All(ctx context.Context, exec boil.ContextExecutor) (EtagSlic
 	err := q.Bind(ctx, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "boiler: failed to assign all query results to Etag slice")
-	}
-
-	if len(etagAfterSelectHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
-				return o, err
-			}
-		}
 	}
 
 	return o, nil
@@ -417,10 +233,6 @@ func (o *Etag) Insert(ctx context.Context, exec boil.ContextExecutor, columns bo
 		}
 	}
 
-	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
-		return err
-	}
-
 	nzDefaults := queries.NonZeroDefaultSet(etagColumnsWithDefault, o)
 
 	key := makeCacheKey(columns, nzDefaults)
@@ -501,13 +313,13 @@ CacheNoHooks:
 		etagInsertCacheMut.Unlock()
 	}
 
-	return o.doAfterInsertHooks(ctx, exec)
+	return nil
 }
 
 // Update uses an executor to update the Etag.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *Etag) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *Etag) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
@@ -515,9 +327,6 @@ func (o *Etag) Update(ctx context.Context, exec boil.ContextExecutor, columns bo
 	}
 
 	var err error
-	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
-		return 0, err
-	}
 	key := makeCacheKey(columns, nil)
 	etagUpdateCacheMut.RLock()
 	cache, cached := etagUpdateCache[key]
@@ -533,7 +342,7 @@ func (o *Etag) Update(ctx context.Context, exec boil.ContextExecutor, columns bo
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("boiler: unable to update etags, could not build whitelist")
+			return errors.New("boiler: unable to update etags, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE `etags` SET %s WHERE %s",
@@ -542,7 +351,7 @@ func (o *Etag) Update(ctx context.Context, exec boil.ContextExecutor, columns bo
 		)
 		cache.valueMapping, err = queries.BindMapping(etagType, etagMapping, append(wl, etagPrimaryKeyColumns...))
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
@@ -553,15 +362,9 @@ func (o *Etag) Update(ctx context.Context, exec boil.ContextExecutor, columns bo
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	var result sql.Result
-	result, err = exec.ExecContext(ctx, cache.query, values...)
+	_, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update etags row")
-	}
-
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by update for etags")
+		return errors.Wrap(err, "boiler: unable to update etags row")
 	}
 
 	if !cached {
@@ -570,35 +373,30 @@ func (o *Etag) Update(ctx context.Context, exec boil.ContextExecutor, columns bo
 		etagUpdateCacheMut.Unlock()
 	}
 
-	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q etagQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q etagQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all for etags")
+		return errors.Wrap(err, "boiler: unable to update all for etags")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected for etags")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o EtagSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o EtagSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	ln := int64(len(o))
 	if ln == 0 {
-		return 0, nil
+		return nil
 	}
 
 	if len(cols) == 0 {
-		return 0, errors.New("boiler: update all requires at least one column argument")
+		return errors.New("boiler: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -626,16 +424,12 @@ func (o EtagSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, col
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all in etag slice")
+		return errors.Wrap(err, "boiler: unable to update all in etag slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected all in update all etag")
-	}
-	return rowsAff, nil
+	return nil
 }
 
 var mySQLEtagUniqueColumns = []string{}
@@ -653,10 +447,6 @@ func (o *Etag) Upsert(ctx context.Context, exec boil.ContextExecutor, updateColu
 			o.CreatedAt = currTime
 		}
 		o.UpdatedAt = currTime
-	}
-
-	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
-		return err
 	}
 
 	nzDefaults := queries.NonZeroDefaultSet(etagColumnsWithDefault, o)
@@ -778,18 +568,14 @@ CacheNoHooks:
 		etagUpsertCacheMut.Unlock()
 	}
 
-	return o.doAfterUpsertHooks(ctx, exec)
+	return nil
 }
 
 // Delete deletes a single Etag record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *Etag) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o *Etag) Delete(ctx context.Context, exec boil.ContextExecutor) error {
 	if o == nil {
-		return 0, errors.New("boiler: no Etag provided for delete")
-	}
-
-	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
-		return 0, err
+		return errors.New("boiler: no Etag provided for delete")
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), etagPrimaryKeyMapping)
@@ -800,56 +586,34 @@ func (o *Etag) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, er
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete from etags")
+		return errors.Wrap(err, "boiler: unable to delete from etags")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by delete for etags")
-	}
-
-	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
-		return 0, err
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q etagQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q etagQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if q.Query == nil {
-		return 0, errors.New("boiler: no etagQuery provided for delete all")
+		return errors.New("boiler: no etagQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from etags")
+		return errors.Wrap(err, "boiler: unable to delete all from etags")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for etags")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o EtagSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o EtagSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
-		return 0, nil
-	}
-
-	if len(etagBeforeDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
+		return nil
 	}
 
 	var args []interface{}
@@ -866,25 +630,12 @@ func (o EtagSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (in
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from etag slice")
+		return errors.Wrap(err, "boiler: unable to delete all from etag slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for etags")
-	}
-
-	if len(etagAfterDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // Reload refetches the object from the database

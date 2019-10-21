@@ -95,8 +95,6 @@ type (
 	// CharacterCorporationHistorySlice is an alias for a slice of pointers to CharacterCorporationHistory.
 	// This should generally be used opposed to []CharacterCorporationHistory.
 	CharacterCorporationHistorySlice []*CharacterCorporationHistory
-	// CharacterCorporationHistoryHook is the signature for custom CharacterCorporationHistory hook methods
-	CharacterCorporationHistoryHook func(context.Context, boil.ContextExecutor, *CharacterCorporationHistory) error
 
 	characterCorporationHistoryQuery struct {
 		*queries.Query
@@ -124,176 +122,6 @@ var (
 	_ = qmhelper.Where
 )
 
-var characterCorporationHistoryBeforeInsertHooks []CharacterCorporationHistoryHook
-var characterCorporationHistoryBeforeUpdateHooks []CharacterCorporationHistoryHook
-var characterCorporationHistoryBeforeDeleteHooks []CharacterCorporationHistoryHook
-var characterCorporationHistoryBeforeUpsertHooks []CharacterCorporationHistoryHook
-
-var characterCorporationHistoryAfterInsertHooks []CharacterCorporationHistoryHook
-var characterCorporationHistoryAfterSelectHooks []CharacterCorporationHistoryHook
-var characterCorporationHistoryAfterUpdateHooks []CharacterCorporationHistoryHook
-var characterCorporationHistoryAfterDeleteHooks []CharacterCorporationHistoryHook
-var characterCorporationHistoryAfterUpsertHooks []CharacterCorporationHistoryHook
-
-// doBeforeInsertHooks executes all "before insert" hooks.
-func (o *CharacterCorporationHistory) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterCorporationHistoryBeforeInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *CharacterCorporationHistory) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterCorporationHistoryBeforeUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *CharacterCorporationHistory) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterCorporationHistoryBeforeDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *CharacterCorporationHistory) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterCorporationHistoryBeforeUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterInsertHooks executes all "after Insert" hooks.
-func (o *CharacterCorporationHistory) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterCorporationHistoryAfterInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterSelectHooks executes all "after Select" hooks.
-func (o *CharacterCorporationHistory) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterCorporationHistoryAfterSelectHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpdateHooks executes all "after Update" hooks.
-func (o *CharacterCorporationHistory) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterCorporationHistoryAfterUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *CharacterCorporationHistory) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterCorporationHistoryAfterDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *CharacterCorporationHistory) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range characterCorporationHistoryAfterUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// AddCharacterCorporationHistoryHook registers your hook function for all future operations.
-func AddCharacterCorporationHistoryHook(hookPoint boil.HookPoint, characterCorporationHistoryHook CharacterCorporationHistoryHook) {
-	switch hookPoint {
-	case boil.BeforeInsertHook:
-		characterCorporationHistoryBeforeInsertHooks = append(characterCorporationHistoryBeforeInsertHooks, characterCorporationHistoryHook)
-	case boil.BeforeUpdateHook:
-		characterCorporationHistoryBeforeUpdateHooks = append(characterCorporationHistoryBeforeUpdateHooks, characterCorporationHistoryHook)
-	case boil.BeforeDeleteHook:
-		characterCorporationHistoryBeforeDeleteHooks = append(characterCorporationHistoryBeforeDeleteHooks, characterCorporationHistoryHook)
-	case boil.BeforeUpsertHook:
-		characterCorporationHistoryBeforeUpsertHooks = append(characterCorporationHistoryBeforeUpsertHooks, characterCorporationHistoryHook)
-	case boil.AfterInsertHook:
-		characterCorporationHistoryAfterInsertHooks = append(characterCorporationHistoryAfterInsertHooks, characterCorporationHistoryHook)
-	case boil.AfterSelectHook:
-		characterCorporationHistoryAfterSelectHooks = append(characterCorporationHistoryAfterSelectHooks, characterCorporationHistoryHook)
-	case boil.AfterUpdateHook:
-		characterCorporationHistoryAfterUpdateHooks = append(characterCorporationHistoryAfterUpdateHooks, characterCorporationHistoryHook)
-	case boil.AfterDeleteHook:
-		characterCorporationHistoryAfterDeleteHooks = append(characterCorporationHistoryAfterDeleteHooks, characterCorporationHistoryHook)
-	case boil.AfterUpsertHook:
-		characterCorporationHistoryAfterUpsertHooks = append(characterCorporationHistoryAfterUpsertHooks, characterCorporationHistoryHook)
-	}
-}
-
 // One returns a single characterCorporationHistory record from the query.
 func (q characterCorporationHistoryQuery) One(ctx context.Context, exec boil.ContextExecutor) (*CharacterCorporationHistory, error) {
 	o := &CharacterCorporationHistory{}
@@ -308,10 +136,6 @@ func (q characterCorporationHistoryQuery) One(ctx context.Context, exec boil.Con
 		return nil, errors.Wrap(err, "boiler: failed to execute a one query for character_corporation_history")
 	}
 
-	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
-		return o, err
-	}
-
 	return o, nil
 }
 
@@ -322,14 +146,6 @@ func (q characterCorporationHistoryQuery) All(ctx context.Context, exec boil.Con
 	err := q.Bind(ctx, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "boiler: failed to assign all query results to CharacterCorporationHistory slice")
-	}
-
-	if len(characterCorporationHistoryAfterSelectHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
-				return o, err
-			}
-		}
 	}
 
 	return o, nil
@@ -417,10 +233,6 @@ func (o *CharacterCorporationHistory) Insert(ctx context.Context, exec boil.Cont
 		}
 	}
 
-	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
-		return err
-	}
-
 	nzDefaults := queries.NonZeroDefaultSet(characterCorporationHistoryColumnsWithDefault, o)
 
 	key := makeCacheKey(columns, nzDefaults)
@@ -501,13 +313,13 @@ CacheNoHooks:
 		characterCorporationHistoryInsertCacheMut.Unlock()
 	}
 
-	return o.doAfterInsertHooks(ctx, exec)
+	return nil
 }
 
 // Update uses an executor to update the CharacterCorporationHistory.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *CharacterCorporationHistory) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *CharacterCorporationHistory) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
@@ -515,9 +327,6 @@ func (o *CharacterCorporationHistory) Update(ctx context.Context, exec boil.Cont
 	}
 
 	var err error
-	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
-		return 0, err
-	}
 	key := makeCacheKey(columns, nil)
 	characterCorporationHistoryUpdateCacheMut.RLock()
 	cache, cached := characterCorporationHistoryUpdateCache[key]
@@ -533,7 +342,7 @@ func (o *CharacterCorporationHistory) Update(ctx context.Context, exec boil.Cont
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("boiler: unable to update character_corporation_history, could not build whitelist")
+			return errors.New("boiler: unable to update character_corporation_history, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE `character_corporation_history` SET %s WHERE %s",
@@ -542,7 +351,7 @@ func (o *CharacterCorporationHistory) Update(ctx context.Context, exec boil.Cont
 		)
 		cache.valueMapping, err = queries.BindMapping(characterCorporationHistoryType, characterCorporationHistoryMapping, append(wl, characterCorporationHistoryPrimaryKeyColumns...))
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
@@ -553,15 +362,9 @@ func (o *CharacterCorporationHistory) Update(ctx context.Context, exec boil.Cont
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	var result sql.Result
-	result, err = exec.ExecContext(ctx, cache.query, values...)
+	_, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update character_corporation_history row")
-	}
-
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by update for character_corporation_history")
+		return errors.Wrap(err, "boiler: unable to update character_corporation_history row")
 	}
 
 	if !cached {
@@ -570,35 +373,30 @@ func (o *CharacterCorporationHistory) Update(ctx context.Context, exec boil.Cont
 		characterCorporationHistoryUpdateCacheMut.Unlock()
 	}
 
-	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q characterCorporationHistoryQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q characterCorporationHistoryQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all for character_corporation_history")
+		return errors.Wrap(err, "boiler: unable to update all for character_corporation_history")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected for character_corporation_history")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o CharacterCorporationHistorySlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o CharacterCorporationHistorySlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	ln := int64(len(o))
 	if ln == 0 {
-		return 0, nil
+		return nil
 	}
 
 	if len(cols) == 0 {
-		return 0, errors.New("boiler: update all requires at least one column argument")
+		return errors.New("boiler: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -626,16 +424,12 @@ func (o CharacterCorporationHistorySlice) UpdateAll(ctx context.Context, exec bo
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all in characterCorporationHistory slice")
+		return errors.Wrap(err, "boiler: unable to update all in characterCorporationHistory slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected all in update all characterCorporationHistory")
-	}
-	return rowsAff, nil
+	return nil
 }
 
 var mySQLCharacterCorporationHistoryUniqueColumns = []string{}
@@ -653,10 +447,6 @@ func (o *CharacterCorporationHistory) Upsert(ctx context.Context, exec boil.Cont
 			o.CreatedAt = currTime
 		}
 		o.UpdatedAt = currTime
-	}
-
-	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
-		return err
 	}
 
 	nzDefaults := queries.NonZeroDefaultSet(characterCorporationHistoryColumnsWithDefault, o)
@@ -778,18 +568,14 @@ CacheNoHooks:
 		characterCorporationHistoryUpsertCacheMut.Unlock()
 	}
 
-	return o.doAfterUpsertHooks(ctx, exec)
+	return nil
 }
 
 // Delete deletes a single CharacterCorporationHistory record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *CharacterCorporationHistory) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o *CharacterCorporationHistory) Delete(ctx context.Context, exec boil.ContextExecutor) error {
 	if o == nil {
-		return 0, errors.New("boiler: no CharacterCorporationHistory provided for delete")
-	}
-
-	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
-		return 0, err
+		return errors.New("boiler: no CharacterCorporationHistory provided for delete")
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), characterCorporationHistoryPrimaryKeyMapping)
@@ -800,56 +586,34 @@ func (o *CharacterCorporationHistory) Delete(ctx context.Context, exec boil.Cont
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete from character_corporation_history")
+		return errors.Wrap(err, "boiler: unable to delete from character_corporation_history")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by delete for character_corporation_history")
-	}
-
-	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
-		return 0, err
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q characterCorporationHistoryQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q characterCorporationHistoryQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if q.Query == nil {
-		return 0, errors.New("boiler: no characterCorporationHistoryQuery provided for delete all")
+		return errors.New("boiler: no characterCorporationHistoryQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from character_corporation_history")
+		return errors.Wrap(err, "boiler: unable to delete all from character_corporation_history")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for character_corporation_history")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o CharacterCorporationHistorySlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o CharacterCorporationHistorySlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
-		return 0, nil
-	}
-
-	if len(characterCorporationHistoryBeforeDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
+		return nil
 	}
 
 	var args []interface{}
@@ -866,25 +630,12 @@ func (o CharacterCorporationHistorySlice) DeleteAll(ctx context.Context, exec bo
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from characterCorporationHistory slice")
+		return errors.Wrap(err, "boiler: unable to delete all from characterCorporationHistory slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for character_corporation_history")
-	}
-
-	if len(characterCorporationHistoryAfterDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // Reload refetches the object from the database

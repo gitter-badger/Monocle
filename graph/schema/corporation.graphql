@@ -1,6 +1,7 @@
 extend type Query {
     corporation(id: Int!): Corporation!
     corporationsByMemberCount(limit: Int!, independent: Boolean! = false, npc: Boolean! = false): [Corporation]!
+    corporationsByAllianceID(allianceID: Int!): [Corporation]!
 }
 
 type Corporation {
@@ -17,14 +18,15 @@ type Corporation {
     war_eligible: Boolean!
     closed: Boolean!
     alliance: Alliance
+    ceo: Character!
     members: [Character]!
-    #history: [AllianceHistory]!
+    history: [AllianceHistory]!
 }
 
 type AllianceHistory {
     id: Int!
-    recordID: Int!
-    allianceID: Int
-    #alliance: Alliance
-    startDate: Time
+    record_id: Int!
+    alliance_id: Int
+    alliance: Alliance
+    start_date: Time
 }

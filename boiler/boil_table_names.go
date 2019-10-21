@@ -7,20 +7,20 @@ var TableNames = struct {
 	Alliances                   string
 	CharacterCorporationHistory string
 	Characters                  string
+	CorporationAllianceHistory  string
 	CorporationDeltas           string
 	Corporations                string
 	Etags                       string
 	KV                          string
 	Totals                      string
-	UnknownCorps                string
 }{
 	Alliances:                   "alliances",
 	CharacterCorporationHistory: "character_corporation_history",
 	Characters:                  "characters",
+	CorporationAllianceHistory:  "corporation_alliance_history",
 	CorporationDeltas:           "corporation_deltas",
 	Corporations:                "corporations",
 	Etags:                       "etags",
 	KV:                          "kv",
 	Totals:                      "totals",
-	UnknownCorps:                "unknown_corps",
 }

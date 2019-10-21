@@ -90,8 +90,6 @@ type (
 	// TotalSlice is an alias for a slice of pointers to Total.
 	// This should generally be used opposed to []Total.
 	TotalSlice []*Total
-	// TotalHook is the signature for custom Total hook methods
-	TotalHook func(context.Context, boil.ContextExecutor, *Total) error
 
 	totalQuery struct {
 		*queries.Query
@@ -119,176 +117,6 @@ var (
 	_ = qmhelper.Where
 )
 
-var totalBeforeInsertHooks []TotalHook
-var totalBeforeUpdateHooks []TotalHook
-var totalBeforeDeleteHooks []TotalHook
-var totalBeforeUpsertHooks []TotalHook
-
-var totalAfterInsertHooks []TotalHook
-var totalAfterSelectHooks []TotalHook
-var totalAfterUpdateHooks []TotalHook
-var totalAfterDeleteHooks []TotalHook
-var totalAfterUpsertHooks []TotalHook
-
-// doBeforeInsertHooks executes all "before insert" hooks.
-func (o *Total) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range totalBeforeInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *Total) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range totalBeforeUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *Total) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range totalBeforeDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *Total) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range totalBeforeUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterInsertHooks executes all "after Insert" hooks.
-func (o *Total) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range totalAfterInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterSelectHooks executes all "after Select" hooks.
-func (o *Total) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range totalAfterSelectHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpdateHooks executes all "after Update" hooks.
-func (o *Total) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range totalAfterUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *Total) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range totalAfterDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *Total) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range totalAfterUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// AddTotalHook registers your hook function for all future operations.
-func AddTotalHook(hookPoint boil.HookPoint, totalHook TotalHook) {
-	switch hookPoint {
-	case boil.BeforeInsertHook:
-		totalBeforeInsertHooks = append(totalBeforeInsertHooks, totalHook)
-	case boil.BeforeUpdateHook:
-		totalBeforeUpdateHooks = append(totalBeforeUpdateHooks, totalHook)
-	case boil.BeforeDeleteHook:
-		totalBeforeDeleteHooks = append(totalBeforeDeleteHooks, totalHook)
-	case boil.BeforeUpsertHook:
-		totalBeforeUpsertHooks = append(totalBeforeUpsertHooks, totalHook)
-	case boil.AfterInsertHook:
-		totalAfterInsertHooks = append(totalAfterInsertHooks, totalHook)
-	case boil.AfterSelectHook:
-		totalAfterSelectHooks = append(totalAfterSelectHooks, totalHook)
-	case boil.AfterUpdateHook:
-		totalAfterUpdateHooks = append(totalAfterUpdateHooks, totalHook)
-	case boil.AfterDeleteHook:
-		totalAfterDeleteHooks = append(totalAfterDeleteHooks, totalHook)
-	case boil.AfterUpsertHook:
-		totalAfterUpsertHooks = append(totalAfterUpsertHooks, totalHook)
-	}
-}
-
 // One returns a single total record from the query.
 func (q totalQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Total, error) {
 	o := &Total{}
@@ -303,10 +131,6 @@ func (q totalQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Total,
 		return nil, errors.Wrap(err, "boiler: failed to execute a one query for totals")
 	}
 
-	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
-		return o, err
-	}
-
 	return o, nil
 }
 
@@ -317,14 +141,6 @@ func (q totalQuery) All(ctx context.Context, exec boil.ContextExecutor) (TotalSl
 	err := q.Bind(ctx, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "boiler: failed to assign all query results to Total slice")
-	}
-
-	if len(totalAfterSelectHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
-				return o, err
-			}
-		}
 	}
 
 	return o, nil
@@ -407,10 +223,6 @@ func (o *Total) Insert(ctx context.Context, exec boil.ContextExecutor, columns b
 		if o.CreatedAt.IsZero() {
 			o.CreatedAt = currTime
 		}
-	}
-
-	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
-		return err
 	}
 
 	nzDefaults := queries.NonZeroDefaultSet(totalColumnsWithDefault, o)
@@ -503,17 +315,14 @@ CacheNoHooks:
 		totalInsertCacheMut.Unlock()
 	}
 
-	return o.doAfterInsertHooks(ctx, exec)
+	return nil
 }
 
 // Update uses an executor to update the Total.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *Total) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *Total) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	var err error
-	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
-		return 0, err
-	}
 	key := makeCacheKey(columns, nil)
 	totalUpdateCacheMut.RLock()
 	cache, cached := totalUpdateCache[key]
@@ -529,7 +338,7 @@ func (o *Total) Update(ctx context.Context, exec boil.ContextExecutor, columns b
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("boiler: unable to update totals, could not build whitelist")
+			return errors.New("boiler: unable to update totals, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE `totals` SET %s WHERE %s",
@@ -538,7 +347,7 @@ func (o *Total) Update(ctx context.Context, exec boil.ContextExecutor, columns b
 		)
 		cache.valueMapping, err = queries.BindMapping(totalType, totalMapping, append(wl, totalPrimaryKeyColumns...))
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
@@ -549,15 +358,9 @@ func (o *Total) Update(ctx context.Context, exec boil.ContextExecutor, columns b
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	var result sql.Result
-	result, err = exec.ExecContext(ctx, cache.query, values...)
+	_, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update totals row")
-	}
-
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by update for totals")
+		return errors.Wrap(err, "boiler: unable to update totals row")
 	}
 
 	if !cached {
@@ -566,35 +369,30 @@ func (o *Total) Update(ctx context.Context, exec boil.ContextExecutor, columns b
 		totalUpdateCacheMut.Unlock()
 	}
 
-	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q totalQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q totalQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all for totals")
+		return errors.Wrap(err, "boiler: unable to update all for totals")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected for totals")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o TotalSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o TotalSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	ln := int64(len(o))
 	if ln == 0 {
-		return 0, nil
+		return nil
 	}
 
 	if len(cols) == 0 {
-		return 0, errors.New("boiler: update all requires at least one column argument")
+		return errors.New("boiler: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -622,16 +420,12 @@ func (o TotalSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, co
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all in total slice")
+		return errors.Wrap(err, "boiler: unable to update all in total slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected all in update all total")
-	}
-	return rowsAff, nil
+	return nil
 }
 
 var mySQLTotalUniqueColumns = []string{
@@ -650,10 +444,6 @@ func (o *Total) Upsert(ctx context.Context, exec boil.ContextExecutor, updateCol
 		if o.CreatedAt.IsZero() {
 			o.CreatedAt = currTime
 		}
-	}
-
-	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
-		return err
 	}
 
 	nzDefaults := queries.NonZeroDefaultSet(totalColumnsWithDefault, o)
@@ -786,18 +576,14 @@ CacheNoHooks:
 		totalUpsertCacheMut.Unlock()
 	}
 
-	return o.doAfterUpsertHooks(ctx, exec)
+	return nil
 }
 
 // Delete deletes a single Total record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *Total) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o *Total) Delete(ctx context.Context, exec boil.ContextExecutor) error {
 	if o == nil {
-		return 0, errors.New("boiler: no Total provided for delete")
-	}
-
-	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
-		return 0, err
+		return errors.New("boiler: no Total provided for delete")
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), totalPrimaryKeyMapping)
@@ -808,56 +594,34 @@ func (o *Total) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, e
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete from totals")
+		return errors.Wrap(err, "boiler: unable to delete from totals")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by delete for totals")
-	}
-
-	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
-		return 0, err
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q totalQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q totalQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if q.Query == nil {
-		return 0, errors.New("boiler: no totalQuery provided for delete all")
+		return errors.New("boiler: no totalQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from totals")
+		return errors.Wrap(err, "boiler: unable to delete all from totals")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for totals")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o TotalSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o TotalSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
-		return 0, nil
-	}
-
-	if len(totalBeforeDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
+		return nil
 	}
 
 	var args []interface{}
@@ -874,25 +638,12 @@ func (o TotalSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (i
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from total slice")
+		return errors.Wrap(err, "boiler: unable to delete all from total slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for totals")
-	}
-
-	if len(totalAfterDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // Reload refetches the object from the database

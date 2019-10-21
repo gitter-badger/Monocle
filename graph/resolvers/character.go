@@ -38,7 +38,7 @@ func (r *queryResolver) CharactersByID(ctx context.Context, limit int, order mod
 	return characters, err
 }
 
-func (r *queryResolver) CharactersByBirthday(ctx context.Context, limit int, order models.Sort) ([]*monocle.Character, error) {
+func (r *queryResolver) CharactersByBirthday(ctx context.Context, limit int, order *models.Sort) ([]*monocle.Character, error) {
 	var characters []*monocle.Character
 
 	if limit > 100 {
@@ -49,10 +49,42 @@ func (r *queryResolver) CharactersByBirthday(ctx context.Context, limit int, ord
 		qm.Where("birthday = DATE('%c-%d', CURDATE())"),
 		qm.Limit(limit),
 		qm.OrderBy(fmt.Sprintf(
-			"%s %s",
-			boiler.CharacterColumns.Birthday,
+			"birthday %s",
 			order.String(),
 		)),
+	).Bind(ctx, r.DB, &characters)
+
+	return characters, err
+}
+
+func (r *queryResolver) CharactersByAllianceID(ctx context.Context, allianceID int, page *int) ([]*monocle.Character, error) {
+
+	characters := make([]*monocle.Character, 0)
+
+	limit := 50
+	offset := (*page * limit) - limit
+
+	err := boiler.Characters(
+		qm.Where("alliance_id = ?", allianceID),
+		qm.Limit(limit),
+		qm.Offset(offset),
+		qm.OrderBy("birthday DESC"),
+	).Bind(ctx, r.DB, &characters)
+
+	return characters, err
+
+}
+
+func (r *queryResolver) CharactersByCorporationID(ctx context.Context, corporationID int, page *int) ([]*monocle.Character, error) {
+	characters := make([]*monocle.Character, 0)
+
+	limit := 50
+	offset := (*page * limit) - limit
+
+	err := boiler.Characters(
+		qm.Where("corporation_id = ?", corporationID),
+		qm.Limit(limit),
+		qm.Offset(offset),
 	).Bind(ctx, r.DB, &characters)
 
 	return characters, err

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/ddouglas/monocle/cron"
+	"github.com/ddouglas/monocle/hack"
 	"github.com/ddouglas/monocle/processor"
 	"github.com/ddouglas/monocle/server"
 	"github.com/spf13/viper"
@@ -61,7 +62,7 @@ func init() {
 
 	viper.SetConfigName("env")
 	viper.SetConfigType("json")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath("/home/monocle/config")
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -111,11 +112,11 @@ func init() {
 			UsageText: "Run GoCron Implmentation",
 			Action:    cron.Action,
 		},
-		// cli.Command{
-		// 	Name:     "hack",
-		// 	Category: "Hacking",
-		// 	Action:   hack.Action,
-		// },
+		cli.Command{
+			Name:     "hack",
+			Category: "Hacking",
+			Action:   hack.Action,
+		},
 	}
 
 }

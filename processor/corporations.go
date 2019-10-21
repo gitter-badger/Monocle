@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/ddouglas/monocle"
@@ -157,77 +156,6 @@ func (p *Processor) corpUpdater() {
 		p.Logger.Info("Waiting")
 		wg.Wait()
 		p.Logger.Info("Done")
-	}
-}
-
-func (p *Processor) corpImport() {
-	for {
-		var corporations []monocle.Corporation
-		p.Logger.DebugF("Current Error Count: %d Remain: %d", p.ESI.Remain, p.ESI.Reset)
-		if p.ESI.Remain < 20 {
-			p.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
-			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-		}
-		p.Logger.Info("Start")
-
-		err := boiler.UnknownCorps(
-			qm.Limit(int(records*workers)),
-		).Bind(context.Background(), p.DB, &corporations)
-		if err != nil {
-			p.Logger.Errorf("No records returned from database", p.ESI.Reset)
-			time.Sleep(time.Minute * 1)
-			continue
-		}
-
-		if len(corporations) <= 0 {
-			// temp := sleep * 30
-			p.Logger.Info("No corporations were queried")
-			// time.Sleep(time.Second * time.Duration(temp))
-			os.Exit(0)
-		}
-
-		p.Logger.Infof("Successfully Queried %d Characters", len(corporations))
-
-		corpChunk := chunkCorporationSlice(int(records), corporations)
-
-		for _, chunk := range corpChunk {
-			wg.Add(1)
-			p.Logger.Infof("%d", len(chunk))
-			if len(chunk) > 0 {
-				go func(corporations []monocle.Corporation) {
-					defer wg.Done()
-					whereIDs := []interface{}{}
-					for _, corporation := range corporations {
-						corp := Corporation{
-							model:  corporation,
-							exists: false,
-						}
-						whereIDs = append(whereIDs, corporation.ID)
-						p.processCorporation(corp)
-						p.processCorporationAllianceHistory(corp)
-					}
-
-					p.Logger.Infof("Attempting to delete %d records from unknown_corps", len(whereIDs))
-
-					affected, err := boiler.UnknownCorps(
-						qm.WhereIn("id IN ?", whereIDs...),
-					).DeleteAll(context.Background(), p.DB)
-					if err != nil {
-						p.Logger.Infof("Failed to delete %d records, encountered error: %s", len(whereIDs), err.Error())
-						return
-					}
-
-					p.Logger.Infof("Successfully deleted %d records", affected)
-				}(chunk)
-			}
-
-		}
-
-		p.Logger.Info("Finished Loop. Waiting...")
-		wg.Wait()
-		p.Logger.Info("Done. Sleeping....")
-		time.Sleep(time.Second * 1)
-
 	}
 }
 

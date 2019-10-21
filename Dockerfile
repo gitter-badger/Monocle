@@ -1,12 +1,12 @@
-FROM golang:1.12 as builder
-WORKDIR /go/src/github.com/ddouglas/monocle
-COPY . /go/src/github.com/ddouglas/monocle
-WORKDIR /go/src/github.com/ddouglas/monocle/cmd/cli
-RUN mkdir /bin/monocle && \
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /bin/monocle/cli && \
-    mv ../../env.json /bin/monocle
-
-WORKDIR /bin/monocle
-
+FROM golang:1.12
+WORKDIR /home/monocle/config
+COPY /config /home/monocle/config
+WORKDIR /home/monocle/src
+COPY . /home/monocle/src
+RUN rm -rf /home/monocle/src/config
+RUN rm docker-rebuild.sh
+WORKDIR /home/monocle/src/cmd/cli
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 MOD=vendor go build -o /home/monocle/bin/cli
+WORKDIR /home/monocle/bin
 
 LABEL maintainer="David Douglas <david@onetwentyseven.dev>"

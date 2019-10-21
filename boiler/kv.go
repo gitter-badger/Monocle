@@ -107,8 +107,6 @@ type (
 	// KVSlice is an alias for a slice of pointers to KV.
 	// This should generally be used opposed to []KV.
 	KVSlice []*KV
-	// KVHook is the signature for custom KV hook methods
-	KVHook func(context.Context, boil.ContextExecutor, *KV) error
 
 	kvQuery struct {
 		*queries.Query
@@ -136,176 +134,6 @@ var (
 	_ = qmhelper.Where
 )
 
-var kvBeforeInsertHooks []KVHook
-var kvBeforeUpdateHooks []KVHook
-var kvBeforeDeleteHooks []KVHook
-var kvBeforeUpsertHooks []KVHook
-
-var kvAfterInsertHooks []KVHook
-var kvAfterSelectHooks []KVHook
-var kvAfterUpdateHooks []KVHook
-var kvAfterDeleteHooks []KVHook
-var kvAfterUpsertHooks []KVHook
-
-// doBeforeInsertHooks executes all "before insert" hooks.
-func (o *KV) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range kvBeforeInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *KV) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range kvBeforeUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *KV) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range kvBeforeDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *KV) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range kvBeforeUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterInsertHooks executes all "after Insert" hooks.
-func (o *KV) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range kvAfterInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterSelectHooks executes all "after Select" hooks.
-func (o *KV) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range kvAfterSelectHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpdateHooks executes all "after Update" hooks.
-func (o *KV) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range kvAfterUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *KV) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range kvAfterDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *KV) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
-	for _, hook := range kvAfterUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// AddKVHook registers your hook function for all future operations.
-func AddKVHook(hookPoint boil.HookPoint, kvHook KVHook) {
-	switch hookPoint {
-	case boil.BeforeInsertHook:
-		kvBeforeInsertHooks = append(kvBeforeInsertHooks, kvHook)
-	case boil.BeforeUpdateHook:
-		kvBeforeUpdateHooks = append(kvBeforeUpdateHooks, kvHook)
-	case boil.BeforeDeleteHook:
-		kvBeforeDeleteHooks = append(kvBeforeDeleteHooks, kvHook)
-	case boil.BeforeUpsertHook:
-		kvBeforeUpsertHooks = append(kvBeforeUpsertHooks, kvHook)
-	case boil.AfterInsertHook:
-		kvAfterInsertHooks = append(kvAfterInsertHooks, kvHook)
-	case boil.AfterSelectHook:
-		kvAfterSelectHooks = append(kvAfterSelectHooks, kvHook)
-	case boil.AfterUpdateHook:
-		kvAfterUpdateHooks = append(kvAfterUpdateHooks, kvHook)
-	case boil.AfterDeleteHook:
-		kvAfterDeleteHooks = append(kvAfterDeleteHooks, kvHook)
-	case boil.AfterUpsertHook:
-		kvAfterUpsertHooks = append(kvAfterUpsertHooks, kvHook)
-	}
-}
-
 // One returns a single kv record from the query.
 func (q kvQuery) One(ctx context.Context, exec boil.ContextExecutor) (*KV, error) {
 	o := &KV{}
@@ -320,10 +148,6 @@ func (q kvQuery) One(ctx context.Context, exec boil.ContextExecutor) (*KV, error
 		return nil, errors.Wrap(err, "boiler: failed to execute a one query for kv")
 	}
 
-	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
-		return o, err
-	}
-
 	return o, nil
 }
 
@@ -334,14 +158,6 @@ func (q kvQuery) All(ctx context.Context, exec boil.ContextExecutor) (KVSlice, e
 	err := q.Bind(ctx, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "boiler: failed to assign all query results to KV slice")
-	}
-
-	if len(kvAfterSelectHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
-				return o, err
-			}
-		}
 	}
 
 	return o, nil
@@ -429,10 +245,6 @@ func (o *KV) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil
 		}
 	}
 
-	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
-		return err
-	}
-
 	nzDefaults := queries.NonZeroDefaultSet(kvColumnsWithDefault, o)
 
 	key := makeCacheKey(columns, nzDefaults)
@@ -512,13 +324,13 @@ CacheNoHooks:
 		kvInsertCacheMut.Unlock()
 	}
 
-	return o.doAfterInsertHooks(ctx, exec)
+	return nil
 }
 
 // Update uses an executor to update the KV.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *KV) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *KV) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
@@ -526,9 +338,6 @@ func (o *KV) Update(ctx context.Context, exec boil.ContextExecutor, columns boil
 	}
 
 	var err error
-	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
-		return 0, err
-	}
 	key := makeCacheKey(columns, nil)
 	kvUpdateCacheMut.RLock()
 	cache, cached := kvUpdateCache[key]
@@ -544,7 +353,7 @@ func (o *KV) Update(ctx context.Context, exec boil.ContextExecutor, columns boil
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("boiler: unable to update kv, could not build whitelist")
+			return errors.New("boiler: unable to update kv, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE `kv` SET %s WHERE %s",
@@ -553,7 +362,7 @@ func (o *KV) Update(ctx context.Context, exec boil.ContextExecutor, columns boil
 		)
 		cache.valueMapping, err = queries.BindMapping(kvType, kvMapping, append(wl, kvPrimaryKeyColumns...))
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
@@ -564,15 +373,9 @@ func (o *KV) Update(ctx context.Context, exec boil.ContextExecutor, columns boil
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	var result sql.Result
-	result, err = exec.ExecContext(ctx, cache.query, values...)
+	_, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update kv row")
-	}
-
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by update for kv")
+		return errors.Wrap(err, "boiler: unable to update kv row")
 	}
 
 	if !cached {
@@ -581,35 +384,30 @@ func (o *KV) Update(ctx context.Context, exec boil.ContextExecutor, columns boil
 		kvUpdateCacheMut.Unlock()
 	}
 
-	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q kvQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q kvQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all for kv")
+		return errors.Wrap(err, "boiler: unable to update all for kv")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected for kv")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o KVSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o KVSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	ln := int64(len(o))
 	if ln == 0 {
-		return 0, nil
+		return nil
 	}
 
 	if len(cols) == 0 {
-		return 0, errors.New("boiler: update all requires at least one column argument")
+		return errors.New("boiler: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -637,16 +435,12 @@ func (o KVSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols 
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to update all in kv slice")
+		return errors.Wrap(err, "boiler: unable to update all in kv slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to retrieve rows affected all in update all kv")
-	}
-	return rowsAff, nil
+	return nil
 }
 
 var mySQLKVUniqueColumns = []string{
@@ -666,10 +460,6 @@ func (o *KV) Upsert(ctx context.Context, exec boil.ContextExecutor, updateColumn
 			o.CreatedAt = currTime
 		}
 		o.UpdatedAt = currTime
-	}
-
-	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
-		return err
 	}
 
 	nzDefaults := queries.NonZeroDefaultSet(kvColumnsWithDefault, o)
@@ -791,18 +581,14 @@ CacheNoHooks:
 		kvUpsertCacheMut.Unlock()
 	}
 
-	return o.doAfterUpsertHooks(ctx, exec)
+	return nil
 }
 
 // Delete deletes a single KV record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *KV) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o *KV) Delete(ctx context.Context, exec boil.ContextExecutor) error {
 	if o == nil {
-		return 0, errors.New("boiler: no KV provided for delete")
-	}
-
-	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
-		return 0, err
+		return errors.New("boiler: no KV provided for delete")
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), kvPrimaryKeyMapping)
@@ -813,56 +599,34 @@ func (o *KV) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, erro
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete from kv")
+		return errors.Wrap(err, "boiler: unable to delete from kv")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by delete for kv")
-	}
-
-	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
-		return 0, err
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q kvQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q kvQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if q.Query == nil {
-		return 0, errors.New("boiler: no kvQuery provided for delete all")
+		return errors.New("boiler: no kvQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	_, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from kv")
+		return errors.Wrap(err, "boiler: unable to delete all from kv")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for kv")
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o KVSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o KVSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
-		return 0, nil
-	}
-
-	if len(kvBeforeDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
+		return nil
 	}
 
 	var args []interface{}
@@ -879,25 +643,12 @@ func (o KVSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int6
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	result, err := exec.ExecContext(ctx, sql, args...)
+	_, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "boiler: unable to delete all from kv slice")
+		return errors.Wrap(err, "boiler: unable to delete all from kv slice")
 	}
 
-	rowsAff, err := result.RowsAffected()
-	if err != nil {
-		return 0, errors.Wrap(err, "boiler: failed to get rows affected by deleteall for kv")
-	}
-
-	if len(kvAfterDeleteHooks) != 0 {
-		for _, obj := range o {
-			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
-				return 0, err
-			}
-		}
-	}
-
-	return rowsAff, nil
+	return nil
 }
 
 // Reload refetches the object from the database

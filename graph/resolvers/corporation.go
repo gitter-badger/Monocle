@@ -46,6 +46,17 @@ func (r *queryResolver) CorporationsByMemberCount(ctx context.Context, limit int
 	return corporations, err
 }
 
+func (r *queryResolver) CorporationsByAllianceID(ctx context.Context, allianceID int) ([]*monocle.Corporation, error) {
+
+	corporations := make([]*monocle.Corporation, 0)
+
+	err := boiler.Corporations(
+		qm.Where("alliance_id = ?", allianceID),
+	).Bind(ctx, r.DB, &corporations)
+
+	return corporations, err
+}
+
 type corporationResolver struct {
 	*Common
 }
@@ -56,4 +67,12 @@ func (q *corporationResolver) Alliance(ctx context.Context, obj *monocle.Corpora
 
 func (q *corporationResolver) Members(ctx context.Context, obj *monocle.Corporation) ([]*monocle.Character, error) {
 	return dataloaders.CtxLoader(ctx).CorporationMembers.Load(obj.ID)
+}
+
+func (q *corporationResolver) History(ctx context.Context, obj *monocle.Corporation) ([]*monocle.CorporationAllianceHistory, error) {
+	return dataloaders.CtxLoader(ctx).CorporationAllianceHistory.Load(obj.ID)
+}
+
+func (q *corporationResolver) Ceo(ctx context.Context, obj *monocle.Corporation) (*monocle.Character, error) {
+	return dataloaders.CtxLoader(ctx).Character.Load(obj.CreatorID)
 }

@@ -1,0 +1,9 @@
+extend type Query {
+    searchEntity(term: String!): [Entity]!
+}
+
+type Entity {
+    id: Int!
+    name: String!
+    category: String!
+}
