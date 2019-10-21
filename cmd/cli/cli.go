@@ -62,7 +62,7 @@ func init() {
 
 	viper.SetConfigName("env")
 	viper.SetConfigType("json")
-	viper.AddConfigPath("/home/monocle/config")
+	viper.AddConfigPath("/app/config/monocle")
 
 	err := viper.ReadInConfig()
 	if err != nil {
