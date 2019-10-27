@@ -14,10 +14,12 @@ import (
 
 	"github.com/99designs/gqlgen/handler"
 	"github.com/go-chi/chi"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 	"golang.org/x/time/rate"
 
+	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/core"
 	"github.com/ddouglas/monocle/graph/dataloaders"
 	"github.com/ddouglas/monocle/graph/resolvers"
@@ -60,7 +62,14 @@ func New(port uint) (*Server, error) {
 }
 
 func Serve(c *cli.Context) {
-	port := c.Uint("port")
+
+	var config monocle.Config
+	err := envconfig.Process("", &config)
+	if err != nil {
+		log.Fatal("unable initialize environment variables")
+	}
+
+	port := uint(config.AppPort)
 
 	api, err := New(port)
 	if err != nil {
