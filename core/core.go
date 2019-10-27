@@ -6,14 +6,13 @@ import (
 	"os"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/spf13/viper"
+	"github.com/kelseyhightower/envconfig"
 
 	"github.com/apsdehal/go-logger"
+	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/esi"
 	"github.com/ddouglas/monocle/mysql"
 )
-
-var err error
 
 type (
 	App struct {
@@ -25,6 +24,11 @@ type (
 )
 
 func New() (*App, error) {
+	var config monocle.Config
+	err := envconfig.Process("", &config)
+	if err != nil {
+		log.Fatal("unable initialize environment variables")
+	}
 
 	logging, err := logger.New("monocle-core", 1, os.Stdout)
 	if err != nil {
@@ -34,7 +38,7 @@ func New() (*App, error) {
 
 	logging.SetFormat("#%{id} %{time} %{file}:%{line} => %{lvl} %{message}")
 
-	switch viper.GetInt("log.level") {
+	switch config.LogLevel {
 	case 1:
 		logging.SetLogLevel(logger.CriticalLevel)
 	case 2:
@@ -62,7 +66,7 @@ func New() (*App, error) {
 		logging.Fatalf("Encoutered Error Attempting to setup ESI Client: %s", err)
 	}
 
-	token := fmt.Sprintf("Bot %s", viper.GetString("discord.token"))
+	token := fmt.Sprintf("Bot %s", config.DiscordToken)
 	discord, err := discordgo.New(token)
 	if err != nil {
 		logging.Fatalf("Encoutered Error Attempting to setup Discord Go: %s", err)

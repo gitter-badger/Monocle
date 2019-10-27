@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/ddouglas/monocle/hack"
 	"github.com/ddouglas/monocle/processor"
 	"github.com/ddouglas/monocle/server"
-	"github.com/spf13/viper"
 	"github.com/urfave/cli"
 )
 
@@ -59,16 +57,6 @@ var save = cli.BoolFlag{
 }
 
 func init() {
-
-	viper.SetConfigName("env")
-	viper.SetConfigType("json")
-	viper.AddConfigPath("/app/config/monocle")
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 
 	app = cli.NewApp()
 	app.Name = "monocle Core"

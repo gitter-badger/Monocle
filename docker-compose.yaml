@@ -1,96 +1,112 @@
 version: "3.7"
 
 services:
-    # alliHunter:
-    #     image: monocle:latest
-    #     network_mode: "host"
-    #     restart: on-failure
-    #     logging:
-    #         driver: "json-file"
-    #         options:
-    #             max-file: "5"
-    #             max-size: "50m"
-    #     command: ./cli processor --scope=alliHunter
-    #     container_name: alliHunter
-    # alliUpdater:
-    #     image: monocle:latest
-    #     network_mode: "host"
-    #     restart: on-failure
-    #     logging:
-    #         driver: "json-file"
-    #         options:
-    #             max-file: "5"
-    #             max-size: "50m"
-    #     command: ./cli processor --scope=alliUpdater --workers=2 --records=100
-    #     container_name: alliUpdater
-    # charUpdater:
-    #     image: monocle:latest
-    #     network_mode: "host"
-    #     restart: on-failure
-    #     logging:
-    #         driver: "json-file"
-    #         options:
-    #             max-file: "5"
-    #             max-size: "50m"
-    #     command: ./cli processor --scope=charUpdater --workers=50 --records=1000
-    #     container_name: charUpdater
-    # charHunter:
-    #     image: monocle:latest
-    #     network_mode: "host"
-    #     restart: on-failure
-    #     logging:
-    #         driver: "json-file"
-    #         options:
-    #             max-file: "5"
-    #             max-size: "50m"
-    #     command: ./cli processor --scope=charHunter --records=10
-    #     container_name: charHunter
-    # charImport:
-    #     image: monocle:latest
-    #     network_mode: "host"
-    #     restart: on-failure
-    #     logging:
-    #         driver: "json-file"
-    #         options:
-    #             max-file: "5"
-    #             max-size: "50m"
-    #     command: ./cli processor --scope=charImport --workers=150 --records=1000
-    #     container_name: charImport
-    # corpHunter:
-    #     image: monocle:latest
-    #     network_mode: "host"
-    #     restart: on-failure
-    #     logging:
-    #         driver: "json-file"
-    #         options:
-    #             max-file: "5"
-    #             max-size: "50m"
-    #     command: ./cli processor --scope=corpHunter
-    #     container_name: corpHunter
-    # corpUpdater:
-    #     image: monocle:latest
-    #     network_mode: "host"
-    #     restart: on-failure
-    #     logging:
-    #         driver: "json-file"
-    #         options:
-    #             max-file: "5"
-    #             max-size: "50m"
-    #     command: ./cli processor --scope=corpUpdater
-    #     container_name: corpUpdater
-    # cron:
-    #     image: monocle:latest
-    #     network_mode: "host"
-    #     restart: on-failure
-    #     logging:
-    #         driver: "json-file"
-    #         options:
-    #             max-file: "5"
-    #             max-size: "50m"
-    #     command: ./cli cron
-    #     container_name: cron
+    alliHunter:
+        image: devoverlord93/monocle
+        network_mode: "host"
+        restart: on-failure
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli processor --scope=alliHunter
+        container_name: alliHunter
+        env_file:
+            - .env-docker
+    alliUpdater:
+        image: devoverlord93/monocle
+        network_mode: "host"
+        restart: on-failure
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli processor --scope=alliUpdater --workers=2 --records=100
+        container_name: alliUpdater
+        env_file:
+            - .env-docker
+    charUpdater:
+        image: devoverlord93/monocle
+        network_mode: "host"
+        restart: on-failure
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli processor --scope=charUpdater --workers=50 --records=1000
+        container_name: charUpdater
+        env_file:
+            - .env-docker
+    charHunter:
+        image: devoverlord93/monocle
+        network_mode: "host"
+        restart: on-failure
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli processor --scope=charHunter --records=10
+        container_name: charHunter
+        env_file:
+            - .env-docker
+    charImport:
+        image: devoverlord93/monocle
+        network_mode: "host"
+        restart: on-failure
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli processor --scope=charImport --workers=150 --records=1000
+        container_name: charImport
+        env_file:
+            - .env-docker
+    corpHunter:
+        image: devoverlord93/monocle
+        network_mode: "host"
+        restart: on-failure
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli processor --scope=corpHunter
+        container_name: corpHunter
+        env_file:
+            - .env-docker
+    corpUpdater:
+        image: devoverlord93/monocle
+        network_mode: "host"
+        restart: on-failure
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli processor --scope=corpUpdater
+        container_name: corpUpdater
+        env_file:
+            - .env-docker
+    cron:
+        image: devoverlord93/monocle
+        network_mode: "host"
+        restart: on-failure
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"
+                max-size: "50m"
+        command: ./cli cron
+        container_name: cron
+        env_file:
+            - .env-docker
     api:
-        image: monocle:latest
+        image: devoverlord93/monocle
         network_mode: "host"
         restart: on-failure
         logging:
@@ -100,5 +116,7 @@ services:
                 max-size: "50m"
         command: ./cli api
         container_name: api
+        env_file:
+            - .env-docker
         ports:
             - "8080:8080"

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
+	"golang.org/x/time/rate"
 
 	"github.com/ddouglas/monocle/core"
 	"github.com/ddouglas/monocle/graph/dataloaders"
@@ -23,9 +25,17 @@ import (
 )
 
 type Server struct {
-	App    *core.App
-	server *http.Server
+	App      *core.App
+	visitors map[string]*visitor
+	server   *http.Server
 }
+
+type visitor struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
+}
+
+var mtx sync.Mutex
 
 func New(port uint) (*Server, error) {
 	core, err := core.New()
@@ -42,6 +52,7 @@ func New(port uint) (*Server, error) {
 			ReadTimeout:  30 * time.Second,
 			WriteTimeout: 30 * time.Second,
 		},
+		visitors: make(map[string]*visitor, 0),
 	}
 
 	x.server.Handler = x.RegisterRoutes()
@@ -71,7 +82,7 @@ func Serve(c *cli.Context) {
 	<-stop
 	api.App.Logger.Info("Shutting Down Server")
 
-	api.GracefullyShutdown(context.Background())
+	_ = api.GracefullyShutdown(context.Background())
 }
 
 func (s *Server) RegisterRoutes() *chi.Mux {
@@ -79,6 +90,7 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 
 	r.Use(Cors)
 	r.Use(s.RequestLogger)
+	r.Use(s.RateLimiter)
 
 	graphSchema := service.NewExecutableSchema(service.Config{
 		Resolvers: &resolvers.Common{DB: s.App.DB.DB},

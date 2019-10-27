@@ -3,7 +3,6 @@ package resolvers
 import (
 	"context"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ddouglas/monocle"
 )
 
@@ -29,8 +28,6 @@ func (q *queryResolver) SearchEntity(ctx context.Context, term string) ([]*monoc
 	if err != nil {
 		return nil, err
 	}
-
-	spew.Dump(entities)
 
 	return entities, nil
 

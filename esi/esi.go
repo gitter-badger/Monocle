@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/ddouglas/monocle"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -52,15 +54,20 @@ type (
 )
 
 func New() (*Client, error) {
+	var config monocle.Config
+	err := envconfig.Process("", &config)
+	if err != nil {
+		log.Fatal("unable initialize environment variables")
+	}
 
 	http := &http.Client{
 		Timeout: 30 * time.Second,
 	}
 
 	return &Client{
-		Host:      viper.GetString("esi.host"),
+		Host:      config.EsiHost,
 		Http:      http,
-		UserAgent: viper.GetString("api.user_agent"),
+		UserAgent: config.ApiUserAgent,
 		Remain:    100,
 		Reset:     60,
 	}, nil

@@ -1,9 +1,12 @@
 package mysql
 
 import (
+	"log"
+
+	"github.com/ddouglas/monocle"
 	"github.com/jmoiron/sqlx"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 )
 
 // DB holds the connection the database
@@ -13,9 +16,13 @@ type DB struct {
 
 func Connect() (*DB, error) {
 
-	dsn := viper.GetString("db.dsn")
+	var config monocle.Config
+	err := envconfig.Process("", &config)
+	if err != nil {
+		log.Fatal("unable initialize environment variables")
+	}
 
-	pool, err := sqlx.Open("mysql", dsn)
+	pool, err := sqlx.Open("mysql", config.DBDsn)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create mysql connection")
 	}

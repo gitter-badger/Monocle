@@ -23,7 +23,7 @@ func (r *queryResolver) Stats(ctx context.Context, limit int) ([]*monocle.Total,
 	stats := []*monocle.Total{}
 	err := boiler.Totals(
 		qm.OrderBy("created_at DESC"),
-		qm.Limit(10),
+		qm.Limit(limit),
 	).Bind(ctx, r.DB, &stats)
 
 	return stats, err
