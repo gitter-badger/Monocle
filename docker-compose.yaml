@@ -53,19 +53,6 @@ services:
         container_name: charHunter
         env_file:
             - .env-docker
-    charImport:
-        image: devoverlord93/monocle
-        network_mode: "host"
-        restart: on-failure
-        logging:
-            driver: "json-file"
-            options:
-                max-file: "5"
-                max-size: "50m"
-        command: ./cli processor --scope=charImport --workers=150 --records=1000
-        container_name: charImport
-        env_file:
-            - .env-docker
     corpHunter:
         image: devoverlord93/monocle
         network_mode: "host"
