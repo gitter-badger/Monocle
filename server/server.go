@@ -88,7 +88,7 @@ func Serve(c *cli.Context) {
 func (s *Server) RegisterRoutes() *chi.Mux {
 	r := chi.NewRouter()
 
-	// r.Use(Cors)
+	r.Use(Cors)
 	r.Use(s.RequestLogger)
 	r.Use(s.RateLimiter)
 
