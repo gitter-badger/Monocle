@@ -110,9 +110,11 @@ type ComplexityRoot struct {
 	}
 
 	CorporationHistory struct {
+		Character     func(childComplexity int) int
 		Corporation   func(childComplexity int) int
 		CorporationID func(childComplexity int) int
 		ID            func(childComplexity int) int
+		LeaveDate     func(childComplexity int) int
 		RecordID      func(childComplexity int) int
 		StartDate     func(childComplexity int) int
 	}
@@ -124,20 +126,20 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Alliance                        func(childComplexity int, id int) int
-		AlliancesByMemberCount          func(childComplexity int, limit int) int
-		Character                       func(childComplexity int, id int) int
-		CharactersByAllianceID          func(childComplexity int, allianceID int, page *int) int
-		CharactersByBirthday            func(childComplexity int, limit int, order *models.Sort) int
-		CharactersByCorporationID       func(childComplexity int, corporationID int, page *int) int
-		CharactersByCorporationJoinDate func(childComplexity int, corporationID int, page *int) int
-		CharactersByID                  func(childComplexity int, limit int, order models.Sort) int
-		Corporation                     func(childComplexity int, id int) int
-		CorporationsByAllianceID        func(childComplexity int, allianceID int, page int) int
-		CorporationsByMemberCount       func(childComplexity int, limit int, independent bool, npc bool) int
-		SearchEntity                    func(childComplexity int, term string) int
-		Stat                            func(childComplexity int) int
-		Stats                           func(childComplexity int, limit int) int
+		Alliance                                func(childComplexity int, id int) int
+		AlliancesByMemberCount                  func(childComplexity int, limit int) int
+		Character                               func(childComplexity int, id int) int
+		CharacterCorporationHistoryByAllianceID func(childComplexity int, allianceID int, limit *int) int
+		CharactersByAllianceID                  func(childComplexity int, allianceID int, page *int) int
+		CharactersByBirthday                    func(childComplexity int, limit int, order *models.Sort) int
+		CharactersByCorporationID               func(childComplexity int, corporationID int, page *int) int
+		CharactersByID                          func(childComplexity int, limit int, order models.Sort) int
+		Corporation                             func(childComplexity int, id int) int
+		CorporationsByAllianceID                func(childComplexity int, allianceID int, page int) int
+		CorporationsByMemberCount               func(childComplexity int, limit int, independent bool, npc bool) int
+		SearchEntity                            func(childComplexity int, term string) int
+		Stat                                    func(childComplexity int) int
+		Stats                                   func(childComplexity int, limit int) int
 	}
 
 	Total struct {
@@ -168,6 +170,7 @@ type CorporationResolver interface {
 	History(ctx context.Context, obj *monocle.Corporation) ([]*monocle.CorporationAllianceHistory, error)
 }
 type CorporationHistoryResolver interface {
+	Character(ctx context.Context, obj *monocle.CharacterCorporationHistory) (*monocle.Character, error)
 	Corporation(ctx context.Context, obj *monocle.CharacterCorporationHistory) (*monocle.Corporation, error)
 }
 type QueryResolver interface {
@@ -175,8 +178,8 @@ type QueryResolver interface {
 	CharactersByID(ctx context.Context, limit int, order models.Sort) ([]*monocle.Character, error)
 	CharactersByAllianceID(ctx context.Context, allianceID int, page *int) ([]*monocle.Character, error)
 	CharactersByCorporationID(ctx context.Context, corporationID int, page *int) ([]*monocle.Character, error)
-	CharactersByCorporationJoinDate(ctx context.Context, corporationID int, page *int) ([]*monocle.Character, error)
 	CharactersByBirthday(ctx context.Context, limit int, order *models.Sort) ([]*monocle.Character, error)
+	CharacterCorporationHistoryByAllianceID(ctx context.Context, allianceID int, limit *int) ([]*monocle.CharacterCorporationHistory, error)
 	Alliance(ctx context.Context, id int) (*monocle.Alliance, error)
 	AlliancesByMemberCount(ctx context.Context, limit int) ([]*monocle.Alliance, error)
 	Corporation(ctx context.Context, id int) (*monocle.Corporation, error)
@@ -524,6 +527,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Corporation.WarEligible(childComplexity), true
 
+	case "CorporationHistory.character":
+		if e.complexity.CorporationHistory.Character == nil {
+			break
+		}
+
+		return e.complexity.CorporationHistory.Character(childComplexity), true
+
 	case "CorporationHistory.corporation":
 		if e.complexity.CorporationHistory.Corporation == nil {
 			break
@@ -544,6 +554,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CorporationHistory.ID(childComplexity), true
+
+	case "CorporationHistory.leave_date":
+		if e.complexity.CorporationHistory.LeaveDate == nil {
+			break
+		}
+
+		return e.complexity.CorporationHistory.LeaveDate(childComplexity), true
 
 	case "CorporationHistory.record_id":
 		if e.complexity.CorporationHistory.RecordID == nil {
@@ -616,6 +633,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Character(childComplexity, args["id"].(int)), true
 
+	case "Query.characterCorporationHistoryByAllianceID":
+		if e.complexity.Query.CharacterCorporationHistoryByAllianceID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_characterCorporationHistoryByAllianceID_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CharacterCorporationHistoryByAllianceID(childComplexity, args["allianceID"].(int), args["limit"].(*int)), true
+
 	case "Query.charactersByAllianceID":
 		if e.complexity.Query.CharactersByAllianceID == nil {
 			break
@@ -651,18 +680,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.CharactersByCorporationID(childComplexity, args["corporationID"].(int), args["page"].(*int)), true
-
-	case "Query.charactersByCorporationJoinDate":
-		if e.complexity.Query.CharactersByCorporationJoinDate == nil {
-			break
-		}
-
-		args, err := ec.field_Query_charactersByCorporationJoinDate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.CharactersByCorporationJoinDate(childComplexity, args["corporationID"].(int), args["page"].(*int)), true
 
 	case "Query.charactersByID":
 		if e.complexity.Query.CharactersByID == nil {
@@ -845,8 +862,9 @@ type Alliance {
     charactersByID(limit: Int! = 5, order: Sort! = ASC): [Character]!
     charactersByAllianceID(allianceID: Int!, page: Int = 1): [Character]!
     charactersByCorporationID(corporationID: Int!, page: Int = 1): [Character]!
-    charactersByCorporationJoinDate(corporationID: Int!, page: Int = 1): [Character]!
     charactersByBirthday(limit: Int! = 100, order: Sort = DESC): [Character]!
+
+    characterCorporationHistoryByAllianceID(allianceID: Int!, limit: Int = 100): [CorporationHistory]
 }
 
 type Character {
@@ -870,6 +888,8 @@ type CorporationHistory {
     record_id: Int!
     corporation_id: Int!
     start_date: Time!
+    leave_date: Time
+    character: Character!
     corporation: Corporation!
 }
 
@@ -982,6 +1002,28 @@ func (ec *executionContext) field_Query_alliancesByMemberCount_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_characterCorporationHistoryByAllianceID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["allianceID"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["allianceID"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_character_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1041,28 +1083,6 @@ func (ec *executionContext) field_Query_charactersByBirthday_args(ctx context.Co
 }
 
 func (ec *executionContext) field_Query_charactersByCorporationID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["corporationID"]; ok {
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["corporationID"] = arg0
-	var arg1 *int
-	if tmp, ok := rawArgs["page"]; ok {
-		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["page"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_charactersByCorporationJoinDate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -3044,6 +3064,77 @@ func (ec *executionContext) _CorporationHistory_start_date(ctx context.Context, 
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _CorporationHistory_leave_date(ctx context.Context, field graphql.CollectedField, obj *monocle.CharacterCorporationHistory) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "CorporationHistory",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LeaveDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(null.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTime2githubᚗcomᚋvolatiletechᚋnullᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CorporationHistory_character(ctx context.Context, field graphql.CollectedField, obj *monocle.CharacterCorporationHistory) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "CorporationHistory",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CorporationHistory().Character(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*monocle.Character)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCharacter2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _CorporationHistory_corporation(ctx context.Context, field graphql.CollectedField, obj *monocle.CharacterCorporationHistory) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -3368,50 +3459,6 @@ func (ec *executionContext) _Query_charactersByCorporationID(ctx context.Context
 	return ec.marshalNCharacter2ᚕᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_charactersByCorporationJoinDate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_charactersByCorporationJoinDate_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CharactersByCorporationJoinDate(rctx, args["corporationID"].(int), args["page"].(*int))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*monocle.Character)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNCharacter2ᚕᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Query_charactersByBirthday(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -3454,6 +3501,47 @@ func (ec *executionContext) _Query_charactersByBirthday(ctx context.Context, fie
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNCharacter2ᚕᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacter(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_characterCorporationHistoryByAllianceID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_characterCorporationHistoryByAllianceID_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CharacterCorporationHistoryByAllianceID(rctx, args["allianceID"].(int), args["limit"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*monocle.CharacterCorporationHistory)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOCorporationHistory2ᚕᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacterCorporationHistory(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_alliance(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5589,6 +5677,22 @@ func (ec *executionContext) _CorporationHistory(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "leave_date":
+			out.Values[i] = ec._CorporationHistory_leave_date(ctx, field, obj)
+		case "character":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CorporationHistory_character(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "corporation":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -5722,20 +5826,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "charactersByCorporationJoinDate":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_charactersByCorporationJoinDate(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
 		case "charactersByBirthday":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -5748,6 +5838,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			})
+		case "characterCorporationHistoryByAllianceID":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_characterCorporationHistoryByAllianceID(ctx, field)
 				return res
 			})
 		case "alliance":
@@ -6895,6 +6996,46 @@ func (ec *executionContext) marshalOCorporation2ᚖgithubᚗcomᚋddouglasᚋmon
 
 func (ec *executionContext) marshalOCorporationHistory2githubᚗcomᚋddouglasᚋmonocleᚐCharacterCorporationHistory(ctx context.Context, sel ast.SelectionSet, v monocle.CharacterCorporationHistory) graphql.Marshaler {
 	return ec._CorporationHistory(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOCorporationHistory2ᚕᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacterCorporationHistory(ctx context.Context, sel ast.SelectionSet, v []*monocle.CharacterCorporationHistory) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOCorporationHistory2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacterCorporationHistory(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalOCorporationHistory2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCharacterCorporationHistory(ctx context.Context, sel ast.SelectionSet, v *monocle.CharacterCorporationHistory) graphql.Marshaler {

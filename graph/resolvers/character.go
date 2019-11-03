@@ -103,15 +103,8 @@ func (q *characterResolver) History(ctx context.Context, obj *monocle.Character)
 }
 
 func (q *characterResolver) Joined(ctx context.Context, obj *monocle.Character) (*monocle.CharacterCorporationHistory, error) {
-	// history, err := dataloaders.CtxLoader(ctx).CharacterCorporationHistory.Load(obj.ID)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// if len(history) == 0 {
-	return nil, nil
-	// }
+	return dataloaders.CtxLoader(ctx).CharacterCorporationHistory.Load(obj.ID)
 
-	// return history[0], nil
 }
 
 type corporationHistoryResolver struct {

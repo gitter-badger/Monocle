@@ -11,7 +11,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-// go:generate sqlboiler mysql --wipe --struct-tag-casing camel --no-tests
+// go:generate sqlboiler  --wipe --struct-tag-casing camel --no-tests mysql
 
 var app *cli.App
 var scope = cli.StringFlag{

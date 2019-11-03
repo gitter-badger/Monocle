@@ -3,8 +3,10 @@ type Query {
     charactersByID(limit: Int! = 5, order: Sort! = ASC): [Character]!
     charactersByAllianceID(allianceID: Int!, page: Int = 1): [Character]!
     charactersByCorporationID(corporationID: Int!, page: Int = 1): [Character]!
-    charactersByCorporationJoinDate(corporationID: Int!, page: Int = 1): [Character]!
     charactersByBirthday(limit: Int! = 100, order: Sort = DESC): [Character]!
+    
+    characterCorporationHistoryByCorporationID(allianceID: Int!, limit: Int = 100): [CorporationHistory]
+    characterCorporationHistoryByAllianceID(allianceID: Int!, limit: Int = 100): [CorporationHistory]
 }
 
 type Character {
@@ -28,6 +30,8 @@ type CorporationHistory {
     record_id: Int!
     corporation_id: Int!
     start_date: Time!
+    leave_date: Time
+    character: Character!
     corporation: Corporation!
 }
 

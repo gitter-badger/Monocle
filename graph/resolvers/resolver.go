@@ -36,7 +36,3 @@ func (r *Common) Corporation() generated.CorporationResolver {
 func (r *Common) CorporationHistory() generated.CorporationHistoryResolver {
 	return &corporationHistoryResolver{r}
 }
-
-func offset(page *int, limit *int) int {
-	return (*page * *limit) - *limit
-}

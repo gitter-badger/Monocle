@@ -11,7 +11,6 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/boil"
-	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
@@ -32,21 +31,16 @@ func (a *Auditor) charUpdater() {
 			qm.Offset(offset),
 		)
 
-		str, args := queries.BuildQuery(query.Query)
-		a.Logger.WithFields(logrus.Fields{
-			"query": str,
-			"args":  args,
-		}).Debug()
+		tools.OutputDebugQuery(query.Query)
 
 		err := query.Bind(context.Background(), a.DB, &characters)
 		if err != nil {
-			a.Logger.WithError(err).Error("no records returned from database")
-			time.Sleep(time.Minute * 1)
-			a.Logger.Debug("continuing loop")
-			continue
+			a.Logger.WithError(err).Error("error encountered querying database")
+			return
 		}
 
 		if len(characters) <= 0 {
+			a.DGO.ChannelMessageSend("394991263344230411", "Done with Auditor, exiting script")
 			a.Logger.Info("no characters queried. done with job....exiting...")
 			return
 		}
@@ -102,15 +96,16 @@ func (a *Auditor) processCharacterChunk(characters []monocle.Character) {
 	for _, histories := range x {
 		historiesLen := len(histories)
 		if historiesLen == 1 {
+			a.Logger.WithField("id", histories[0].ID).Debug("1 history entry, skipping....")
 			a.UpdateCharacter(histories[0].ID)
 			continue
 		}
 		for i, history := range histories {
-			if i == historiesLen-1 {
-				continue
+			if i != historiesLen-1 {
+				j := i + 1
+				history.LeaveDate.SetValid(histories[j].StartDate)
 			}
-			j := i + 1
-			history.LeaveDate.SetValid(histories[j].StartDate)
+
 			var boilHistory boiler.CharacterCorporationHistory
 			err = copier.Copy(&boilHistory, history)
 			if err != nil {
@@ -129,7 +124,11 @@ func (a *Auditor) processCharacterChunk(characters []monocle.Character) {
 				}).WithError(err).Error("Failed to copier history to boilHistory")
 				continue
 			}
+			time.Sleep(time.Millisecond * 100)
 		}
+		a.Logger.WithField("id", histories[0].ID).Debug("Done")
+		a.Logger.Debug("---------------")
+		time.Sleep(time.Second * 2)
 		a.UpdateCharacter(histories[0].ID)
 	}
 
