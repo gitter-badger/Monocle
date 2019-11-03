@@ -2,10 +2,8 @@ package core
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/kelseyhightower/envconfig"
@@ -31,27 +29,27 @@ func New(name string) (*App, error) {
 	if err != nil {
 		log.Fatal("unable initialize environment variables")
 	}
-	logDir := "core/logs"
-	if _, err := os.Stat(logDir); os.IsNotExist(err) {
-		err = os.Mkdir(logDir, os.ModeDir)
-		if err != nil {
-			log.Fatal("unable make log directory")
-		}
-	}
+	// logDir := "core/logs"
+	// if _, err := os.Stat(logDir); os.IsNotExist(err) {
+	// 	err = os.Mkdir(logDir, os.ModeDir)
+	// 	if err != nil {
+	// 		log.Fatal("unable make log directory")
+	// 	}
+	// }
 
 	var logger = logrus.New()
-	if name == "" {
-		name = "unknown"
-	}
-	name = fmt.Sprintf("%s/%s", logDir, name)
-	logFileName := fmt.Sprintf("%s_%s.log", name, time.Now().Format("2006-01-02-15-04"))
-	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// if name == "" {
+	// 	name = "unknown"
+	// }
+	// name = fmt.Sprintf("%s/%s", logDir, name)
+	// logFileName := fmt.Sprintf("%s_%s.log", name, time.Now().Format("2006-01-02-15-04"))
+	// logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	mw := io.MultiWriter(os.Stdout, logFile)
-	logger.SetOutput(mw)
+	// mw := io.MultiWriter(os.Stdout, logFile)
+	logger.SetOutput(os.Stdout)
 
 	level, err := logrus.ParseLevel(config.LogLevel)
 	if err != nil {
