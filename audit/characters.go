@@ -101,7 +101,11 @@ func (a *Auditor) processCharacterChunk(characters []monocle.Character) {
 			continue
 		}
 		for i, history := range histories {
+
 			if i != historiesLen-1 {
+				if history.LeaveDate.Valid {
+					continue
+				}
 				j := i + 1
 				history.LeaveDate.SetValid(histories[j].StartDate)
 			}
@@ -128,7 +132,7 @@ func (a *Auditor) processCharacterChunk(characters []monocle.Character) {
 		}
 		a.Logger.WithField("id", histories[0].ID).Debug("Done")
 		a.Logger.Debug("---------------")
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Millisecond * 200)
 		a.UpdateCharacter(histories[0].ID)
 	}
 
