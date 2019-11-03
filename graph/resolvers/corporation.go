@@ -46,12 +46,16 @@ func (r *queryResolver) CorporationsByMemberCount(ctx context.Context, limit int
 	return corporations, err
 }
 
-func (r *queryResolver) CorporationsByAllianceID(ctx context.Context, allianceID int) ([]*monocle.Corporation, error) {
+func (r *queryResolver) CorporationsByAllianceID(ctx context.Context, allianceID int, page int) ([]*monocle.Corporation, error) {
 
 	corporations := make([]*monocle.Corporation, 0)
 
+	offset := (page * 100) - 100
+
 	err := boiler.Corporations(
 		qm.Where("alliance_id = ?", allianceID),
+		qm.Limit(100),
+		qm.Offset(offset),
 	).Bind(ctx, r.DB, &corporations)
 
 	return corporations, err

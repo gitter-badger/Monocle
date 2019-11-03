@@ -5,17 +5,26 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/boiler"
 	"github.com/ddouglas/monocle/esi"
+	"github.com/jinzhu/copier"
+	"github.com/sirupsen/logrus"
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
 type Character struct {
-	model  monocle.Character
+	model  *monocle.Character
+	exists bool
+}
+
+type CharacterCorporationHistory struct {
+	model  []*monocle.CharacterCorporationHistory
 	exists bool
 }
 
@@ -24,78 +33,91 @@ func (p *Processor) charHunter() {
 		Value uint64 `json:"value"`
 	}
 
-	kv, err := p.DB.SelectValueByKey("last_good_character_id")
+	const key = "last_good_character_id"
+
+	kv, err := boiler.KVS(
+		qm.Where("k = ?", key),
+	).One(context.Background(), p.DB)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			p.Logger.Criticalf("Unable to query for ID: %s", err)
+			p.Logger.WithError(err).WithField("key", key).Error("query for key failed")
 			return
 		}
 	}
 
-	err = json.Unmarshal(kv.Value, &value)
+	err = json.Unmarshal(kv.V, &value)
 	if err != nil {
-		p.Logger.Criticalf("Unable to unmarshal value: %s", err)
+		p.Logger.WithError(err).WithField("value", kv.V).Error("unable to unmarshal value into struct")
 		return
 	}
 
 	begin = value.Value
 
-	p.Logger.Infof("Starting at ID %d", begin)
+	p.Logger.WithField("id", begin).WithField("method", "charHunter").Info("starting...")
 
 	for x := begin; x <= 2147483647; x += records {
 
 		end := x + records
-		msg := fmt.Sprintf("Errors: %d Remaining: %d Loop: %d - %d", p.ESI.Remain, p.ESI.Reset, x, x+records)
-		p.Logger.CriticalF("%s", msg)
+		p.Logger.WithFields(logrus.Fields{
+			"errors":    p.ESI.Remain,
+			"remaining": p.ESI.Reset,
+			"loop":      x,
+			"end":       end,
+		}).Info()
+
 		attempts := 0
 		for {
 			if attempts >= 2 {
-				msg := fmt.Sprintf("Head Requests to %d failed. Sleep for %d minutes before trying again", end, sleep)
-				p.Logger.Errorf("\t%s", msg)
-				// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-				// p.DGO.ChannelMessageSend("394991263344230411", msg)
+				p.Logger.WithFields(logrus.Fields{
+					"end":      end,
+					"sleep":    sleep,
+					"attempts": attempts,
+				}).Error("head requests failed. sleeping...")
 				time.Sleep(time.Minute * time.Duration(sleep))
 				attempts = 0
 			}
-			p.Logger.DebugF("Checking for valid end of %d", end)
+
+			p.Logger.WithField("end", end).Info("checking for valid end")
+
 			response, err := p.ESI.HeadCharactersCharacterID(uint64(end))
 			if err != nil {
-				p.Logger.ErrorF(err.Error())
-				time.Sleep(time.Second * 5)
+				p.Logger.WithError(err).Error("head request for character failed")
+				time.Sleep(time.Second * time.Duration(sleep))
 				attempts = 3
 				continue
 			}
 
 			if response.Code >= 500 {
-				time.Sleep(time.Second * 5)
+				time.Sleep(time.Second * time.Duration(sleep))
 				attempts++
 				continue
 			}
 			break
 		}
-
-		p.Logger.Infof("%d is valid, loop from %d to %d", end, x, end)
+		p.Logger.WithFields(logrus.Fields{
+			"end":     end,
+			"current": x,
+		}).Info("id is valid, starting loop")
 
 		for y := x; y <= end; y++ {
 			if p.ESI.Remain < 20 {
-				msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
-				p.Logger.Errorf("\t%s", msg)
-				// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-				// p.DGO.ChannelMessageSend("394991263344230411", msg)
+				p.Logger.WithFields(logrus.Fields{
+					"errors": p.ESI.Remain,
+					"sleep":  p.ESI.Reset,
+				}).Error("error count is low. sleeping...")
 				time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 			}
 			wg.Add(1)
 
 			character := monocle.Character{ID: uint64(y)}
 			go func(model monocle.Character) {
-				character := Character{
-					model:  model,
+				character := &Character{
+					model:  &model,
 					exists: false,
 				}
 				p.processCharacter(character)
 				p.processCharacterCorpHistory(character)
 				wg.Done()
-				return
 			}(character)
 		}
 
@@ -104,37 +126,38 @@ func (p *Processor) charHunter() {
 
 		value.Value = end
 
-		kv.Value, err = json.Marshal(value)
+		kv.V, err = json.Marshal(value)
 		if err != nil {
-			p.Logger.Criticalf("Unable to unmarshal value: %s", err)
+			p.Logger.WithError(err).WithField("value", value).Error("unable to marshal value")
 			return
 		}
 
-		_, err = p.DB.UpdateValueByKey(kv)
+		err = kv.Update(context.Background(), p.DB, boil.Infer())
 		if err != nil {
-			if err != sql.ErrNoRows {
-				p.Logger.Criticalf("Unable to query for ID: %s", err)
-				return
-			}
+			p.Logger.WithError(err).WithField("key", kv).Error("unable to update database record")
+			return
 		}
 
-		p.Logger.InfoF("Completed, sleep for %d seconds", 2)
-		time.Sleep(time.Second * 2)
-
+		p.Logger.WithField("sleep", sleep).Info("loop complete. entering sleep period")
+		time.Sleep(time.Second * time.Duration(sleep))
 	}
-
-	return
 }
 
 func (p *Processor) charUpdater() {
 	for {
 		var characters []monocle.Character
-		p.Logger.DebugF("Current Error Count: %d Remain: %d", p.ESI.Remain, p.ESI.Reset)
+		p.Logger.WithFields(logrus.Fields{
+			"errors":    p.ESI.Remain,
+			"remaining": p.ESI.Reset,
+		}).Debug()
 		if p.ESI.Remain < 20 {
-			p.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
+			p.Logger.WithFields(logrus.Fields{
+				"errors":    p.ESI.Remain,
+				"remaining": p.ESI.Reset,
+			}).Error("error count is low. sleeping...")
 			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 		}
-		p.Logger.Info("Start")
+		p.Logger.Info("starting loop...")
 
 		err := boiler.Characters(
 			qm.Where(boiler.CharacterColumns.Expires+"<NOW()"),
@@ -143,19 +166,21 @@ func (p *Processor) charUpdater() {
 			qm.Limit(int(records*workers)),
 		).Bind(context.Background(), p.DB, &characters)
 		if err != nil {
-			p.Logger.Errorf("No records returned from database", p.ESI.Reset)
+			p.Logger.WithError(err).Error("no records returned from database")
 			time.Sleep(time.Minute * 1)
+			p.Logger.Debug("continuing loop")
 			continue
 		}
 
 		if len(characters) <= 0 {
 			temp := sleep * 30
-			p.Logger.Infof("No characters were queried. Sleeping for %d seconds", temp)
+			p.Logger.WithField("sleep", temp).Info("no characters queried. sleeping...")
 			time.Sleep(time.Second * time.Duration(temp))
+			p.Logger.Debug("continuing loop")
 			continue
 		}
 
-		p.Logger.Infof("Successfully Queried %d Characters", len(characters))
+		p.Logger.WithField("count", len(characters)).Info("character query successful")
 
 		charChunk := chunkCharacterSlice(int(records), characters)
 
@@ -166,10 +191,11 @@ func (p *Processor) charUpdater() {
 
 		}
 
-		p.Logger.Info("Finished Loop. Waiting...")
+		p.Logger.Debug("waiting")
 		wg.Wait()
-		p.Logger.Info("Done. Sleeping....")
-		time.Sleep(time.Second * 1)
+		sleep := time.Second * 1
+		p.Logger.WithField("sleep", sleep).Debug("done. sleeping...")
+		time.Sleep(sleep)
 	}
 }
 
@@ -179,10 +205,10 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 	defer wg.Done()
 
 	if p.ESI.Remain < 20 {
-		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
-		p.Logger.Errorf("\t%s", msg)
-		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-		// p.DGO.ChannelMessageSend("394991263344230411", msg)
+		p.Logger.WithFields(logrus.Fields{
+			"errors":    p.ESI.Remain,
+			"remaining": p.ESI.Reset,
+		}).Error("error count is low. sleeping...")
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
@@ -192,12 +218,12 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 	attempts := 1
 	for {
 		if attempts >= 3 {
-			p.Logger.Error("All Attempts exhuasted")
+			p.Logger.WithField("attempts", attempts).Error("all attempts exhausted")
 			return
 		}
 		response, err = p.ESI.PostCharactersAffiliation(charIds)
 		if err != nil {
-			p.Logger.Errorf("PostCharactersAffiliation Request for %d ids failed: %s", len(charIds), err)
+			p.Logger.WithField("count", len(charIds)).WithError(err).Error("PostCharacterAffiliation request failed")
 			return
 		}
 
@@ -206,8 +232,15 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 		}
 
 		attempts++
-		p.Logger.ErrorF("Code %d Method \"p.ESI.PostCharactersAffiliation\", attempting %d request again in 1 second", response.Code, attempts)
-		time.Sleep(1 * time.Second)
+		sleep := time.Second * 1
+		p.Logger.WithFields(logrus.Fields{
+			"code":    response.Code,
+			"path":    response.Path,
+			"attempt": attempts,
+			"method":  "processCharacterChunk",
+			"sleep":   sleep,
+		}).Error("request failed. attempting again after sleeping.")
+		time.Sleep(sleep)
 	}
 
 	affiliations := response.Data.([]monocle.CharacterAffiliation)
@@ -217,6 +250,8 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 	for _, affiliation := range affiliations {
 
 		selected := charMap[affiliation.CharacterID]
+		updated = append(updated, selected)
+
 		switch {
 		case affiliation.CorporationID != selected.CorporationID,
 			affiliation.AllianceID.Uint32 != selected.AllianceID.Uint32,
@@ -229,8 +264,8 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 	}
 
 	for _, model := range updated {
-		character := Character{
-			model:  model,
+		character := &Character{
+			model:  &model,
 			exists: true,
 		}
 		p.processCharacter(character)
@@ -245,40 +280,37 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 		query = fmt.Sprintf(query, t, strings.Join(args, ", "))
 		_, err = p.DB.Exec(query, stale...)
 		if err != nil {
-			p.Logger.ErrorF("Failed to bulk update Etag Expiry for %d ids: %s", len(stale), err)
+			p.Logger.WithError(err).WithField("stale_records", len(stale)).Error("build update of etag expiry failed")
 		}
 	}
-
-	return
 }
 
-func (p *Processor) processCharacter(character Character) {
+func (p *Processor) processCharacter(character *Character) {
 	var response esi.Response
 	var err error
 
 	if p.ESI.Remain < 20 {
-		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
-		p.Logger.Errorf("\t%s", msg)
-		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-		// p.DGO.ChannelMessageSend("394991263344230411", msg)
+		p.Logger.WithFields(logrus.Fields{
+			"errors":    p.ESI.Remain,
+			"remaining": p.ESI.Reset,
+		}).Error("error count is low. sleeping...")
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
 	if !character.model.IsExpired() {
 		return
 	}
-
-	p.Logger.Debugf("\tProcessing Char %d", character.model.ID)
+	p.Logger.WithField("id", character.model.ID).Debug("processing char")
 
 	attempts := 0
 	for {
 		if attempts >= 3 {
-			p.Logger.Errorf("All Attempts exhuasted for Character %d", character.model.ID)
+			p.Logger.WithField("id", character.model.ID).Info("all attempts exhuasted for character")
 			return
 		}
 		response, err = p.ESI.GetCharactersCharacterID(character.model)
 		if err != nil {
-			p.Logger.Errorf("Error completing request to ESI for Character %d information: %s", character.model.ID, err)
+			p.Logger.WithField("id", character.model.ID).WithError(err).Error("error completing esi request for character")
 			return
 		}
 
@@ -287,69 +319,94 @@ func (p *Processor) processCharacter(character Character) {
 		}
 
 		attempts++
-		p.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting %d request again in 1 second", response.Code, response.Path, attempts)
-		time.Sleep(1 * time.Second)
+		sleep := 1 * time.Second
+		p.Logger.WithFields(logrus.Fields{
+			"code":     response.Code,
+			"path":     response.Path,
+			"attempts": attempts,
+			"sleep":    sleep,
+		}).Info("received bad response code for request. sleeping for trying again...")
+		time.Sleep(sleep)
 	}
 
-	character.model = response.Data.(monocle.Character)
-
+	character.model = response.Data.(*monocle.Character)
 	if character.model.CorporationID == 1000001 {
 		character.model.Ignored = true
 	}
 
-	p.Logger.Debugf("\tCharacter: %d:%s\tNew Character: %t", character.model.ID, character.model.Name, !character.exists)
+	p.Logger.WithFields(logrus.Fields{
+		"id":     character.model.ID,
+		"name":   character.model.Name,
+		"exists": character.exists,
+	}).Debug()
 
-	switch !character.exists {
+	switch character.exists {
 	case true:
-		_, err := p.DB.InsertCharacter(character.model)
+		err := p.DB.UpdateCharacterByID(character.model)
 		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to insert new character into database: %s", err)
+			p.Logger.WithError(err).WithField("id", character.model.ID).Error("update query failed for character")
 			return
 		}
 	case false:
-		_, err := p.DB.UpdateCharacterByID(character.model)
+		err := p.DB.InsertCharacter(character.model)
 		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to update character in database: %s", err)
+			p.Logger.WithError(err).WithField("id", character.model.ID).Error("insert query failed for character")
 			return
 		}
 	}
 
 }
 
-func (p *Processor) processCharacterCorpHistory(character Character) {
-	var history []monocle.CharacterCorporationHistory
+func (p *Processor) processCharacterCorpHistory(character *Character) {
+	var err error
+	var history = CharacterCorporationHistory{
+		exists: true,
+	}
+
+	var etag = EtagResource{
+		model:  &monocle.EtagResource{},
+		exists: true,
+	}
+
 	var response esi.Response
 
 	if p.ESI.Remain < 20 {
-		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
-		p.Logger.Errorf("\t%s", msg)
-		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-		// p.DGO.ChannelMessageSend("394991263344230411", msg)
+		p.Logger.WithFields(logrus.Fields{
+			"errors":    p.ESI.Remain,
+			"remaining": p.ESI.Reset,
+		}).Error("error count is low. sleeping...")
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
-	historyEtag, err := p.DB.SelectEtagByIDAndResource(character.model.ID, "character_corporation_history")
-	historyEtag.Exists = true
+	err = boiler.Etags(
+		qm.Where("id = ?", uint64(character.model.ID)),
+		qm.And("resource = ?", "character_corporation_history"),
+	).Bind(context.Background(), p.DB, etag.model)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			p.Logger.Errorf("Unable to query character_corporation_history etag resource for Character %d due to SQL Error: %s", character.model.ID, err)
+			p.Logger.
+				WithError(err).
+				WithFields(logrus.Fields{"id": character.model.ID, "resource": "character_corporation_history"}).
+				Error("etag query failed")
 			return
 		}
 
-		historyEtag.ID = character.model.ID
-		historyEtag.Resource = "character_corporation_history"
-		historyEtag.Exists = false
+		etag.model.ID = character.model.ID
+		etag.model.Resource = "character_corporation_history"
+		etag.model.Exists = false
 	}
+
+	p.Logger.WithField("id", character.model.ID).Debug("processing char corp history")
 
 	attempts := 0
 	for {
 		if attempts >= 3 {
-			p.Logger.Errorf("All Attempts exhuasted for Character %d", historyEtag.ID)
-			break
+			p.Logger.WithFields(logrus.Fields{"id": character.model.ID, "attempts": attempts}).Error("all attempts exhausted")
+			return
 		}
-		response, historyEtag, err = p.ESI.GetCharactersCharacterIDCorporationHistory(historyEtag)
+		response, err = p.ESI.GetCharactersCharacterIDCorporationHistory(etag.model)
 		if err != nil {
-			p.Logger.Errorf("Error completing request to ESI for Character %d Corporation History: %s", historyEtag.ID, err)
+			p.Logger.WithField("id", etag.model.ID).WithError(err).Error("error completing esi request for character corporation history")
 			return
 		}
 
@@ -358,62 +415,196 @@ func (p *Processor) processCharacterCorpHistory(character Character) {
 		}
 
 		attempts++
-		p.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting %d request again in 1 second", response.Code, response.Path, attempts)
-		time.Sleep(1 * time.Second)
+		sleep := time.Second * 1
+
+		p.Logger.WithFields(logrus.Fields{
+			"code":    response.Code,
+			"path":    response.Path,
+			"attempt": attempts,
+			"sleep":   sleep,
+		}).Error("request failed. attempting again after sleeping.")
+		time.Sleep(sleep)
 	}
 
-	history = response.Data.([]monocle.CharacterCorporationHistory)
+	if response.Data == nil {
+		p.Logger.WithFields(logrus.Fields{
+			"code":    response.Code,
+			"path":    response.Path,
+			"attempt": attempts,
+		}).Error("Data property on response is nil")
+		return
+	}
 
-	existing, err := p.DB.SelectCharacterCorporationHistoryByID(historyEtag.ID)
+	if _, ok := response.Data.(map[string]interface{}); !ok {
+		p.Logger.WithFields(logrus.Fields{
+			"code":    response.Code,
+			"path":    response.Path,
+			"attempt": attempts,
+			"data":    response.Data,
+		}).Error("data is not of expected type")
+		return
+	}
+	data := response.Data.(map[string]interface{})
+
+	if _, ok := data["etag"].(*monocle.EtagResource); !ok {
+		p.Logger.WithFields(logrus.Fields{
+			"code":    response.Code,
+			"path":    response.Path,
+			"attempt": attempts,
+		}).Error("Etag Index on response is not set.")
+		return
+	}
+	etag.model = data["etag"].(*monocle.EtagResource)
+
+	var boilEtag boiler.Etag
+	err = copier.Copy(&boilEtag, &etag.model)
 	if err != nil {
-		if err != sql.ErrNoRows {
-			p.Logger.Errorf("Unable to query character_corporation_history etag resource for Character %d due to SQL Error: %s", historyEtag.ID, err)
-			return
-		}
-	}
-	if len(existing) > 0 {
-		p.Logger.Debug("Running findUnknownCorps")
-		p.findUnknownCorps(character, existing)
-		p.Logger.Debug("Done with findUnknownCorps")
+		// Log an error
+		return
 	}
 
-	diff := diffExistingCharCorpHistory(existing, history)
-
-	switch !historyEtag.Exists {
+	switch etag.exists {
 	case true:
-		_, err := p.DB.InsertEtag(historyEtag)
+		err = boilEtag.Update(context.Background(), p.DB, boil.Infer())
 		if err != nil {
-			p.Logger.Errorf("error encountered attempting to insert new etag for history into database: %s", err)
+			p.Logger.WithError(err).
+				WithField("id", etag.model.ID).
+				WithField("resource", etag.model.Resource).
+				WithField("etag", etag.model.Etag).
+				Error("update query failed for history etag")
 			return
 		}
 	case false:
-		_, err := p.DB.UpdateEtagByIDAndResource(historyEtag)
+		err = boilEtag.Insert(context.Background(), p.DB, boil.Infer())
 		if err != nil {
-			p.Logger.Errorf("error encountered attempting to insert new etag for history into database: %s", err)
+			p.Logger.WithError(err).
+				WithField("id", etag.model.ID).
+				WithField("resource", etag.model.Resource).
+				WithField("etag", etag.model.Etag).
+				Error("insert query failed for history etag")
 			return
 		}
+	}
+	// If the response code is a not a 200, there is no new data, so return here
+	if response.Code > 200 {
+		return
 	}
 
-	if len(diff) > 0 {
-		_, err := p.DB.InsertCharacterCorporationHistory(historyEtag.ID, diff)
-		if err != nil {
-			p.Logger.Errorf("error encountered attempting to insert new character corporation history records into database: %s", err)
-			return
-		}
+	if _, ok := data["history"].([]monocle.CharacterCorporationHistory); !ok {
+		// Log an error
+		return
 	}
-	return
+	history.model = data["history"].([]*monocle.CharacterCorporationHistory)
+
+	var boilHistory boiler.CharacterCorporationHistorySlice
+	err = copier.Copy(&boilHistory, &history.model)
+	if err != nil {
+		// Log error
+		return
+	}
+
+	existing, err := boiler.CharacterCorporationHistories(
+		qm.Where("id = ?", etag.model.ID),
+	).All(context.Background(), p.DB)
+	if err != nil {
+		p.Logger.
+			WithError(err).
+			WithFields(logrus.Fields{"id": character.model.ID, "resource": "character_corporation_history"}).
+			Error("history query for character corporation history failed")
+		return
+	}
+	// If we don't know about this characters history at all, loop through the records, perform an insert, and then return
+	if len(existing) == 0 {
+		sort.Slice(boilHistory, func(i, j int) bool {
+			return boilHistory[i].RecordID < boilHistory[j].RecordID
+		})
+		lastIndex := len(boilHistory) - 1
+		for index, history := range boilHistory {
+			history.ID = character.model.ID
+			if index < lastIndex {
+				history.LeaveDate.SetValid(boilHistory[index+1].StartDate)
+			}
+
+			err = history.Insert(context.Background(), p.DB, boil.Infer())
+			if err != nil {
+				p.Logger.WithError(err).WithFields(logrus.Fields{
+					"id":     history.ID,
+					"record": history.RecordID,
+				}).Error("unable to insert character corporation history record into database")
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+		return
+	}
+
+	if len(existing) < len(boilHistory) {
+		p.findUnknownCorps(boilHistory)
+	}
+
+	sort.Slice(existing, func(i, j int) bool {
+		return existing[i].RecordID < existing[j].RecordID
+	})
+
+	sort.Slice(boilHistory, func(i, j int) bool {
+		return boilHistory[i].RecordID < boilHistory[j].RecordID
+	})
+
+	exLen := len(existing)
+	neLen := len(boilHistory)
+	lastIndexOfExisting := exLen - 1
+	lastIndexOfNew := neLen - 1
+	insert := false
+	for index := range boilHistory {
+		if index > lastIndexOfExisting {
+			existing = append(existing, boilHistory[index])
+			insert = true
+		}
+
+		selected := existing[index]
+
+		if selected.LeaveDate.Valid {
+			continue
+		}
+
+		nextIndex := index + 1
+
+		if nextIndex <= lastIndexOfNew {
+			selected.LeaveDate.SetValid(boilHistory[nextIndex].StartDate)
+		}
+
+		if insert {
+			selected.ID = character.model.ID
+			err = selected.Insert(context.Background(), p.DB, boil.Infer())
+			if err != nil {
+				p.Logger.WithError(err).WithFields(logrus.Fields{
+					"id":     selected.ID,
+					"record": selected.RecordID,
+				}).Error("unable to insert character corporation history record into database")
+			}
+		} else {
+			err = selected.Update(context.Background(), p.DB, boil.Infer())
+			if err != nil {
+				p.Logger.WithError(err).WithFields(logrus.Fields{
+					"id":     selected.ID,
+					"record": selected.RecordID,
+				}).Error("unable to update character corporation history record in database")
+			}
+		}
+		time.Sleep(time.Millisecond * 100)
+
+	}
 
 }
 
-func (p *Processor) findUnknownCorps(character Character, historySlice []monocle.CharacterCorporationHistory) {
+func (p *Processor) findUnknownCorps(historySlice boiler.CharacterCorporationHistorySlice) {
 
 	unique := map[uint32]bool{}
 	list := []interface{}{}
 
 	for _, history := range historySlice {
-		if _, v := unique[history.CorporationID]; !v {
-			unique[history.CorporationID] = true
-			list = append(list, history.CorporationID)
+		if _, v := unique[uint32(history.CorporationID)]; !v {
+			unique[uint32(history.CorporationID)] = true
+			list = append(list, uint32(history.CorporationID))
 		}
 	}
 
@@ -422,7 +613,7 @@ func (p *Processor) findUnknownCorps(character Character, historySlice []monocle
 		qm.WhereIn("id IN ?", list...),
 	).Bind(context.Background(), p.DB, &knowns)
 	if err != nil {
-		p.Logger.Errorf("Unable to query database for list of known corporations: %s", err.Error())
+		p.Logger.WithError(err).Error("known corporation query failed")
 		return
 	}
 
@@ -436,9 +627,9 @@ func (p *Processor) findUnknownCorps(character Character, historySlice []monocle
 		return
 	}
 
-	for i, _ := range unique {
-		corporation := Corporation{
-			model: monocle.Corporation{
+	for i := range unique {
+		corporation := &Corporation{
+			model: &monocle.Corporation{
 				ID: i,
 			},
 			exists: false,
@@ -446,24 +637,4 @@ func (p *Processor) findUnknownCorps(character Character, historySlice []monocle
 		p.processCorporation(corporation)
 	}
 
-}
-
-func diffExistingCharCorpHistory(a []monocle.CharacterCorporationHistory, b []monocle.CharacterCorporationHistory) []monocle.CharacterCorporationHistory {
-	c := convertCharCorpHistToMap(a)
-	d := convertCharCorpHistToMap(b)
-	result := make([]monocle.CharacterCorporationHistory, 0)
-	for recordID, history := range d {
-		if _, ok := c[recordID]; !ok {
-			result = append(result, history)
-		}
-	}
-	return result
-}
-
-func convertCharCorpHistToMap(a []monocle.CharacterCorporationHistory) map[uint]monocle.CharacterCorporationHistory {
-	result := make(map[uint]monocle.CharacterCorporationHistory, 0)
-	for _, history := range a {
-		result[history.RecordID] = history
-	}
-	return result
 }

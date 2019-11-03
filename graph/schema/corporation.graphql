@@ -1,7 +1,7 @@
 extend type Query {
     corporation(id: Int!): Corporation!
     corporationsByMemberCount(limit: Int!, independent: Boolean! = false, npc: Boolean! = false): [Corporation]!
-    corporationsByAllianceID(allianceID: Int!): [Corporation]!
+    corporationsByAllianceID(allianceID: Int!, page: Int! = 1): [Corporation]!
 }
 
 type Corporation {

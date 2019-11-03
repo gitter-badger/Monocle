@@ -2,13 +2,15 @@ package core
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/sirupsen/logrus"
 
-	"github.com/apsdehal/go-logger"
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/esi"
 	"github.com/ddouglas/monocle/mysql"
@@ -19,57 +21,64 @@ type (
 		ESI    *esi.Client
 		DB     *mysql.DB
 		DGO    *discordgo.Session
-		Logger *logger.Logger
+		Logger *logrus.Logger
 	}
 )
 
-func New() (*App, error) {
+func New(name string) (*App, error) {
 	var config monocle.Config
 	err := envconfig.Process("", &config)
 	if err != nil {
 		log.Fatal("unable initialize environment variables")
 	}
+	logDir := "core/logs"
+	if _, err := os.Stat(logDir); os.IsNotExist(err) {
+		err = os.Mkdir(logDir, os.ModeDir)
+		if err != nil {
+			log.Fatal("unable make log directory")
+		}
+	}
 
-	logging, err := logger.New("monocle-core", 1, os.Stdout)
+	var logger = logrus.New()
+	if name == "" {
+		name = "unknown"
+	}
+	name = fmt.Sprintf("%s/%s", logDir, name)
+	logFileName := fmt.Sprintf("%s_%s.log", name, time.Now().Format("2006-01-02-15-04"))
+	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatal("Unable to create app lication logger")
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
-	logging.SetFormat("#%{id} %{time} %{file}:%{line} => %{lvl} %{message}")
+	mw := io.MultiWriter(os.Stdout, logFile)
+	logger.SetOutput(mw)
 
-	switch config.LogLevel {
-	case 1:
-		logging.SetLogLevel(logger.CriticalLevel)
-	case 2:
-		logging.SetLogLevel(logger.ErrorLevel)
-	case 3:
-		logging.SetLogLevel(logger.WarningLevel)
-	case 4:
-		logging.SetLogLevel(logger.NoticeLevel)
-	case 5:
-		logging.SetLogLevel(logger.InfoLevel)
-	case 6:
-		logging.SetLogLevel(logger.DebugLevel)
-	default:
-		log.Println("Logging Level Not Set. Defaulting to Info")
-		logging.SetLogLevel(logger.InfoLevel)
+	level, err := logrus.ParseLevel(config.LogLevel)
+	if err != nil {
+		logger.WithField("err", err).Fatal("failed to configure log level for logrus")
 	}
+
+	logger.SetLevel(level)
+
+	// logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetFormatter(&logrus.TextFormatter{
+		DisableColors: false,
+	})
 
 	connection, err := mysql.Connect()
 	if err != nil {
-		logging.Fatalf("Encoutered Error Attempting to setup DB Connection: %s", err)
+		logger.WithField("err", err).Fatal("unable to setup db connection")
 	}
 
 	esiClient, err := esi.New()
 	if err != nil {
-		logging.Fatalf("Encoutered Error Attempting to setup ESI Client: %s", err)
+		logger.WithField("err", err).Fatal("unable to setup esi client")
 	}
 
 	token := fmt.Sprintf("Bot %s", config.DiscordToken)
 	discord, err := discordgo.New(token)
 	if err != nil {
-		logging.Fatalf("Encoutered Error Attempting to setup Discord Go: %s", err)
+		logger.WithField("err", err).Fatal("unable to setup discord client")
 	}
 
 	discord.LogLevel = discordgo.LogDebug
@@ -78,7 +87,7 @@ func New() (*App, error) {
 		ESI:    esiClient,
 		DB:     connection,
 		DGO:    discord,
-		Logger: logging,
+		Logger: logger,
 	}, nil
 
 }

@@ -9,93 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (e *Client) GetAlliances(etagResource monocle.EtagResource) (Response, monocle.EtagResource, error) {
-
-	path := "/v1/alliances/"
-
-	url := url.URL{
-		Scheme: "https",
-		Host:   e.Host,
-		Path:   path,
-	}
-
-	headers := make(map[string]string)
-
-	if etagResource.Etag != "" {
-		headers["If-None-Match"] = etagResource.Etag
-	}
-
-	request := Request{
-		Method:  "GET",
-		Path:    url,
-		Headers: headers,
-		Body:    []byte(""),
-	}
-
-	var ids = make([]int, 0)
-
-	response, err := e.Request(request)
-	if err != nil {
-		return Response{}, etagResource, err
-	}
-
-	mx.Lock()
-	e.Reset = RetrieveErrorResetFromResponse(response)
-	e.Remain = RetrieveErrorCountFromResponse(response)
-	mx.Unlock()
-
-	switch response.Code {
-	case 200:
-		err = json.Unmarshal(response.Data.([]byte), &ids)
-		if err != nil {
-			err = errors.Wrap(err, "unable to unmarshal response body")
-			return response, etagResource, err
-		}
-
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-
-			return response, etagResource, err
-		}
-
-		etagResource.Expires = expires
-
-		etag, err := RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-			return response, etagResource, err
-		}
-		etagResource.Etag = etag
-		break
-	case 304:
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-
-			return response, etagResource, err
-		}
-
-		etagResource.Expires = expires
-
-		etag, err := RetrieveEtagHeaderFromResponse(response)
-		if err != nil {
-			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-			return response, etagResource, err
-		}
-		etagResource.Etag = etag
-		break
-
-	default:
-		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
-	}
-
-	response.Data = ids
-
-	return response, etagResource, err
-
-}
-
 func (e *Client) HeadAlliancesAllianceID(id uint) (Response, error) {
 
 	path := fmt.Sprintf("/v3/alliances/%d/", id)
@@ -127,7 +40,9 @@ func (e *Client) HeadAlliancesAllianceID(id uint) (Response, error) {
 
 	switch response.Code {
 	case 200, 500, 502, 503, 504:
+
 		break
+
 	default:
 		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
@@ -135,7 +50,7 @@ func (e *Client) HeadAlliancesAllianceID(id uint) (Response, error) {
 	return response, err
 }
 
-func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, error) {
+func (e *Client) GetAlliancesAllianceID(alliance *monocle.Alliance) (Response, error) {
 
 	path := fmt.Sprintf("/v3/alliances/%d/", alliance.ID)
 
@@ -173,31 +88,25 @@ func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, er
 		var newAlliance monocle.Alliance
 		err = json.Unmarshal(response.Data.([]byte), &newAlliance)
 		if err != nil {
-			err = errors.Wrapf(err, "unable to unmarshel response body on request %s", path)
-			return response, err
+			return response, errors.Wrapf(err, "unable to unmarshel response body on request %s", path)
 		}
 
 		newAlliance.ID = alliance.ID
 
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		newAlliance.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-
-			return response, err
+			return response, errors.Wrapf(err, "Error Encounter with Request %s", path)
 		}
 
-		newAlliance.Expires = expires
-
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		newAlliance.Etag, err = RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-			return response, err
+			return response, errors.Wrapf(err, "Error Encounter with Request %s", path)
 		}
-		newAlliance.Etag = etag
 
-		alliance = newAlliance
+		alliance = &newAlliance
 
 		break
+
 	case 304:
 		expires, err := RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
@@ -215,6 +124,7 @@ func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, er
 		alliance.Etag = etag
 
 		break
+
 	default:
 		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
@@ -224,7 +134,7 @@ func (e *Client) GetAlliancesAllianceID(alliance monocle.Alliance) (Response, er
 	return response, err
 }
 
-func (e *Client) GetAlliancesAllianceIDCorporations(etagResource monocle.EtagResource) (Response, error) {
+func (e *Client) GetAlliancesAllianceIDCorporations(etagResource *monocle.EtagResource) (Response, error) {
 
 	path := fmt.Sprintf("/v1/alliances/%d/corporations/", etagResource.ID)
 
@@ -263,43 +173,34 @@ func (e *Client) GetAlliancesAllianceIDCorporations(etagResource monocle.EtagRes
 	case 200:
 		err = json.Unmarshal(response.Data.([]byte), &ids)
 		if err != nil {
-			err = errors.Wrapf(err, "unable to unmarshel response body on request %s", path)
-			return response, err
+			return response, errors.Wrapf(err, "unable to unmarshel response body on request %s", path)
 		}
 
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-
-			return response, err
+			return response, errors.Wrapf(err, "Error Encounter with Request %s", path)
 		}
 
-		etagResource.Expires = expires
-
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		etagResource.Etag, err = RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-			return response, err
+			return response, errors.Wrapf(err, "Error Encounter with Request %s", path)
 		}
-		etagResource.Etag = etag
+
 		break
+
 	case 304:
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-
-			return response, err
+			return response, errors.Wrapf(err, "Error Encounter with Request %s", path)
 		}
 
-		etagResource.Expires = expires
-
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		etagResource.Etag, err = RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
-			return response, err
+			return response, errors.Wrapf(err, "Error Encounter with Request %s", path)
 		}
-		etagResource.Etag = etag
+
 		break
+
 	case 500, 502, 503, 504:
 		break
 	default:

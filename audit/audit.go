@@ -1,22 +1,16 @@
-package processor
+package audit
 
 import (
 	"log"
 	"sync"
 
-	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/core"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )
 
-type Processor struct {
+type Auditor struct {
 	*core.App
-}
-
-type EtagResource struct {
-	model  *monocle.EtagResource
-	exists bool
 }
 
 var (
@@ -30,13 +24,13 @@ var (
 )
 
 func Action(c *cli.Context) error {
-	core, err := core.New("processor")
+	core, err := core.New("auditor")
 	if err != nil {
 		err = errors.Wrap(err, "Unable to create core application")
 		log.Fatal(err)
 	}
 
-	p := Processor{
+	a := Auditor{
 		core,
 	}
 
@@ -47,21 +41,11 @@ func Action(c *cli.Context) error {
 	done = c.Uint64("done")
 	sleep = c.Uint64("sleep")
 
-	p.Logger.WithField("workers", workers).Info("starting processor")
+	a.Logger.WithField("workers", workers).Info("starting auditor")
 
 	switch scope {
-	case "charHunter":
-		p.charHunter()
 	case "charUpdater":
-		p.charUpdater()
-	case "corpHunter":
-		p.corpHunter()
-	case "corpUpdater":
-		p.corpUpdater()
-	case "alliHunter":
-		p.alliHunter()
-	case "alliUpdater":
-		p.alliUpdater()
+		a.charUpdater()
 	default:
 		return cli.NewExitError(errors.New("scope not specified"), 1)
 	}

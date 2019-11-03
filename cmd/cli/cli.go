@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/ddouglas/monocle/audit"
 	"github.com/ddouglas/monocle/cron"
 	"github.com/ddouglas/monocle/hack"
 	"github.com/ddouglas/monocle/processor"
-	"github.com/ddouglas/monocle/server"
 	"github.com/urfave/cli"
 )
 
@@ -73,26 +73,26 @@ func init() {
 				scope, workers, records, sleep, begin, done,
 			},
 		},
-		// cli.Command{
-		// 	Name:      "counter",
-		// 	Category:  "Monitoring",
-		// 	Usage:     "counter",
-		// 	UsageText: "Continuous Loop that runs a query every few seconds and returns a count of expired etags",
-		// 	Flags: []cli.Flag{
-		// 		sleep, expired, save,
-		// 	},
-		// 	Action: updater.Counter,
-		// // },
 		cli.Command{
-			Name:      "api",
-			Category:  "HTTP",
-			Usage:     "api",
-			UsageText: "Starts the API to serve HTTPS requests",
+			Name:      "auditor",
+			Category:  "Population",
+			Usage:     "auditor",
+			UsageText: "processes records within the database and populates the database with new records from the API",
+			Action:    audit.Action,
 			Flags: []cli.Flag{
-				port,
+				scope, workers, records, sleep, begin, done,
 			},
-			Action: server.Serve,
 		},
+		// cli.Command{
+		// 	Name:      "api",
+		// 	Category:  "HTTP",
+		// 	Usage:     "api",
+		// 	UsageText: "Starts the API to serve HTTPS requests",
+		// 	Flags: []cli.Flag{
+		// 		port,
+		// 	},
+		// 	Action: server.Serve,
+		// },
 		cli.Command{
 			Name:      "cron",
 			Category:  "Scheduled",

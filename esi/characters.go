@@ -48,7 +48,7 @@ func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
 	return response, err
 }
 
-func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response, error) {
+func (e *Client) GetCharactersCharacterID(character *monocle.Character) (Response, error) {
 
 	path := fmt.Sprintf("/v4/characters/%d/", character.ID)
 
@@ -95,37 +95,29 @@ func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response
 			newChar.Ignored = true
 		}
 
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		newChar.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrap(err, "Error Encountered attempting to parse expires header")
-			return response, err
+			return response, errors.Wrap(err, "Error Encountered attempting to parse expires header")
 		}
-		newChar.Expires = expires
 
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		newChar.Etag, err = RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
-			return response, err
+			return response, errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
 		}
-		newChar.Etag = etag
 
-		character = newChar
+		character = &newChar
 
 		break
 	case 304:
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		character.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrap(err, "Error Encountered attempting to parse expires header")
-			return response, err
+			return response, errors.Wrap(err, "Error Encountered attempting to parse expires header")
 		}
-		character.Expires = expires
 
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		character.Etag, err = RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
-			return response, err
+			return response, errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
 		}
-		character.Etag = etag
 
 		break
 	case 503:
@@ -142,11 +134,11 @@ func (e *Client) GetCharactersCharacterID(character monocle.Character) (Response
 	return response, err
 }
 
-func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle.EtagResource) (Response, monocle.EtagResource, error) {
+func (e *Client) GetCharactersCharacterIDCorporationHistory(etag *monocle.EtagResource) (Response, error) {
 
-	var history []monocle.CharacterCorporationHistory
+	var history []*monocle.CharacterCorporationHistory
 
-	path := fmt.Sprintf("/v1/characters/%d/corporationhistory/", etagResource.ID)
+	path := fmt.Sprintf("/v1/characters/%d/corporationhistory/", etag.ID)
 
 	url := url.URL{
 		Scheme: "https",
@@ -156,8 +148,8 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 
 	headers := make(map[string]string)
 
-	if etagResource.Etag != "" {
-		headers["If-None-Match"] = etagResource.Etag
+	if etag.Etag != "" {
+		headers["If-None-Match"] = etag.Etag
 	}
 
 	request := Request{
@@ -169,46 +161,37 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 
 	response, err := e.Request(request)
 	if err != nil {
-		return response, etagResource, err
+		return response, err
 	}
 
 	switch response.Code {
 	case 200:
 		err = json.Unmarshal(response.Data.([]byte), &history)
 		if err != nil {
-			err = errors.Wrapf(err, "unable to unmarshel response body for %d corporation history", etagResource.ID)
-			return response, etagResource, err
+			return response, errors.Wrapf(err, "unable to unmarshel response body for %d corporation history", etag.ID)
 		}
 
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		etag.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s", response.Path)
-			return response, etagResource, err
+			return response, errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s", response.Path)
 		}
-		etagResource.Expires = expires
 
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		etag.Etag, err = RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s", response.Path)
-			return response, etagResource, err
+			return response, errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s", response.Path)
 		}
-		etagResource.Etag = etag
 
 		break
 	case 304:
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		etag.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s", response.Path)
-			return response, etagResource, err
+			return response, errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s", response.Path)
 		}
-		etagResource.Expires = expires
 
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		etag.Etag, err = RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s", response.Path)
-			return response, etagResource, err
+			return response, errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s", response.Path)
 		}
-		etagResource.Etag = etag
 
 		break
 	case 500, 502, 503, 504:
@@ -217,9 +200,12 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etagResource monocle
 		err = fmt.Errorf("Code: %d Request: %s %s", response.Code, request.Method, url.Path)
 	}
 
-	response.Data = history
+	response.Data = map[string]interface{}{
+		"etag":    etag,
+		"history": history,
+	}
 
-	return response, etagResource, err
+	return response, err
 }
 
 func (e *Client) PostCharactersAffiliation(ids []uint64) (Response, error) {
@@ -233,7 +219,7 @@ func (e *Client) PostCharactersAffiliation(ids []uint64) (Response, error) {
 		Path:   path,
 	}
 
-	headers := make(map[string]string, 0)
+	headers := make(map[string]string)
 
 	// Marshal the ids []uint64 to a []byte for the request
 	bIds, err := json.Marshal(ids)
@@ -257,8 +243,7 @@ func (e *Client) PostCharactersAffiliation(ids []uint64) (Response, error) {
 	case 200:
 		err := json.Unmarshal(response.Data.([]byte), &affiliations)
 		if err != nil {
-			err = errors.Wrap(err, "Unable to unmarshal response body for character affiliations")
-			return response, err
+			return response, errors.Wrap(err, "Unable to unmarshal response body for character affiliations")
 		}
 
 		break

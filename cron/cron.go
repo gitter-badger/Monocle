@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -19,7 +20,7 @@ var wg sync.WaitGroup
 
 func Action(c *cli.Context) error {
 
-	core, err := core.New()
+	core, err := core.New("cron")
 	if err != nil {
 		err = errors.Wrap(err, "Unable to create core application")
 		log.Fatal(err)
@@ -31,13 +32,16 @@ func Action(c *cli.Context) error {
 	}
 	crn := cron.New()
 	wg.Add(1)
-	msg := "Registering Count func with Cron"
-	crn.AddFunc("0 * * * *", h.Counts)
 
-	msg = msg + "\nRegistering Deltas func with Cron"
-	crn.AddFunc("0 */4 * * *", h.Deltas)
+	countCronSig := "0 */2 * * *"
+	msg := fmt.Sprintf("Registering Count func with Cron Sig of \n\t`%s`\n", countCronSig)
+	crn.AddFunc(countCronSig, h.Counts)
 
-	msg = msg + "\nStarting Cron"
+	deltaCronSig := "0 11 * * *"
+	msg = fmt.Sprintf("%s\nRegistering Deltas func with Cron Sig of \n\t`%s`\n", msg, deltaCronSig)
+	crn.AddFunc(deltaCronSig, h.Deltas)
+
+	msg = fmt.Sprintf("%s\nStarting Cron", msg)
 	h.Logger.Info(msg)
 	h.SendDicoMsg(msg)
 	crn.Start()
@@ -79,7 +83,6 @@ func (h *Handler) Deltas() {
 	msg = "Finish Deltas Logger"
 	h.Logger.Info(msg)
 	h.SendDicoMsg(msg)
-	return
 }
 
 func (h *Handler) Counts() {

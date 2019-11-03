@@ -8,6 +8,9 @@ import (
 	"time"
 
 	"github.com/ddouglas/monocle/boiler"
+	"github.com/sirupsen/logrus"
+	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
 	"github.com/ddouglas/monocle"
@@ -15,12 +18,7 @@ import (
 )
 
 type Alliance struct {
-	model  monocle.Alliance
-	exists bool
-}
-
-type AllianceCorporationMembers struct {
-	model  monocle.EtagResource
+	model  *monocle.Alliance
 	exists bool
 }
 
@@ -30,57 +28,68 @@ func (p *Processor) alliHunter() {
 		Value uint64 `json:"value"`
 	}
 
-	kv, err := p.DB.SelectValueByKey("last_good_alliance_id")
+	const key = "last_good_alliance_id"
+
+	kv, err := boiler.KVS(
+		qm.Where("k = ?", key),
+	).One(context.Background(), p.DB)
+
 	if err != nil {
 		if err != sql.ErrNoRows {
-			p.Logger.Criticalf("Unable to query for ID: %s", err)
+			p.Logger.WithError(err).WithField("id", key).Error("query for key failed")
 			return
 		}
 	}
 
-	err = json.Unmarshal(kv.Value, &value)
+	err = json.Unmarshal(kv.V, &value)
 	if err != nil {
-		p.Logger.Criticalf("Unable to unmarshal value: %s", err)
+		p.Logger.WithError(err).WithField("value", kv.V).Error("unable to unmarshal value into struct")
 		return
 	}
 
 	begin = value.Value
-
-	p.Logger.Infof("Starting at ID %d", begin)
+	p.Logger.WithField("id", begin).WithField("method", "alliHunter").Info("starting...")
 
 	for x := begin; x <= 99999999; x++ {
-		msg := fmt.Sprintf("Errors: %d Remaining: %d ID: %d", p.ESI.Remain, p.ESI.Reset, x)
-		p.Logger.CriticalF("%s", msg)
+
+		p.Logger.WithFields(logrus.Fields{
+			"errors":    p.ESI.Remain,
+			"remaining": p.ESI.Reset,
+			"loop":      x,
+		}).Info()
+
 		attempts := 0
 		for {
 			if attempts >= 2 {
-				// Overriding Sleep to be more appropriate for how often alliances are created
 				sleep := 60
-				msg := fmt.Sprintf("Head Requests to %d failed. Sleep for %d minutes before trying again", x, sleep)
-				p.Logger.Errorf("%s", msg)
-				// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-				// p.DGO.ChannelMessageSend("394991263344230411", msg)
+
+				p.Logger.WithFields(logrus.Fields{
+					"sleep":    sleep,
+					"attempts": attempts,
+				}).Error("head requests failed. sleeping...")
 
 				time.Sleep(time.Minute * time.Duration(sleep))
 				attempts = 0
 			}
-			p.Logger.DebugF("Checking for validity of %d", x)
+
+			p.Logger.WithField("id", x).Debug("head request for id")
 			response, err := p.ESI.HeadAlliancesAllianceID(uint(x))
 			if err != nil {
-				p.Logger.ErrorF(err.Error())
-				time.Sleep(time.Second * 5)
+				p.Logger.WithError(err).WithField("sleep", sleep).WithField("attempts", attempts).Error("head request returned error. sleeping...")
+				time.Sleep(time.Second * time.Duration(sleep))
 				attempts = 3
 				continue
 			}
 
 			if response.Code >= 500 {
-				time.Sleep(time.Second * 5)
+				p.Logger.WithError(err).WithField("sleep", sleep).WithField("attempts", attempts).Error("head request returned error. sleeping...")
 				attempts++
+				time.Sleep(time.Second * time.Duration(sleep))
 				continue
 			}
 
-			alliance := Alliance{
-				model: monocle.Alliance{
+			alliance := &Alliance{
+				model: &monocle.Alliance{
 					ID: uint32(x),
 				},
 				exists: false,
@@ -92,60 +101,69 @@ func (p *Processor) alliHunter() {
 
 		value.Value = x
 
-		kv.Value, err = json.Marshal(value)
+		kv.V, err = json.Marshal(value)
 		if err != nil {
-			p.Logger.Criticalf("Unable to unmarshal value: %s", err)
+			p.Logger.WithError(err).WithField("value", value).Error("unable to marshal value")
 			return
 		}
 
-		_, err = p.DB.UpdateValueByKey(kv)
+		err = kv.Update(context.Background(), p.DB, boil.Infer())
 		if err != nil {
-			if err != sql.ErrNoRows {
-				p.Logger.Criticalf("Unable to query for ID: %s", err)
-				return
-			}
+			p.Logger.WithError(err).WithField("key", kv).Error("unable to update database record")
+			return
 		}
 
-		p.Logger.InfoF("Completed, sleep for %d seconds", sleep)
+		p.Logger.WithField("sleep", sleep).Info("loop complete. sleeping...")
 		time.Sleep(time.Second * time.Duration(sleep))
-
 	}
 
-	return
 }
 
 func (p *Processor) alliUpdater() {
 	sleep = 1800
 	for {
 		var alliances []monocle.Alliance
-
-		p.Logger.DebugF("Current Error Count: %d Remain: %d", p.ESI.Remain, p.ESI.Reset)
+		p.Logger.WithFields(logrus.Fields{
+			"errors":    p.ESI.Remain,
+			"remaining": p.ESI.Reset,
+		}).Debug()
 		if p.ESI.Remain < 20 {
-			p.Logger.Errorf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
+			p.Logger.WithFields(logrus.Fields{
+				"errors":    p.ESI.Remain,
+				"remaining": p.ESI.Reset,
+			}).Error("error count is low. sleeping...")
 			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 		}
 
-		err := boiler.Alliances(
+		query := boiler.Alliances(
 			qm.Where(boiler.AllianceColumns.Expires+"<NOW()"),
 			qm.And(boiler.AllianceColumns.Ignored+"=?", 0),
 			qm.And(boiler.AllianceColumns.Closed+"=?", 0),
 			qm.OrderBy(boiler.AllianceColumns.Expires),
 			qm.Limit(int(records*workers)),
-		).Bind(context.Background(), p.DB, &alliances)
+		)
+
+		stmt, args := queries.BuildQuery(query.Query)
+		fmt.Println(stmt)
+		fmt.Println(args...)
+
+		err := query.Bind(context.Background(), p.DB, &alliances)
 		if err != nil {
 			if err != sql.ErrNoRows {
-				p.Logger.Fatalf("Unable to query for alliances: %s", err)
+				p.Logger.WithError(err).Error("unable to query for alliances")
 			}
 			continue
 		}
 
 		if len(alliances) == 0 {
-			p.Logger.Infof("No alliances were queried. Sleeping for %d seconds", sleep)
-			time.Sleep(time.Second * time.Duration(sleep))
+			temp := sleep * 30
+			p.Logger.WithField("sleep", temp).Info("no alliances queried. sleeping...")
+			time.Sleep(time.Minute * time.Duration(temp))
+			p.Logger.Debug("continuing loop")
 			continue
 		}
 
-		p.Logger.Infof("Successfully Queried %d Corporations", len(alliances))
+		p.Logger.WithField("count", len(alliances)).Info("alliances query successful")
 
 		alliChunk := chunkAllianceSlice(int(records), alliances)
 
@@ -153,8 +171,8 @@ func (p *Processor) alliUpdater() {
 			wg.Add(1)
 			go func(alliances []monocle.Alliance) {
 				for _, model := range alliances {
-					alliance := Alliance{
-						model:  model,
+					alliance := &Alliance{
+						model:  &model,
 						exists: true,
 					}
 					p.processAlliance(alliance)
@@ -164,21 +182,23 @@ func (p *Processor) alliUpdater() {
 			}(alliances)
 		}
 
-		p.Logger.Info("Waiting")
+		p.Logger.Debug("waiting")
 		wg.Wait()
-		p.Logger.Info("Done")
+		sleep := time.Second * 1
+		p.Logger.WithField("sleep", sleep).Debug("done. sleeping...")
+		time.Sleep(sleep)
 	}
 }
 
-func (p *Processor) processAlliance(alliance Alliance) {
+func (p *Processor) processAlliance(alliance *Alliance) {
 	var response esi.Response
 	var err error
 
 	if p.ESI.Remain < 20 {
-		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
-		p.Logger.Errorf("\t%s", msg)
-		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-		// p.DGO.ChannelMessageSend("394991263344230411", msg)
+		p.Logger.WithFields(logrus.Fields{
+			"errors":    p.ESI.Remain,
+			"remaining": p.ESI.Reset,
+		}).Error("error count is low. sleeping...")
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
@@ -186,17 +206,17 @@ func (p *Processor) processAlliance(alliance Alliance) {
 		return
 	}
 
-	p.Logger.Debugf("\tProcessing Alliance %d", alliance.model.ID)
+	p.Logger.WithField("id", alliance.model.ID).Debug("processing alliance")
 
 	attempts := 0
 	for {
 		if attempts >= 3 {
-			p.Logger.Errorf("All Attempts exhuasted for Alliance %d", alliance.model.ID)
+			p.Logger.WithField("id", alliance.model.ID).Info("all attempts exhuasted for character")
 			return
 		}
 		response, err = p.ESI.GetAlliancesAllianceID(alliance.model)
 		if err != nil {
-			p.Logger.Errorf("Error completing request to ESI for Alliance %d information: %s", alliance.model.ID, err)
+			p.Logger.WithField("id", alliance.model.ID).WithError(err).Error("error completing esi request for alliance")
 			return
 		}
 
@@ -205,39 +225,49 @@ func (p *Processor) processAlliance(alliance Alliance) {
 		}
 
 		attempts++
-		p.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting %d request again in 1 second", response.Code, response.Path, attempts)
-		time.Sleep(1 * time.Second)
+		sleep := 1 * time.Second
+		p.Logger.WithFields(logrus.Fields{
+			"code":     response.Code,
+			"path":     response.Path,
+			"attempts": attempts,
+			"sleep":    sleep,
+		}).Info("received bad response code for request. sleeping for trying again...")
+		time.Sleep(sleep)
 	}
 
-	alliance.model = response.Data.(monocle.Alliance)
+	alliance.model = response.Data.(*monocle.Alliance)
 
-	p.Logger.Debugf("\tAlliance: %d:%s\tNew Alliance: %t", alliance.model.ID, alliance.model.Name, !alliance.exists)
+	p.Logger.WithFields(logrus.Fields{
+		"id":     alliance.model.ID,
+		"name":   alliance.model.Name,
+		"exists": alliance.exists,
+	}).Debug()
 
-	switch !alliance.exists {
+	switch alliance.exists {
 	case true:
-		_, err := p.DB.InsertAlliance(alliance.model)
+		err := p.DB.UpdateAllianceByID(alliance.model)
 		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to insert new character into database: %s", err)
+			p.Logger.WithError(err).WithField("id", alliance.model.ID).Error("update query failed for alliance")
 			return
 		}
 	case false:
-		_, err := p.DB.UpdateAllianceByID(alliance.model)
+		err := p.DB.InsertAlliance(alliance.model)
 		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to update character in database: %s", err)
+			p.Logger.WithError(err).WithField("id", alliance.model.ID).Error("insert query failed for alliance")
 			return
 		}
 	}
 }
 
-func (p *Processor) processAllianceCorporationMembers(alliance Alliance) {
+func (p *Processor) processAllianceCorporationMembers(alliance *Alliance) {
 	var response esi.Response
 	var err error
 
 	if p.ESI.Remain < 20 {
-		msg := fmt.Sprintf("Error Counter is Low, sleeping for %d seconds", p.ESI.Reset)
-		p.Logger.Errorf("\t%s", msg)
-		// msg = fmt.Sprintf("<@!277968564827324416> %s", msg)
-		// p.DGO.ChannelMessageSend("394991263344230411", msg)
+		p.Logger.WithFields(logrus.Fields{
+			"errors":    p.ESI.Remain,
+			"remaining": p.ESI.Reset,
+		}).Error("error count is low. sleeping...")
 		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
 	}
 
@@ -245,26 +275,38 @@ func (p *Processor) processAllianceCorporationMembers(alliance Alliance) {
 		return
 	}
 
-	var etagModel AllianceCorporationMembers
-	etagModel.exists = true
-	etagModel.model, err = p.DB.SelectEtagByIDAndResource(uint64(alliance.model.ID), "alliance_corporation_members")
-	if err != nil {
-		etagModel.model.ID = uint64(alliance.model.ID)
-		etagModel.model.Resource = "alliance_corporation_members"
-		etagModel.exists = false
+	var etag = &EtagResource{
+		exists: true,
 	}
 
-	p.Logger.Debugf("\tProcessing Alliance %d", alliance.model.ID)
+	err = boiler.Etags(
+		qm.Where("id = ?", uint64(alliance.model.ID)),
+		qm.And("resource = ?", "alliance_corporation_members"),
+	).Bind(context.Background(), p.DB, etag.model)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			p.Logger.
+				WithError(err).
+				WithFields(logrus.Fields{"id": alliance.model.ID, "resource": "alliance_corporation_members"}).
+				Error("etag query failed")
+			return
+		}
+		etag.model.ID = uint64(alliance.model.ID)
+		etag.model.Resource = "alliance_corporation_members"
+		etag.exists = false
+	}
+
+	p.Logger.WithField("id", etag.model.ID).Debug("process alliance corporation members")
 
 	attempts := 0
 	for {
 		if attempts >= 3 {
-			p.Logger.Errorf("All Attempts exhuasted for Alliance %d", alliance.model.ID)
+			p.Logger.WithFields(logrus.Fields{"id": etag.model.ID, "attempts": attempts}).Error("all attempts exhausted")
 			return
 		}
-		response, err = p.ESI.GetAlliancesAllianceIDCorporations(etagModel.model)
+		response, err = p.ESI.GetAlliancesAllianceIDCorporations(etag.model)
 		if err != nil {
-			p.Logger.Errorf("Error completing request to ESI for Alliance %d information: %s", alliance.model.ID, err)
+			p.Logger.WithField("id", etag.model.ID).WithError(err).Error("error completing esi request for alliance corporation members")
 			return
 		}
 
@@ -273,65 +315,82 @@ func (p *Processor) processAllianceCorporationMembers(alliance Alliance) {
 		}
 
 		attempts++
-		p.Logger.ErrorF("Bad Response Code %d received from ESI API for url %s, attempting %d request again in 1 second", response.Code, response.Path, attempts)
-		time.Sleep(1 * time.Second)
+		sleep := 1 * time.Second
+		p.Logger.WithFields(logrus.Fields{
+			"code":    response.Code,
+			"path":    response.Path,
+			"attempt": attempts,
+			"sleep":   sleep,
+		}).Error("request failed. attempting again after sleeping.")
+		time.Sleep(sleep)
 	}
 
 	data := response.Data.(map[string]interface{})
 	if _, ok := data["ids"]; !ok {
-		p.Logger.Error("Expected Key ids missing from response")
+		p.Logger.WithField("data", data).Error("expected key ids missing from response")
 		return
 	}
 
 	if _, ok := data["etag"]; !ok {
-		p.Logger.Error("Expected Key etag missing from response")
+		p.Logger.WithField("data", data).Error("expected key etag missing from response")
 		return
 	}
 
-	etagModel.model = data["etag"].(monocle.EtagResource)
+	etag.model = data["etag"].(*monocle.EtagResource)
 
-	switch !etagModel.exists {
+	switch etag.exists {
 	case true:
-		_, err := p.DB.InsertEtag(etagModel.model)
+		err := p.DB.UpdateEtagByIDAndResource(etag.model)
 		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to insert new character into database: %s", err)
+			p.Logger.WithError(err).
+				WithField("id", etag.model.ID).
+				WithField("resource", etag.model.Resource).
+				WithField("etag", etag.model.Etag).
+				Error("update query failed for etag resource")
 			return
 		}
 	case false:
-		_, err := p.DB.UpdateEtagByIDAndResource(etagModel.model)
+		err := p.DB.InsertEtag(etag.model)
 		if err != nil {
-			p.Logger.Errorf("Error Encountered attempting to update character in database: %s", err)
+			p.Logger.WithError(err).
+				WithField("id", etag.model.ID).
+				WithField("resource", etag.model.Resource).
+				WithField("etag", etag.model.Etag).
+				Error("insert query failed for etag resource")
 			return
 		}
 	}
 
 	ids := data["ids"].([]uint32)
 
-	idInterface := []interface{}{}
-	for _, corpId := range ids {
-		idInterface = append(idInterface, corpId)
-	}
-
-	corporations := make([]*monocle.Corporation, 0)
-
-	err = boiler.Corporations(
-		qm.WhereIn("id IN ?", idInterface...),
-	).Bind(context.Background(), p.DB, &corporations)
-	if err != nil {
-		return
-	}
-
 	member_count := 0
-	for _, corp := range corporations {
-		member_count += int(corp.MemberCount)
+	if len(ids) > 0 {
+		idInterface := []interface{}{}
+		for _, corpId := range ids {
+			idInterface = append(idInterface, corpId)
+		}
+
+		corporations := make([]*monocle.Corporation, 0)
+
+		err = boiler.Corporations(
+			qm.WhereIn("id IN ?", idInterface...),
+		).Bind(context.Background(), p.DB, &corporations)
+		if err != nil {
+			p.Logger.WithError(err).WithField("id", idInterface).Error("failed to query corporations for alliance")
+			return
+		}
+
+		for _, corp := range corporations {
+			member_count += int(corp.MemberCount)
+		}
 	}
 
 	alliance.model.MemberCount = uint32(member_count)
-	_, err = p.DB.UpdateAllianceByID(alliance.model)
+	alliance.model.UpdatedAt = time.Now()
+	err = p.DB.UpdateAllianceByID(alliance.model)
 	if err != nil {
-		p.Logger.Errorf("Unable to update member count from alliance %d", alliance.model.ID)
+		p.Logger.WithError(err).WithField("id", alliance.model.ID).Error("failed to update member count for alliance")
 		return
 	}
 
-	return
 }

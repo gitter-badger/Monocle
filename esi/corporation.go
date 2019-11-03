@@ -48,7 +48,7 @@ func (e *Client) HeadCorporationsCorporationID(id uint) (Response, error) {
 	return response, err
 }
 
-func (e *Client) GetCorporationsCorporationID(corporation monocle.Corporation) (Response, error) {
+func (e *Client) GetCorporationsCorporationID(corporation *monocle.Corporation) (Response, error) {
 
 	path := fmt.Sprintf("/v4/corporations/%d/", corporation.ID)
 
@@ -87,41 +87,34 @@ func (e *Client) GetCorporationsCorporationID(corporation monocle.Corporation) (
 
 		err := json.Unmarshal(response.Data.([]byte), &newCorp)
 		if err != nil {
-			err = errors.Wrap(err, "unable to unmarshel response body")
-			return response, err
+			return response, errors.Wrap(err, "unable to unmarshel response body")
 		}
+
 		newCorp.ID = corporation.ID
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
-		if err != nil {
-			err = errors.Wrap(err, "Error Encountered attempting to parse expires header")
-			return response, err
-		}
-		newCorp.Expires = expires
 
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		newCorp.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
-			return response, err
+			return response, errors.Wrap(err, "Error Encountered attempting to parse expires header")
 		}
-		newCorp.Etag = etag
 
-		corporation = newCorp
+		newCorp.Etag, err = RetrieveEtagHeaderFromResponse(response)
+		if err != nil {
+			return response, errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
+		}
+
+		corporation = &newCorp
 
 		break
 	case 304:
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		corporation.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrap(err, "Error Encountered attempting to parse expires header")
-			return response, err
+			return response, errors.Wrap(err, "Error Encountered attempting to parse expires header")
 		}
-		corporation.Expires = expires
 
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		corporation.Etag, err = RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
-			return response, err
+			return response, errors.Wrap(err, "Error Encountered attempting to retrieve etag header")
 		}
-		corporation.Etag = etag
 
 		break
 	case 503:
@@ -139,9 +132,9 @@ func (e *Client) GetCorporationsCorporationID(corporation monocle.Corporation) (
 
 }
 
-func (e *Client) GetCorporationsCorporationIDAllianceHistory(etagResource monocle.EtagResource) (Response, error) {
+func (e *Client) GetCorporationsCorporationIDAllianceHistory(etagResource *monocle.EtagResource) (Response, error) {
 
-	var history []monocle.CorporationAllianceHistory
+	var history []*monocle.CorporationAllianceHistory
 
 	path := fmt.Sprintf("/v2/corporations/%d/alliancehistory/", etagResource.ID)
 
@@ -177,35 +170,27 @@ func (e *Client) GetCorporationsCorporationIDAllianceHistory(etagResource monocl
 			return response, err
 		}
 
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
-			return response, err
+			return response, errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}
-		etagResource.Expires = expires
 
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		etagResource.Etag, err = RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
-			return response, err
+			return response, errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
 		}
-		etagResource.Etag = etag
 
 		break
 	case 304:
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
-			return response, err
+			return response, errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}
-		etagResource.Expires = expires
 
-		etag, err := RetrieveEtagHeaderFromResponse(response)
+		etagResource.Etag, err = RetrieveEtagHeaderFromResponse(response)
 		if err != nil {
-			err = errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
-			return response, err
+			return response, errors.Wrapf(err, "Error Encountered attempting to retrieve etag header for url %s: %s", response.Path, err)
 		}
-		etagResource.Etag = etag
 
 		break
 	case 500, 502, 503, 504:

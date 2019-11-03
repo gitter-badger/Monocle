@@ -5,196 +5,7 @@ import (
 	sb "github.com/huandu/go-sqlbuilder"
 )
 
-func (db *DB) SelectCorporations(page, perPage uint32) ([]monocle.Corporation, error) {
-
-	corporations := make([]monocle.Corporation, 0)
-
-	s := sb.NewSelectBuilder()
-	q := s.Select(
-		"id",
-		"name",
-		"ticker",
-		"member_count",
-		"ceo_id",
-		"alliance_id",
-		"date_founded",
-		"creator_id",
-		"home_station_id",
-		"tax_rate",
-		"war_eligible",
-		"ignored",
-		"closed",
-		"etag",
-		"expires",
-		"created_at",
-		"updated_at",
-	).From(
-		"monocle.corporations",
-	)
-
-	offset := (page * perPage) - perPage
-
-	q.Limit(int(perPage)).Offset(int(offset))
-
-	query, args := q.Build()
-
-	err := db.Select(&corporations, query, args...)
-	return corporations, err
-}
-
-func (db *DB) SelectCorporationByCorporationID(id uint32) (monocle.Corporation, error) {
-
-	var corporation monocle.Corporation
-
-	s := sb.NewSelectBuilder()
-	s.Select(
-		"id",
-		"name",
-		"ticker",
-		"member_count",
-		"ceo_id",
-		"alliance_id",
-		"date_founded",
-		"creator_id",
-		"home_station_id",
-		"tax_rate",
-		"war_eligible",
-		"ignored",
-		"closed",
-		"etag",
-		"expires",
-		"created_at",
-		"updated_at",
-	).From(
-		"monocle.corporations",
-	).Where(
-		s.E("id", id),
-	).Limit(1)
-
-	query, args := s.Build()
-
-	err := db.Get(&corporation, query, args...)
-	return corporation, err
-}
-
-func (db *DB) SelectIndependentCorps(page, perPage int) ([]monocle.Corporation, error) {
-	var corporations []monocle.Corporation
-
-	s := sb.NewSelectBuilder()
-	s.Select(
-		"id",
-		"name",
-		"ticker",
-		"member_count",
-		"ceo_id",
-		"alliance_id",
-		"date_founded",
-		"creator_id",
-		"home_station_id",
-		"tax_rate",
-		"war_eligible",
-		"ignored",
-		"closed",
-		"etag",
-		"expires",
-		"created_at",
-		"updated_at",
-	).From(
-		"monocle.corporations",
-	)
-
-	offset := (page * perPage) - perPage
-	s.Where(
-		s.E("closed", 0),
-		s.E("ignored", 0),
-		s.IsNull("alliance_id"),
-	).Limit(perPage).Offset(offset)
-
-	query, args := s.Build()
-
-	err := db.Select(&corporations, query, args...)
-	return corporations, err
-}
-
-func (db *DB) SelectCountOfExpiredCorporationEtags() (uint, error) {
-	var count uint
-
-	s := sb.NewSelectBuilder()
-	s.Select(
-		s.As("COUNT(*)", "count"),
-	).From(
-		"monocle.corporations",
-	)
-
-	s.Where(
-		s.LessThan("expires", sb.Raw("NOW()")),
-		s.E("ignored", 0),
-	)
-
-	query, args := s.Build()
-	err := db.Get(&count, query, args...)
-	return count, err
-}
-
-func (db *DB) SelectCountOfCorporationEtags() (uint, error) {
-	var count uint
-
-	s := sb.NewSelectBuilder()
-	s.Select(
-		s.As("COUNT(*)", "count"),
-	).From(
-		"monocle.corporations",
-	)
-
-	s.Where(
-		s.E("ignored", 0),
-	)
-
-	query, args := s.Build()
-	err := db.Get(&count, query, args...)
-	return count, err
-}
-
-func (db *DB) SelectExpiredCorporationEtags(page, perPage int) ([]monocle.Corporation, error) {
-
-	var corporations []monocle.Corporation
-
-	s := sb.NewSelectBuilder()
-	s.Select(
-		"id",
-		"name",
-		"ticker",
-		"member_count",
-		"ceo_id",
-		"alliance_id",
-		"date_founded",
-		"creator_id",
-		"home_station_id",
-		"tax_rate",
-		"war_eligible",
-		"ignored",
-		"closed",
-		"etag",
-		"expires",
-		"created_at",
-		"updated_at",
-	).From(
-		"monocle.corporations",
-	)
-
-	offset := (page * perPage) - perPage
-	s.Where(
-		s.LessThan("expires", sb.Raw("NOW()")),
-		s.E("ignored", 0),
-	).OrderBy("expires").Asc().Limit(perPage).Offset(offset)
-
-	query, args := s.Build()
-
-	err := db.Select(&corporations, query, args...)
-	return corporations, err
-}
-
-func (db *DB) InsertCorporation(corporation monocle.Corporation) (monocle.Corporation, error) {
+func (db *DB) InsertCorporation(corporation *monocle.Corporation) error {
 
 	i := sb.NewInsertBuilder()
 	i.ReplaceInto("monocle.corporations").Cols(
@@ -238,14 +49,11 @@ func (db *DB) InsertCorporation(corporation monocle.Corporation) (monocle.Corpor
 	query, args := i.Build()
 
 	_, err := db.Exec(query, args...)
-	if err != nil {
-		return corporation, err
-	}
 
-	return db.SelectCorporationByCorporationID(corporation.ID)
+	return err
 }
 
-func (db *DB) UpdateCorporationByID(corporation monocle.Corporation) (monocle.Corporation, error) {
+func (db *DB) UpdateCorporationByID(corporation *monocle.Corporation) error {
 	u := sb.NewUpdateBuilder()
 	u.Update("monocle.corporations").Set(
 		u.E("name", corporation.Name),
@@ -270,48 +78,11 @@ func (db *DB) UpdateCorporationByID(corporation monocle.Corporation) (monocle.Co
 	query, args := u.Build()
 
 	_, err := db.Exec(query, args...)
-	if err != nil {
-		return corporation, err
-	}
 
-	return db.SelectCorporationByCorporationID(corporation.ID)
-}
-
-func (db *DB) DeleteCorporationByID(id uint) error {
-	d := sb.NewDeleteBuilder()
-	d.DeleteFrom("monocle.corporations").Where(d.E("id", id))
-
-	query, args := d.Build()
-
-	_, err := db.Exec(query, args...)
 	return err
 }
 
-func (db *DB) SelectCorporationAllianceHistoryByID(id uint64) ([]monocle.CorporationAllianceHistory, error) {
-
-	history := make([]monocle.CorporationAllianceHistory, 0)
-
-	sb := sb.NewSelectBuilder()
-	q := sb.Select(
-		"id",
-		"record_id",
-		"alliance_id",
-		"start_date",
-		"created_at",
-		"updated_at",
-	).
-		From("monocle.corporation_alliance_history").
-		Where(
-			sb.E("id", id),
-		)
-
-	query, args := q.Build()
-
-	err := db.Select(&history, query, args...)
-	return history, err
-}
-
-func (db *DB) InsertCorporationAllianceHistory(id uint64, history []monocle.CorporationAllianceHistory) ([]monocle.CorporationAllianceHistory, error) {
+func (db *DB) InsertCorporationAllianceHistory(id uint64, history []*monocle.CorporationAllianceHistory) error {
 
 	ib := sb.NewInsertBuilder()
 	q := ib.InsertIgnoreInto("monocle.corporation_alliance_history").Cols(
@@ -336,10 +107,7 @@ func (db *DB) InsertCorporationAllianceHistory(id uint64, history []monocle.Corp
 	query, args := ib.Build()
 
 	_, err := db.Exec(query, args...)
-	if err != nil {
-		return history, err
-	}
 
-	return db.SelectCorporationAllianceHistoryByID(id)
+	return err
 
 }

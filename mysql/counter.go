@@ -5,7 +5,7 @@ import (
 	sb "github.com/huandu/go-sqlbuilder"
 )
 
-func (db *DB) InsertCounter(counter monocle.Counter) error {
+func (db *DB) InsertCounter(counter *monocle.Counter) error {
 
 	ib := sb.NewInsertBuilder()
 	q := ib.InsertIgnoreInto("monocle.counter").Cols(

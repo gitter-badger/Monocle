@@ -54,7 +54,7 @@ func New(port uint) (*Server, error) {
 			ReadTimeout:  30 * time.Second,
 			WriteTimeout: 30 * time.Second,
 		},
-		visitors: make(map[string]*visitor, 0),
+		visitors: make(map[string]*visitor),
 	}
 
 	x.server.Handler = x.RegisterRoutes()
@@ -85,7 +85,7 @@ func Serve(c *cli.Context) {
 		}
 	}()
 
-	stop := make(chan os.Signal)
+	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	<-stop
@@ -98,7 +98,8 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(Cors)
-	r.Use(s.RequestLogger)
+	r.Use(NewStructuredLogger(s.App.Logger))
+	// r.Use(s.RequestLogger)
 	r.Use(s.RateLimiter)
 
 	graphSchema := service.NewExecutableSchema(service.Config{

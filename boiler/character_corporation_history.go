@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -27,6 +28,7 @@ type CharacterCorporationHistory struct {
 	RecordID      uint      `db:"record_id" boil:"record_id" json:"record_id" toml:"record_id" yaml:"record_id"`
 	CorporationID uint      `db:"corporation_id" boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
 	StartDate     time.Time `db:"start_date" boil:"start_date" json:"start_date" toml:"start_date" yaml:"start_date"`
+	LeaveDate     null.Time `db:"leave_date" boil:"leave_date" json:"leave_date,omitempty" toml:"leave_date" yaml:"leave_date,omitempty"`
 	CreatedAt     time.Time `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt     time.Time `db:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -39,6 +41,7 @@ var CharacterCorporationHistoryColumns = struct {
 	RecordID      string
 	CorporationID string
 	StartDate     string
+	LeaveDate     string
 	CreatedAt     string
 	UpdatedAt     string
 }{
@@ -46,6 +49,7 @@ var CharacterCorporationHistoryColumns = struct {
 	RecordID:      "record_id",
 	CorporationID: "corporation_id",
 	StartDate:     "start_date",
+	LeaveDate:     "leave_date",
 	CreatedAt:     "created_at",
 	UpdatedAt:     "updated_at",
 }
@@ -57,6 +61,7 @@ var CharacterCorporationHistoryWhere = struct {
 	RecordID      whereHelperuint
 	CorporationID whereHelperuint
 	StartDate     whereHelpertime_Time
+	LeaveDate     whereHelpernull_Time
 	CreatedAt     whereHelpertime_Time
 	UpdatedAt     whereHelpertime_Time
 }{
@@ -64,6 +69,7 @@ var CharacterCorporationHistoryWhere = struct {
 	RecordID:      whereHelperuint{field: "`character_corporation_history`.`record_id`"},
 	CorporationID: whereHelperuint{field: "`character_corporation_history`.`corporation_id`"},
 	StartDate:     whereHelpertime_Time{field: "`character_corporation_history`.`start_date`"},
+	LeaveDate:     whereHelpernull_Time{field: "`character_corporation_history`.`leave_date`"},
 	CreatedAt:     whereHelpertime_Time{field: "`character_corporation_history`.`created_at`"},
 	UpdatedAt:     whereHelpertime_Time{field: "`character_corporation_history`.`updated_at`"},
 }
@@ -85,8 +91,8 @@ func (*characterCorporationHistoryR) NewStruct() *characterCorporationHistoryR {
 type characterCorporationHistoryL struct{}
 
 var (
-	characterCorporationHistoryAllColumns            = []string{"id", "record_id", "corporation_id", "start_date", "created_at", "updated_at"}
-	characterCorporationHistoryColumnsWithoutDefault = []string{"id", "record_id", "corporation_id", "start_date", "created_at", "updated_at"}
+	characterCorporationHistoryAllColumns            = []string{"id", "record_id", "corporation_id", "start_date", "leave_date", "created_at", "updated_at"}
+	characterCorporationHistoryColumnsWithoutDefault = []string{"id", "record_id", "corporation_id", "start_date", "leave_date", "created_at", "updated_at"}
 	characterCorporationHistoryColumnsWithDefault    = []string{}
 	characterCorporationHistoryPrimaryKeyColumns     = []string{"id", "record_id"}
 )

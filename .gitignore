@@ -4,3 +4,4 @@ sqlboiler.json
 env.json
 .env
 .vscode/settings.json
+core/logs/*.log

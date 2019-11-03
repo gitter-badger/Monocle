@@ -14,10 +14,12 @@ type DB struct {
 	*sqlx.DB
 }
 
+var err error
+
 func Connect() (*DB, error) {
 
 	var config monocle.Config
-	err := envconfig.Process("", &config)
+	err = envconfig.Process("", &config)
 	if err != nil {
 		log.Fatal("unable initialize environment variables")
 	}

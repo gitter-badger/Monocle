@@ -1,10 +1,20 @@
-package processor
+package tools
 
 import (
+	"fmt"
+
 	"github.com/ddouglas/monocle"
+	"github.com/volatiletech/sqlboiler/queries"
 )
 
-func charIdsFromSlice(characters []monocle.Character) []uint64 {
+func OutputDebugQuery(query *queries.Query) {
+
+	stmt, args := queries.BuildQuery(query)
+	fmt.Printf("\n\nQuery: %s\nArgs: %v\n\n", stmt, args)
+
+}
+
+func CharIdsFromSlice(characters []monocle.Character) []uint64 {
 
 	ids := []uint64{}
 
@@ -15,7 +25,18 @@ func charIdsFromSlice(characters []monocle.Character) []uint64 {
 	return ids
 }
 
-func characterSliceToMap(characters []monocle.Character) map[uint64]monocle.Character {
+func CharIDsFromCharMap(characters map[uint64]monocle.Character) []uint64 {
+
+	ids := []uint64{}
+	for id := range characters {
+		ids = append(ids, id)
+	}
+
+	return ids
+
+}
+
+func CharacterSliceToMap(characters []monocle.Character) map[uint64]monocle.Character {
 
 	chunk := make(map[uint64]monocle.Character)
 	for _, c := range characters {
@@ -25,7 +46,7 @@ func characterSliceToMap(characters []monocle.Character) map[uint64]monocle.Char
 	return chunk
 }
 
-func chunkCharacterSlice(size int, slice []monocle.Character) [][]monocle.Character {
+func ChunkCharacterSlice(size int, slice []monocle.Character) [][]monocle.Character {
 
 	var chunk [][]monocle.Character
 	chunk = make([][]monocle.Character, 0)
@@ -50,7 +71,7 @@ func chunkCharacterSlice(size int, slice []monocle.Character) [][]monocle.Charac
 	return chunk
 }
 
-func chunkCorporationSlice(size int, slice []monocle.Corporation) [][]monocle.Corporation {
+func ChunkCorporationSlice(size int, slice []monocle.Corporation) [][]monocle.Corporation {
 
 	var chunk [][]monocle.Corporation
 	chunk = make([][]monocle.Corporation, 0)
@@ -75,7 +96,7 @@ func chunkCorporationSlice(size int, slice []monocle.Corporation) [][]monocle.Co
 	return chunk
 }
 
-func chunkAllianceSlice(size int, slice []monocle.Alliance) [][]monocle.Alliance {
+func ChunkAllianceSlice(size int, slice []monocle.Alliance) [][]monocle.Alliance {
 
 	var chunk [][]monocle.Alliance
 	chunk = make([][]monocle.Alliance, 0)
