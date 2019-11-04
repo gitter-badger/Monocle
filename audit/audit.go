@@ -30,7 +30,7 @@ func Action(c *cli.Context) error {
 		log.Fatal(err)
 	}
 
-	a := Auditor{
+	a := &Auditor{
 		core,
 	}
 
@@ -45,7 +45,7 @@ func Action(c *cli.Context) error {
 
 	switch scope {
 	case "charUpdater":
-		a.charUpdater()
+		a.charUpdater(c)
 	default:
 		return cli.NewExitError(errors.New("scope not specified"), 1)
 	}

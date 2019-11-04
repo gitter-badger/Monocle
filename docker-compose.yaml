@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
     alliHunter:
-        image: devoverlord93/monocle
+        image: devoverlord93/monocle:${DOCKER_VERSION}
         network_mode: "host"
         restart: on-failure
         logging:
@@ -15,7 +15,7 @@ services:
         env_file:
             - .env-docker
     alliUpdater:
-        image: devoverlord93/monocle
+        image: devoverlord93/monocle:${DOCKER_VERSION}
         network_mode: "host"
         restart: on-failure
         logging:
@@ -28,7 +28,7 @@ services:
         env_file:
             - .env-docker
     charUpdater:
-        image: devoverlord93/monocle
+        image: devoverlord93/monocle:${DOCKER_VERSION}
         network_mode: "host"
         restart: on-failure
         logging:
@@ -41,7 +41,7 @@ services:
         env_file:
             - .env-docker
     charHunter:
-        image: devoverlord93/monocle
+        image: devoverlord93/monocle:${DOCKER_VERSION}
         network_mode: "host"
         restart: on-failure
         logging:
@@ -54,7 +54,7 @@ services:
         env_file:
             - .env-docker
     corpHunter:
-        image: devoverlord93/monocle
+        image: devoverlord93/monocle:${DOCKER_VERSION}
         network_mode: "host"
         restart: on-failure
         logging:
@@ -67,7 +67,7 @@ services:
         env_file:
             - .env-docker
     corpUpdater:
-        image: devoverlord93/monocle
+        image: devoverlord93/monocle:${DOCKER_VERSION}
         network_mode: "host"
         restart: on-failure
         logging:
@@ -80,7 +80,7 @@ services:
         env_file:
             - .env-docker
     cron:
-        image: devoverlord93/monocle
+        image: devoverlord93/monocle:${DOCKER_VERSION}
         network_mode: "host"
         restart: on-failure
         logging:
@@ -93,7 +93,7 @@ services:
         env_file:
             - .env-docker
     api:
-        image: devoverlord93/monocle
+        image: devoverlord93/monocle:${DOCKER_VERSION}
         network_mode: "host"
         restart: on-failure
         logging:

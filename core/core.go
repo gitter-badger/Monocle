@@ -58,10 +58,11 @@ func New(name string) (*App, error) {
 
 	logger.SetLevel(level)
 
-	// logger.SetFormatter(&logrus.JSONFormatter{})
-	logger.SetFormatter(&logrus.TextFormatter{
-		DisableColors: false,
-	})
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	// logger.SetFormatter(&logrus.TextFormatter{
+	// 	DisableColors: false,
+	// 	FullTimestamp: true,
+	// })
 
 	connection, err := mysql.Connect()
 	if err != nil {

@@ -10,28 +10,30 @@ import (
 	"github.com/ddouglas/monocle/tools"
 	"github.com/jinzhu/copier"
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
-func (a *Auditor) charUpdater() {
-	page := 1
+func (a *Auditor) charUpdater(c *cli.Context) {
+	page := c.Int("page")
+	end := c.Int("end")
 	limit := 50000
-	for {
+	for i := page; i <= end; i++ {
 		var characters []monocle.Character
-		offset := (page * limit) - limit
+		offset := (i * limit) - limit
 		a.Logger.WithFields(logrus.Fields{
-			"page":   page,
+			"page":   i,
 			"limit":  limit,
 			"offset": offset,
-		}).Debug("begin loop")
+		}).Info("begin loop")
 
 		query := boiler.Characters(
 			qm.Limit(limit),
 			qm.Offset(offset),
 		)
 
-		tools.OutputDebugQuery(query.Query)
+		// tools.OutputDebugQuery(query.Query)
 
 		err := query.Bind(context.Background(), a.DB, &characters)
 		if err != nil {
@@ -47,19 +49,16 @@ func (a *Auditor) charUpdater() {
 
 		a.Logger.WithField("count", len(characters)).Info("character query successful")
 
-		charChunk := tools.ChunkCharacterSlice(2500, characters)
+		charChunk := tools.ChunkCharacterSlice(1000, characters)
 
 		for _, characters := range charChunk {
 			wg.Add(1)
 			go a.processCharacterChunk(characters)
 		}
 
-		a.Logger.Debug("waiting")
+		a.Logger.Info("waiting")
 		wg.Wait()
-		sleep := time.Second * 1
-		a.Logger.WithField("sleep", sleep).Debug("done. sleeping...")
-		time.Sleep(sleep)
-		page = page + 1
+		a.Logger.Info("done")
 	}
 }
 
@@ -128,11 +127,9 @@ func (a *Auditor) processCharacterChunk(characters []monocle.Character) {
 				}).WithError(err).Error("Failed to copier history to boilHistory")
 				continue
 			}
-			time.Sleep(time.Millisecond * 100)
 		}
 		a.Logger.WithField("id", histories[0].ID).Debug("Done")
 		a.Logger.Debug("---------------")
-		time.Sleep(time.Millisecond * 200)
 		a.UpdateCharacter(histories[0].ID)
 	}
 

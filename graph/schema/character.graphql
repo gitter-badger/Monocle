@@ -4,9 +4,17 @@ type Query {
     charactersByAllianceID(allianceID: Int!, page: Int = 1): [Character]!
     charactersByCorporationID(corporationID: Int!, page: Int = 1): [Character]!
     charactersByBirthday(limit: Int! = 100, order: Sort = DESC): [Character]!
-    
-    characterCorporationHistoryByCorporationID(allianceID: Int!, limit: Int = 100): [CorporationHistory]
-    characterCorporationHistoryByAllianceID(allianceID: Int!, limit: Int = 100): [CorporationHistory]
+
+    characterCorporationHistoryByCorporationID(
+        corporationID: Int!
+        page: Int = 1
+        limit: Int
+    ): [CorporationHistory]
+    characterCorporationHistoryByAllianceID(
+        allianceID: Int!
+        page: Int = 1
+        limit: Int
+    ): [CorporationHistory]
 }
 
 type Character {
@@ -22,7 +30,6 @@ type Character {
     race_id: Int!
     corporation: Corporation!
     history: [CorporationHistory]!
-    joined: CorporationHistory
 }
 
 type CorporationHistory {

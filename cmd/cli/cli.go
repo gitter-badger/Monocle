@@ -8,6 +8,7 @@ import (
 	"github.com/ddouglas/monocle/cron"
 	"github.com/ddouglas/monocle/hack"
 	"github.com/ddouglas/monocle/processor"
+	"github.com/ddouglas/monocle/server"
 	"github.com/urfave/cli"
 )
 
@@ -31,6 +32,14 @@ var records = cli.IntFlag{
 }
 var begin = cli.IntFlag{
 	Name: "begin",
+}
+
+var page = cli.IntFlag{
+	Name: "page",
+}
+
+var end = cli.IntFlag{
+	Name: "end",
 }
 
 var done = cli.IntFlag{
@@ -80,19 +89,19 @@ func init() {
 			UsageText: "processes records within the database and populates the database with new records from the API",
 			Action:    audit.Action,
 			Flags: []cli.Flag{
-				scope, workers, records, sleep, begin, done,
+				scope, workers, records, sleep, begin, done, page, end,
 			},
 		},
-		// cli.Command{
-		// 	Name:      "api",
-		// 	Category:  "HTTP",
-		// 	Usage:     "api",
-		// 	UsageText: "Starts the API to serve HTTPS requests",
-		// 	Flags: []cli.Flag{
-		// 		port,
-		// 	},
-		// 	Action: server.Serve,
-		// },
+		cli.Command{
+			Name:      "api",
+			Category:  "HTTP",
+			Usage:     "api",
+			UsageText: "Starts the API to serve HTTPS requests",
+			Flags: []cli.Flag{
+				port,
+			},
+			Action: server.Serve,
+		},
 		cli.Command{
 			Name:      "cron",
 			Category:  "Scheduled",

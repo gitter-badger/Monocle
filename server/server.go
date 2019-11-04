@@ -40,7 +40,7 @@ type visitor struct {
 var mtx sync.Mutex
 
 func New(port uint) (*Server, error) {
-	core, err := core.New()
+	core, err := core.New("api")
 	if err != nil {
 		err = errors.Wrap(err, "Unable to create core application")
 
