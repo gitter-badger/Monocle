@@ -33,11 +33,6 @@ func (e *Client) HeadAlliancesAllianceID(id uint) (Response, error) {
 		return response, err
 	}
 
-	mx.Lock()
-	e.Reset = RetrieveErrorResetFromResponse(response)
-	e.Remain = RetrieveErrorCountFromResponse(response)
-	mx.Unlock()
-
 	switch response.Code {
 	case 200, 500, 502, 503, 504:
 
@@ -77,12 +72,6 @@ func (e *Client) GetAlliancesAllianceID(alliance *monocle.Alliance) (Response, e
 	if err != nil {
 		return response, err
 	}
-
-	mx.Lock()
-	e.Reset = RetrieveErrorResetFromResponse(response)
-	e.Remain = RetrieveErrorCountFromResponse(response)
-	mx.Unlock()
-
 	switch response.Code {
 	case 200:
 		var newAlliance monocle.Alliance
@@ -163,11 +152,6 @@ func (e *Client) GetAlliancesAllianceIDCorporations(etagResource *monocle.EtagRe
 	if err != nil {
 		return response, err
 	}
-
-	mx.Lock()
-	e.Reset = RetrieveErrorResetFromResponse(response)
-	e.Remain = RetrieveErrorCountFromResponse(response)
-	mx.Unlock()
 
 	switch response.Code {
 	case 200:

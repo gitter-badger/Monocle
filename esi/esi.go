@@ -119,6 +119,11 @@ func (e *Client) Request(request Request) (Response, error) {
 
 	response.Headers = headers
 
+	mx.Lock()
+	e.Reset = RetrieveErrorResetFromResponse(response)
+	e.Remain = RetrieveErrorCountFromResponse(response)
+	mx.Unlock()
+
 	return response, nil
 }
 

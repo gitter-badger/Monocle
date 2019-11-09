@@ -76,11 +76,6 @@ func (e *Client) GetCharactersCharacterID(character *monocle.Character) (Respons
 		return response, err
 	}
 
-	mx.Lock()
-	e.Reset = RetrieveErrorResetFromResponse(response)
-	e.Remain = RetrieveErrorCountFromResponse(response)
-	mx.Unlock()
-
 	switch response.Code {
 	case 200:
 		var newChar monocle.Character

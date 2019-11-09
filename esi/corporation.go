@@ -34,11 +34,6 @@ func (e *Client) HeadCorporationsCorporationID(id uint) (Response, error) {
 		return response, err
 	}
 
-	mx.Lock()
-	e.Reset = RetrieveErrorResetFromResponse(response)
-	e.Remain = RetrieveErrorCountFromResponse(response)
-	mx.Unlock()
-
 	switch response.Code {
 	case 200, 500, 502, 503, 504:
 		break
@@ -75,11 +70,6 @@ func (e *Client) GetCorporationsCorporationID(corporation *monocle.Corporation) 
 	if err != nil {
 		return response, err
 	}
-
-	mx.Lock()
-	e.Reset = RetrieveErrorResetFromResponse(response)
-	e.Remain = RetrieveErrorCountFromResponse(response)
-	mx.Unlock()
 
 	switch response.Code {
 	case 200:
