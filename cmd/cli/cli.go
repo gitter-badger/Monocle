@@ -56,14 +56,6 @@ var sleep = cli.IntFlag{
 	Usage: "The number of seconds the loop should sleep for",
 	Value: 5,
 }
-var expired = cli.BoolFlag{
-	Name:  "expired",
-	Usage: "Limit to query to just expired records or count all records in the database",
-}
-
-var save = cli.BoolFlag{
-	Name: "save",
-}
 
 func init() {
 
