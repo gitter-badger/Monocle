@@ -25,8 +25,5 @@ type Alliance struct {
 }
 
 func (a Alliance) IsExpired() bool {
-	if a.Expires.Before(time.Now()) {
-		return true
-	}
-	return false
+	return a.Expires.Before(time.Now())
 }

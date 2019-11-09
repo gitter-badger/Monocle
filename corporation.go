@@ -27,8 +27,5 @@ type Corporation struct {
 }
 
 func (c Corporation) IsExpired() bool {
-	if c.Expires.Before(time.Now()) {
-		return true
-	}
-	return false
+	return c.Expires.Before(time.Now())
 }

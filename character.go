@@ -26,8 +26,5 @@ type Character struct {
 }
 
 func (c Character) IsExpired() bool {
-	if c.Expires.Before(time.Now()) {
-		return true
-	}
-	return false
+	return c.Expires.Before(time.Now())
 }
