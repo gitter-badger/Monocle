@@ -9,6 +9,6 @@ type Config struct {
 	DBDsn             string `envconfig:"DB_DSN" required:"true"`
 	LogLevel          string `envconfig:"LOG_LEVEL" required:"true"`
 	EsiHost           string `envconfig:"ESI_HOST" required:"true"`
-	ApiUserAgent      string `db:"API_USER_AGENT" json:"API_USER_AGENT"`
+	ApiUserAgent      string `envconfig:"API_USER_AGENT" required:"true"`
 	DiscordToken      string `envconfig:"DISCORD_TOKEN" required:"true"`
 }
