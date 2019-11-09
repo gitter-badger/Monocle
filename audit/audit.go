@@ -14,13 +14,8 @@ type Auditor struct {
 }
 
 var (
-	workers uint64
-	records uint64
-	sleep   uint64
-	begin   uint64
-	done    uint64
-	scope   string
-	wg      sync.WaitGroup
+	scope string
+	wg    sync.WaitGroup
 )
 
 func Action(c *cli.Context) error {
@@ -30,22 +25,17 @@ func Action(c *cli.Context) error {
 		log.Fatal(err)
 	}
 
+	scope = c.String("scope")
+
 	a := &Auditor{
 		core,
 	}
 
-	scope = c.String("scope")
-	workers = c.Uint64("workers")
-	records = c.Uint64("records")
-	begin = c.Uint64("begin")
-	done = c.Uint64("done")
-	sleep = c.Uint64("sleep")
-
-	a.Logger.WithField("workers", workers).Info("starting auditor")
-
 	switch scope {
 	case "charUpdater":
 		a.charUpdater(c)
+	case "corpUpdater":
+		a.corpUpdater(c)
 	default:
 		return cli.NewExitError(errors.New("scope not specified"), 1)
 	}
