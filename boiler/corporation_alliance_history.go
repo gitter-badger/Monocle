@@ -28,6 +28,7 @@ type CorporationAllianceHistory struct {
 	RecordID   uint      `db:"record_id" boil:"record_id" json:"record_id" toml:"record_id" yaml:"record_id"`
 	AllianceID null.Uint `db:"alliance_id" boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
 	StartDate  time.Time `db:"start_date" boil:"start_date" json:"start_date" toml:"start_date" yaml:"start_date"`
+	LeaveDate  null.Time `db:"leave_date" boil:"leave_date" json:"leave_date,omitempty" toml:"leave_date" yaml:"leave_date,omitempty"`
 	CreatedAt  time.Time `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt  time.Time `db:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -40,6 +41,7 @@ var CorporationAllianceHistoryColumns = struct {
 	RecordID   string
 	AllianceID string
 	StartDate  string
+	LeaveDate  string
 	CreatedAt  string
 	UpdatedAt  string
 }{
@@ -47,6 +49,7 @@ var CorporationAllianceHistoryColumns = struct {
 	RecordID:   "record_id",
 	AllianceID: "alliance_id",
 	StartDate:  "start_date",
+	LeaveDate:  "leave_date",
 	CreatedAt:  "created_at",
 	UpdatedAt:  "updated_at",
 }
@@ -81,6 +84,7 @@ var CorporationAllianceHistoryWhere = struct {
 	RecordID   whereHelperuint
 	AllianceID whereHelpernull_Uint
 	StartDate  whereHelpertime_Time
+	LeaveDate  whereHelpernull_Time
 	CreatedAt  whereHelpertime_Time
 	UpdatedAt  whereHelpertime_Time
 }{
@@ -88,6 +92,7 @@ var CorporationAllianceHistoryWhere = struct {
 	RecordID:   whereHelperuint{field: "`corporation_alliance_history`.`record_id`"},
 	AllianceID: whereHelpernull_Uint{field: "`corporation_alliance_history`.`alliance_id`"},
 	StartDate:  whereHelpertime_Time{field: "`corporation_alliance_history`.`start_date`"},
+	LeaveDate:  whereHelpernull_Time{field: "`corporation_alliance_history`.`leave_date`"},
 	CreatedAt:  whereHelpertime_Time{field: "`corporation_alliance_history`.`created_at`"},
 	UpdatedAt:  whereHelpertime_Time{field: "`corporation_alliance_history`.`updated_at`"},
 }
@@ -109,8 +114,8 @@ func (*corporationAllianceHistoryR) NewStruct() *corporationAllianceHistoryR {
 type corporationAllianceHistoryL struct{}
 
 var (
-	corporationAllianceHistoryAllColumns            = []string{"id", "record_id", "alliance_id", "start_date", "created_at", "updated_at"}
-	corporationAllianceHistoryColumnsWithoutDefault = []string{"id", "record_id", "alliance_id", "start_date", "created_at", "updated_at"}
+	corporationAllianceHistoryAllColumns            = []string{"id", "record_id", "alliance_id", "start_date", "leave_date", "created_at", "updated_at"}
+	corporationAllianceHistoryColumnsWithoutDefault = []string{"id", "record_id", "alliance_id", "start_date", "leave_date", "created_at", "updated_at"}
 	corporationAllianceHistoryColumnsWithDefault    = []string{}
 	corporationAllianceHistoryPrimaryKeyColumns     = []string{"id", "record_id"}
 )
