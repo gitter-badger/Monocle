@@ -13,8 +13,5 @@ type EtagResource struct {
 }
 
 func (e EtagResource) IsExpired() bool {
-	if e.Expires.Before(time.Now()) {
-		return true
-	}
-	return false
+	return e.Expires.Before(time.Now())
 }
