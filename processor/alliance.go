@@ -4,13 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/ddouglas/monocle/boiler"
 	"github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/boil"
-	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
 	"github.com/ddouglas/monocle"
@@ -127,13 +125,9 @@ func (p *Processor) alliUpdater() {
 			"errors":    p.ESI.Remain,
 			"remaining": p.ESI.Reset,
 		}).Debug()
-		if p.ESI.Remain < 20 {
-			p.Logger.WithFields(logrus.Fields{
-				"errors":    p.ESI.Remain,
-				"remaining": p.ESI.Reset,
-			}).Error("error count is low. sleeping...")
-			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-		}
+
+		p.SleepDuringDowntime(time.Now())
+		p.EvaluateESIArtifacts()
 
 		query := boiler.Alliances(
 			qm.Where(boiler.AllianceColumns.Expires+"<NOW()"),
@@ -142,10 +136,6 @@ func (p *Processor) alliUpdater() {
 			qm.OrderBy(boiler.AllianceColumns.Expires),
 			qm.Limit(int(records*workers)),
 		)
-
-		stmt, args := queries.BuildQuery(query.Query)
-		fmt.Println(stmt)
-		fmt.Println(args...)
 
 		err := query.Bind(context.Background(), p.DB, &alliances)
 		if err != nil {
@@ -194,13 +184,8 @@ func (p *Processor) processAlliance(alliance *Alliance) {
 	var response esi.Response
 	var err error
 
-	if p.ESI.Remain < 20 {
-		p.Logger.WithFields(logrus.Fields{
-			"errors":    p.ESI.Remain,
-			"remaining": p.ESI.Reset,
-		}).Error("error count is low. sleeping...")
-		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-	}
+	p.SleepDuringDowntime(time.Now())
+	p.EvaluateESIArtifacts()
 
 	if !alliance.model.IsExpired() {
 		return
@@ -263,13 +248,8 @@ func (p *Processor) processAllianceCorporationMembers(alliance *Alliance) {
 	var response esi.Response
 	var err error
 
-	if p.ESI.Remain < 20 {
-		p.Logger.WithFields(logrus.Fields{
-			"errors":    p.ESI.Remain,
-			"remaining": p.ESI.Reset,
-		}).Error("error count is low. sleeping...")
-		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-	}
+	p.SleepDuringDowntime(time.Now())
+	p.EvaluateESIArtifacts()
 
 	if !alliance.model.IsExpired() {
 		return

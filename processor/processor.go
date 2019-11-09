@@ -3,10 +3,12 @@ package processor
 import (
 	"log"
 	"sync"
+	"time"
 
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/core"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -67,4 +69,29 @@ func Action(c *cli.Context) error {
 	}
 
 	return nil
+}
+
+func (p *Processor) EvaluateESIArtifacts() {
+
+	if p.ESI.Remain < 20 {
+		p.Logger.WithFields(logrus.Fields{
+			"errors":    p.ESI.Remain,
+			"remaining": p.ESI.Reset,
+		}).Error("error count is low. sleeping...")
+		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
+	}
+
+}
+
+func (p *Processor) SleepDuringDowntime(t time.Time) {
+
+	const lower = 39300 // 10:55 UTC 10h * 3600s + 55m * 60s
+	const upper = 42900 // 11:25 UTC 11h * 3600s + 25m * 60s
+
+	hm := (t.Hour() * 3600) + (t.Minute() * 60)
+
+	if hm >= lower && hm <= upper {
+		p.Logger.Info("Entering Sleep Phase for Downtime")
+		time.Sleep(time.Second * time.Duration(upper-hm))
+	}
 }

@@ -100,13 +100,8 @@ func (p *Processor) charHunter() {
 		}).Info("id is valid, starting loop")
 
 		for y := x; y <= end; y++ {
-			if p.ESI.Remain < 20 {
-				p.Logger.WithFields(logrus.Fields{
-					"errors": p.ESI.Remain,
-					"sleep":  p.ESI.Reset,
-				}).Error("error count is low. sleeping...")
-				time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-			}
+			p.SleepDuringDowntime(time.Now())
+			p.EvaluateESIArtifacts()
 			wg.Add(1)
 
 			character := monocle.Character{ID: uint64(y)}
@@ -150,13 +145,8 @@ func (p *Processor) charUpdater() {
 			"errors":    p.ESI.Remain,
 			"remaining": p.ESI.Reset,
 		}).Debug()
-		if p.ESI.Remain < 20 {
-			p.Logger.WithFields(logrus.Fields{
-				"errors":    p.ESI.Remain,
-				"remaining": p.ESI.Reset,
-			}).Error("error count is low. sleeping...")
-			time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-		}
+		p.SleepDuringDowntime(time.Now())
+		p.EvaluateESIArtifacts()
 		p.Logger.Info("starting loop...")
 
 		err := boiler.Characters(
@@ -204,13 +194,8 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 	var err error
 	defer wg.Done()
 
-	if p.ESI.Remain < 20 {
-		p.Logger.WithFields(logrus.Fields{
-			"errors":    p.ESI.Remain,
-			"remaining": p.ESI.Reset,
-		}).Error("error count is low. sleeping...")
-		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-	}
+	p.SleepDuringDowntime(time.Now())
+	p.EvaluateESIArtifacts()
 
 	charMap := characterSliceToMap(characters)
 	charIds := charIdsFromSlice(characters)
@@ -289,13 +274,8 @@ func (p *Processor) processCharacter(character *Character) {
 	var response esi.Response
 	var err error
 
-	if p.ESI.Remain < 20 {
-		p.Logger.WithFields(logrus.Fields{
-			"errors":    p.ESI.Remain,
-			"remaining": p.ESI.Reset,
-		}).Error("error count is low. sleeping...")
-		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-	}
+	p.SleepDuringDowntime(time.Now())
+	p.EvaluateESIArtifacts()
 
 	if !character.model.IsExpired() {
 		return
@@ -370,13 +350,8 @@ func (p *Processor) processCharacterCorpHistory(character *Character) {
 
 	var response esi.Response
 
-	if p.ESI.Remain < 20 {
-		p.Logger.WithFields(logrus.Fields{
-			"errors":    p.ESI.Remain,
-			"remaining": p.ESI.Reset,
-		}).Error("error count is low. sleeping...")
-		time.Sleep(time.Second * time.Duration(p.ESI.Reset))
-	}
+	p.SleepDuringDowntime(time.Now())
+	p.EvaluateESIArtifacts()
 
 	err = boiler.Etags(
 		qm.Where("id = ?", uint64(character.model.ID)),
@@ -596,12 +571,12 @@ func (p *Processor) processCharacterCorpHistory(character *Character) {
 
 }
 
-func (p *Processor) findUnknownCorps(historySlice boiler.CharacterCorporationHistorySlice) {
+func (p *Processor) findUnknownCorps(histories boiler.CharacterCorporationHistorySlice) {
 
 	unique := map[uint32]bool{}
 	list := []interface{}{}
 
-	for _, history := range historySlice {
+	for _, history := range histories {
 		if _, v := unique[uint32(history.CorporationID)]; !v {
 			unique[uint32(history.CorporationID)] = true
 			list = append(list, uint32(history.CorporationID))

@@ -96,6 +96,27 @@ func ChunkCorporationSlice(size int, slice []monocle.Corporation) [][]monocle.Co
 	return chunk
 }
 
+func CorpIDsFromCorpMap(corporations map[uint32]monocle.Corporation) []uint32 {
+
+	ids := []uint32{}
+	for id := range corporations {
+		ids = append(ids, id)
+	}
+
+	return ids
+
+}
+
+func CorporationSliceToMap(corporations []monocle.Corporation) map[uint32]monocle.Corporation {
+
+	chunk := make(map[uint32]monocle.Corporation)
+	for _, c := range corporations {
+		chunk[c.ID] = c
+	}
+
+	return chunk
+}
+
 func ChunkAllianceSlice(size int, slice []monocle.Alliance) [][]monocle.Alliance {
 
 	var chunk [][]monocle.Alliance

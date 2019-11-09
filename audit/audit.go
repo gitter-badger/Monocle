@@ -34,8 +34,8 @@ func Action(c *cli.Context) error {
 	switch scope {
 	case "charUpdater":
 		a.charUpdater(c)
-	case "corpUpdater":
-		a.corpUpdater(c)
+	// case "corpUpdater":
+	// 	a.corpUpdater(c)
 	default:
 		return cli.NewExitError(errors.New("scope not specified"), 1)
 	}
