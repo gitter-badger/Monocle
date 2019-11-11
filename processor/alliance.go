@@ -88,7 +88,7 @@ func (p *Processor) alliHunter() {
 
 			alliance := &Alliance{
 				model: &monocle.Alliance{
-					ID: uint32(x),
+					ID: uint(x),
 				},
 				exists: false,
 			}
@@ -365,7 +365,7 @@ func (p *Processor) processAllianceCorporationMembers(alliance *Alliance) {
 		}
 	}
 
-	alliance.model.MemberCount = uint32(member_count)
+	alliance.model.MemberCount = uint(member_count)
 	alliance.model.UpdatedAt = time.Now()
 	err = p.DB.UpdateAllianceByID(alliance.model)
 	if err != nil {

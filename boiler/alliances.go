@@ -24,7 +24,7 @@ import (
 
 // Alliance is an object representing the database table.
 type Alliance struct {
-	ID                    uint64    `db:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
+	ID                    uint      `db:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
 	Name                  string    `db:"name" boil:"name" json:"name" toml:"name" yaml:"name"`
 	Ticker                string    `db:"ticker" boil:"ticker" json:"ticker" toml:"ticker" yaml:"ticker"`
 	CreatorCorporationID  uint      `db:"creator_corporation_id" boil:"creator_corporation_id" json:"creator_corporation_id" toml:"creator_corporation_id" yaml:"creator_corporation_id"`
@@ -32,8 +32,8 @@ type Alliance struct {
 	DateFounded           null.Time `db:"date_founded" boil:"date_founded" json:"date_founded,omitempty" toml:"date_founded" yaml:"date_founded,omitempty"`
 	ExecutorCorporationID uint      `db:"executor_corporation_id" boil:"executor_corporation_id" json:"executor_corporation_id" toml:"executor_corporation_id" yaml:"executor_corporation_id"`
 	MemberCount           uint      `db:"member_count" boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
-	Ignored               int8      `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
-	Closed                int8      `db:"closed" boil:"closed" json:"closed" toml:"closed" yaml:"closed"`
+	Ignored               bool      `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
+	Closed                bool      `db:"closed" boil:"closed" json:"closed" toml:"closed" yaml:"closed"`
 	Etag                  string    `db:"etag" boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
 	Expires               time.Time `db:"expires" boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
 	CreatedAt             time.Time `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
@@ -77,14 +77,14 @@ var AllianceColumns = struct {
 
 // Generated where
 
-type whereHelperuint64 struct{ field string }
+type whereHelperuint struct{ field string }
 
-func (w whereHelperuint64) EQ(x uint64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperuint64) NEQ(x uint64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperuint64) LT(x uint64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperuint64) LTE(x uint64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperuint64) GT(x uint64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperuint64) GTE(x uint64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperuint) EQ(x uint) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperuint) NEQ(x uint) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperuint) LT(x uint) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperuint) LTE(x uint) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperuint) GT(x uint) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperuint) GTE(x uint) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
 type whereHelperstring struct{ field string }
 
@@ -102,14 +102,14 @@ func (w whereHelperstring) IN(slice []string) qm.QueryMod {
 	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
 }
 
-type whereHelperuint struct{ field string }
+type whereHelperuint64 struct{ field string }
 
-func (w whereHelperuint) EQ(x uint) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperuint) NEQ(x uint) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperuint) LT(x uint) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperuint) LTE(x uint) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperuint) GT(x uint) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperuint) GTE(x uint) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperuint64) EQ(x uint64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperuint64) NEQ(x uint64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperuint64) LT(x uint64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperuint64) LTE(x uint64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperuint64) GT(x uint64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperuint64) GTE(x uint64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
 type whereHelpernull_Time struct{ field string }
 
@@ -134,14 +134,14 @@ func (w whereHelpernull_Time) GTE(x null.Time) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
 
-type whereHelperint8 struct{ field string }
+type whereHelperbool struct{ field string }
 
-func (w whereHelperint8) EQ(x int8) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperint8) NEQ(x int8) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperint8) LT(x int8) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperint8) LTE(x int8) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperint8) GT(x int8) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperint8) GTE(x int8) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
 type whereHelpertime_Time struct{ field string }
 
@@ -165,7 +165,7 @@ func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
 }
 
 var AllianceWhere = struct {
-	ID                    whereHelperuint64
+	ID                    whereHelperuint
 	Name                  whereHelperstring
 	Ticker                whereHelperstring
 	CreatorCorporationID  whereHelperuint
@@ -173,14 +173,14 @@ var AllianceWhere = struct {
 	DateFounded           whereHelpernull_Time
 	ExecutorCorporationID whereHelperuint
 	MemberCount           whereHelperuint
-	Ignored               whereHelperint8
-	Closed                whereHelperint8
+	Ignored               whereHelperbool
+	Closed                whereHelperbool
 	Etag                  whereHelperstring
 	Expires               whereHelpertime_Time
 	CreatedAt             whereHelpertime_Time
 	UpdatedAt             whereHelpertime_Time
 }{
-	ID:                    whereHelperuint64{field: "`alliances`.`id`"},
+	ID:                    whereHelperuint{field: "`alliances`.`id`"},
 	Name:                  whereHelperstring{field: "`alliances`.`name`"},
 	Ticker:                whereHelperstring{field: "`alliances`.`ticker`"},
 	CreatorCorporationID:  whereHelperuint{field: "`alliances`.`creator_corporation_id`"},
@@ -188,8 +188,8 @@ var AllianceWhere = struct {
 	DateFounded:           whereHelpernull_Time{field: "`alliances`.`date_founded`"},
 	ExecutorCorporationID: whereHelperuint{field: "`alliances`.`executor_corporation_id`"},
 	MemberCount:           whereHelperuint{field: "`alliances`.`member_count`"},
-	Ignored:               whereHelperint8{field: "`alliances`.`ignored`"},
-	Closed:                whereHelperint8{field: "`alliances`.`closed`"},
+	Ignored:               whereHelperbool{field: "`alliances`.`ignored`"},
+	Closed:                whereHelperbool{field: "`alliances`.`closed`"},
 	Etag:                  whereHelperstring{field: "`alliances`.`etag`"},
 	Expires:               whereHelpertime_Time{field: "`alliances`.`expires`"},
 	CreatedAt:             whereHelpertime_Time{field: "`alliances`.`created_at`"},
@@ -250,6 +250,11 @@ var (
 	_ = qmhelper.Where
 )
 
+// OneG returns a single alliance record from the query using the global executor.
+func (q allianceQuery) OneG(ctx context.Context) (*Alliance, error) {
+	return q.One(ctx, boil.GetContextDB())
+}
+
 // One returns a single alliance record from the query.
 func (q allianceQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Alliance, error) {
 	o := &Alliance{}
@@ -267,6 +272,11 @@ func (q allianceQuery) One(ctx context.Context, exec boil.ContextExecutor) (*All
 	return o, nil
 }
 
+// AllG returns all Alliance records from the query using the global executor.
+func (q allianceQuery) AllG(ctx context.Context) (AllianceSlice, error) {
+	return q.All(ctx, boil.GetContextDB())
+}
+
 // All returns all Alliance records from the query.
 func (q allianceQuery) All(ctx context.Context, exec boil.ContextExecutor) (AllianceSlice, error) {
 	var o []*Alliance
@@ -277,6 +287,11 @@ func (q allianceQuery) All(ctx context.Context, exec boil.ContextExecutor) (Alli
 	}
 
 	return o, nil
+}
+
+// CountG returns the count of all Alliance records in the query, and panics on error.
+func (q allianceQuery) CountG(ctx context.Context) (int64, error) {
+	return q.Count(ctx, boil.GetContextDB())
 }
 
 // Count returns the count of all Alliance records in the query.
@@ -292,6 +307,11 @@ func (q allianceQuery) Count(ctx context.Context, exec boil.ContextExecutor) (in
 	}
 
 	return count, nil
+}
+
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q allianceQuery) ExistsG(ctx context.Context) (bool, error) {
+	return q.Exists(ctx, boil.GetContextDB())
 }
 
 // Exists checks if the row exists in the table.
@@ -316,9 +336,14 @@ func Alliances(mods ...qm.QueryMod) allianceQuery {
 	return allianceQuery{NewQuery(mods...)}
 }
 
+// FindAllianceG retrieves a single record by ID.
+func FindAllianceG(ctx context.Context, iD uint, selectCols ...string) (*Alliance, error) {
+	return FindAlliance(ctx, boil.GetContextDB(), iD, selectCols...)
+}
+
 // FindAlliance retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindAlliance(ctx context.Context, exec boil.ContextExecutor, iD uint64, selectCols ...string) (*Alliance, error) {
+func FindAlliance(ctx context.Context, exec boil.ContextExecutor, iD uint, selectCols ...string) (*Alliance, error) {
 	allianceObj := &Alliance{}
 
 	sel := "*"
@@ -340,6 +365,11 @@ func FindAlliance(ctx context.Context, exec boil.ContextExecutor, iD uint64, sel
 	}
 
 	return allianceObj, nil
+}
+
+// InsertG a single record. See Insert for whitelist behavior description.
+func (o *Alliance) InsertG(ctx context.Context, columns boil.Columns) error {
+	return o.Insert(ctx, boil.GetContextDB(), columns)
 }
 
 // Insert a single record using an executor.
@@ -443,6 +473,12 @@ CacheNoHooks:
 	return nil
 }
 
+// UpdateG a single Alliance record using the global executor.
+// See Update for more documentation.
+func (o *Alliance) UpdateG(ctx context.Context, columns boil.Columns) error {
+	return o.Update(ctx, boil.GetContextDB(), columns)
+}
+
 // Update uses an executor to update the Alliance.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
@@ -503,6 +539,11 @@ func (o *Alliance) Update(ctx context.Context, exec boil.ContextExecutor, column
 	return nil
 }
 
+// UpdateAllG updates all rows with the specified column values.
+func (q allianceQuery) UpdateAllG(ctx context.Context, cols M) error {
+	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
+}
+
 // UpdateAll updates all rows with the specified column values.
 func (q allianceQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
@@ -513,6 +554,11 @@ func (q allianceQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor,
 	}
 
 	return nil
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (o AllianceSlice) UpdateAllG(ctx context.Context, cols M) error {
+	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
@@ -557,6 +603,11 @@ func (o AllianceSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor,
 	}
 
 	return nil
+}
+
+// UpsertG attempts an insert, and does an update or ignore on conflict.
+func (o *Alliance) UpsertG(ctx context.Context, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(ctx, boil.GetContextDB(), updateColumns, insertColumns)
 }
 
 var mySQLAllianceUniqueColumns = []string{
@@ -700,6 +751,12 @@ CacheNoHooks:
 	return nil
 }
 
+// DeleteG deletes a single Alliance record.
+// DeleteG will match against the primary key column to find the record to delete.
+func (o *Alliance) DeleteG(ctx context.Context) error {
+	return o.Delete(ctx, boil.GetContextDB())
+}
+
 // Delete deletes a single Alliance record with an executor.
 // Delete will match against the primary key column to find the record to delete.
 func (o *Alliance) Delete(ctx context.Context, exec boil.ContextExecutor) error {
@@ -739,6 +796,11 @@ func (q allianceQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor)
 	return nil
 }
 
+// DeleteAllG deletes all rows in the slice.
+func (o AllianceSlice) DeleteAllG(ctx context.Context) error {
+	return o.DeleteAll(ctx, boil.GetContextDB())
+}
+
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o AllianceSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
@@ -767,6 +829,15 @@ func (o AllianceSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor)
 	return nil
 }
 
+// ReloadG refetches the object from the database using the primary keys.
+func (o *Alliance) ReloadG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: no Alliance provided for reload")
+	}
+
+	return o.Reload(ctx, boil.GetContextDB())
+}
+
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Alliance) Reload(ctx context.Context, exec boil.ContextExecutor) error {
@@ -777,6 +848,16 @@ func (o *Alliance) Reload(ctx context.Context, exec boil.ContextExecutor) error 
 
 	*o = *ret
 	return nil
+}
+
+// ReloadAllG refetches every row with matching primary key column values
+// and overwrites the original object slice with the newly updated slice.
+func (o *AllianceSlice) ReloadAllG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: empty AllianceSlice provided for reload all")
+	}
+
+	return o.ReloadAll(ctx, boil.GetContextDB())
 }
 
 // ReloadAll refetches every row with matching primary key column values
@@ -808,8 +889,13 @@ func (o *AllianceSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor
 	return nil
 }
 
+// AllianceExistsG checks if the Alliance row exists.
+func AllianceExistsG(ctx context.Context, iD uint) (bool, error) {
+	return AllianceExists(ctx, boil.GetContextDB(), iD)
+}
+
 // AllianceExists checks if the Alliance row exists.
-func AllianceExists(ctx context.Context, exec boil.ContextExecutor, iD uint64) (bool, error) {
+func AllianceExists(ctx context.Context, exec boil.ContextExecutor, iD uint) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from `alliances` where `id`=? limit 1)"
 

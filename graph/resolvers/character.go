@@ -90,7 +90,7 @@ func (r *queryResolver) CharactersByCorporationID(ctx context.Context, corporati
 	return characters, err
 }
 
-func (r *queryResolver) CharacterCorporationHistoryByAllianceID(ctx context.Context, allianceID int, page *int, limit *int) ([]*monocle.CharacterCorporationHistory, error) {
+func (r *queryResolver) CharacterCorporationHistoryByAllianceID(ctx context.Context, allianceID int, page *int, limit *int, sort *models.Sort) ([]*monocle.CharacterCorporationHistory, error) {
 	histories := make([]*monocle.CharacterCorporationHistory, 0)
 
 	if limit == nil || *limit > 50 {
@@ -127,14 +127,14 @@ func (r *queryResolver) CharacterCorporationHistoryByAllianceID(ctx context.Cont
 		qm.And(fmt.Sprintf("%s.%s IS NULL", boiler.TableNames.CharacterCorporationHistory, "leave_date")),
 		qm.Limit(*limit),
 		qm.Offset(offset),
-		qm.OrderBy("record_id DESC"),
+		qm.OrderBy(fmt.Sprintf("record_id %s", sort.String())),
 	).Bind(ctx, r.DB, &histories)
 
 	return histories, err
 
 }
 
-func (r *queryResolver) CharacterCorporationHistoryByCorporationID(ctx context.Context, corporationID int, page *int, limit *int) ([]*monocle.CharacterCorporationHistory, error) {
+func (r *queryResolver) CharacterCorporationHistoryByCorporationID(ctx context.Context, corporationID int, page *int, limit *int, sort *models.Sort) ([]*monocle.CharacterCorporationHistory, error) {
 	histories := make([]*monocle.CharacterCorporationHistory, 0)
 
 	if limit == nil || *limit > 50 {
@@ -160,7 +160,7 @@ func (r *queryResolver) CharacterCorporationHistoryByCorporationID(ctx context.C
 		qm.And("leave_date IS NULL"),
 		qm.Limit(*limit),
 		qm.Offset(offset),
-		qm.OrderBy("record_id DESC"),
+		qm.OrderBy(fmt.Sprintf("record_id %s", sort.String())),
 	).Bind(ctx, r.DB, &histories)
 
 	return histories, err

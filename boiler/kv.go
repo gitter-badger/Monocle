@@ -134,6 +134,11 @@ var (
 	_ = qmhelper.Where
 )
 
+// OneG returns a single kv record from the query using the global executor.
+func (q kvQuery) OneG(ctx context.Context) (*KV, error) {
+	return q.One(ctx, boil.GetContextDB())
+}
+
 // One returns a single kv record from the query.
 func (q kvQuery) One(ctx context.Context, exec boil.ContextExecutor) (*KV, error) {
 	o := &KV{}
@@ -151,6 +156,11 @@ func (q kvQuery) One(ctx context.Context, exec boil.ContextExecutor) (*KV, error
 	return o, nil
 }
 
+// AllG returns all KV records from the query using the global executor.
+func (q kvQuery) AllG(ctx context.Context) (KVSlice, error) {
+	return q.All(ctx, boil.GetContextDB())
+}
+
 // All returns all KV records from the query.
 func (q kvQuery) All(ctx context.Context, exec boil.ContextExecutor) (KVSlice, error) {
 	var o []*KV
@@ -161,6 +171,11 @@ func (q kvQuery) All(ctx context.Context, exec boil.ContextExecutor) (KVSlice, e
 	}
 
 	return o, nil
+}
+
+// CountG returns the count of all KV records in the query, and panics on error.
+func (q kvQuery) CountG(ctx context.Context) (int64, error) {
+	return q.Count(ctx, boil.GetContextDB())
 }
 
 // Count returns the count of all KV records in the query.
@@ -176,6 +191,11 @@ func (q kvQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64, e
 	}
 
 	return count, nil
+}
+
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q kvQuery) ExistsG(ctx context.Context) (bool, error) {
+	return q.Exists(ctx, boil.GetContextDB())
 }
 
 // Exists checks if the row exists in the table.
@@ -198,6 +218,11 @@ func (q kvQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, e
 func KVS(mods ...qm.QueryMod) kvQuery {
 	mods = append(mods, qm.From("`kv`"))
 	return kvQuery{NewQuery(mods...)}
+}
+
+// FindKVG retrieves a single record by ID.
+func FindKVG(ctx context.Context, k string, selectCols ...string) (*KV, error) {
+	return FindKV(ctx, boil.GetContextDB(), k, selectCols...)
 }
 
 // FindKV retrieves a single record by ID with an executor.
@@ -224,6 +249,11 @@ func FindKV(ctx context.Context, exec boil.ContextExecutor, k string, selectCols
 	}
 
 	return kvObj, nil
+}
+
+// InsertG a single record. See Insert for whitelist behavior description.
+func (o *KV) InsertG(ctx context.Context, columns boil.Columns) error {
+	return o.Insert(ctx, boil.GetContextDB(), columns)
 }
 
 // Insert a single record using an executor.
@@ -327,6 +357,12 @@ CacheNoHooks:
 	return nil
 }
 
+// UpdateG a single KV record using the global executor.
+// See Update for more documentation.
+func (o *KV) UpdateG(ctx context.Context, columns boil.Columns) error {
+	return o.Update(ctx, boil.GetContextDB(), columns)
+}
+
 // Update uses an executor to update the KV.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
@@ -387,6 +423,11 @@ func (o *KV) Update(ctx context.Context, exec boil.ContextExecutor, columns boil
 	return nil
 }
 
+// UpdateAllG updates all rows with the specified column values.
+func (q kvQuery) UpdateAllG(ctx context.Context, cols M) error {
+	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
+}
+
 // UpdateAll updates all rows with the specified column values.
 func (q kvQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
@@ -397,6 +438,11 @@ func (q kvQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols 
 	}
 
 	return nil
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (o KVSlice) UpdateAllG(ctx context.Context, cols M) error {
+	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
@@ -441,6 +487,11 @@ func (o KVSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols 
 	}
 
 	return nil
+}
+
+// UpsertG attempts an insert, and does an update or ignore on conflict.
+func (o *KV) UpsertG(ctx context.Context, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(ctx, boil.GetContextDB(), updateColumns, insertColumns)
 }
 
 var mySQLKVUniqueColumns = []string{
@@ -584,6 +635,12 @@ CacheNoHooks:
 	return nil
 }
 
+// DeleteG deletes a single KV record.
+// DeleteG will match against the primary key column to find the record to delete.
+func (o *KV) DeleteG(ctx context.Context) error {
+	return o.Delete(ctx, boil.GetContextDB())
+}
+
 // Delete deletes a single KV record with an executor.
 // Delete will match against the primary key column to find the record to delete.
 func (o *KV) Delete(ctx context.Context, exec boil.ContextExecutor) error {
@@ -623,6 +680,11 @@ func (q kvQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error
 	return nil
 }
 
+// DeleteAllG deletes all rows in the slice.
+func (o KVSlice) DeleteAllG(ctx context.Context) error {
+	return o.DeleteAll(ctx, boil.GetContextDB())
+}
+
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o KVSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
@@ -651,6 +713,15 @@ func (o KVSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error
 	return nil
 }
 
+// ReloadG refetches the object from the database using the primary keys.
+func (o *KV) ReloadG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: no KV provided for reload")
+	}
+
+	return o.Reload(ctx, boil.GetContextDB())
+}
+
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *KV) Reload(ctx context.Context, exec boil.ContextExecutor) error {
@@ -661,6 +732,16 @@ func (o *KV) Reload(ctx context.Context, exec boil.ContextExecutor) error {
 
 	*o = *ret
 	return nil
+}
+
+// ReloadAllG refetches every row with matching primary key column values
+// and overwrites the original object slice with the newly updated slice.
+func (o *KVSlice) ReloadAllG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: empty KVSlice provided for reload all")
+	}
+
+	return o.ReloadAll(ctx, boil.GetContextDB())
 }
 
 // ReloadAll refetches every row with matching primary key column values
@@ -690,6 +771,11 @@ func (o *KVSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) erro
 	*o = slice
 
 	return nil
+}
+
+// KVExistsG checks if the KV row exists.
+func KVExistsG(ctx context.Context, k string) (bool, error) {
+	return KVExists(ctx, boil.GetContextDB(), k)
 }
 
 // KVExists checks if the KV row exists.

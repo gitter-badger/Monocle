@@ -239,8 +239,8 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 
 		switch {
 		case affiliation.CorporationID != selected.CorporationID,
-			affiliation.AllianceID.Uint32 != selected.AllianceID.Uint32,
-			affiliation.FactionID.Uint32 != selected.FactionID.Uint32:
+			affiliation.AllianceID.Uint != selected.AllianceID.Uint,
+			affiliation.FactionID.Uint != selected.FactionID.Uint:
 			updated = append(updated, selected)
 		default:
 			stale = append(stale, selected.ID)
@@ -368,7 +368,7 @@ func (p *Processor) processCharacterCorpHistory(character *Character) {
 
 		etag.model.ID = character.model.ID
 		etag.model.Resource = "character_corporation_history"
-		etag.model.Exists = false
+		etag.exists = false
 	}
 
 	p.Logger.WithField("id", character.model.ID).Debug("processing char corp history")
@@ -536,6 +536,7 @@ func (p *Processor) processCharacterCorpHistory(character *Character) {
 		}
 
 		selected := existing[index]
+		selected.ID = character.model.ID
 
 		if selected.LeaveDate.Valid {
 			continue
@@ -548,7 +549,6 @@ func (p *Processor) processCharacterCorpHistory(character *Character) {
 		}
 
 		if insert {
-			selected.ID = character.model.ID
 			err = selected.Insert(context.Background(), p.DB, boil.Infer())
 			if err != nil {
 				p.Logger.WithError(err).WithFields(logrus.Fields{

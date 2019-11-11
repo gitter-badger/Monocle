@@ -50,5 +50,5 @@ type allianceHistoryResolver struct {
 }
 
 func (ah *allianceHistoryResolver) Alliance(ctx context.Context, obj *monocle.CorporationAllianceHistory) (*monocle.Alliance, error) {
-	return dataloaders.CtxLoader(ctx).Alliance.Load(obj.AllianceID.Uint32)
+	return dataloaders.CtxLoader(ctx).Alliance.Load(obj.AllianceID.Uint)
 }

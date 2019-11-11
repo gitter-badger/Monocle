@@ -12,7 +12,7 @@ import (
 // CorporationLoaderConfig captures the config to create a new CorporationLoader
 type CorporationLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []uint32) ([]*monocle.Corporation, []error)
+	Fetch func(keys []uint) ([]*monocle.Corporation, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -33,7 +33,7 @@ func NewCorporationLoader(config CorporationLoaderConfig) *CorporationLoader {
 // CorporationLoader batches and caches requests
 type CorporationLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []uint32) ([]*monocle.Corporation, []error)
+	fetch func(keys []uint) ([]*monocle.Corporation, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -44,7 +44,7 @@ type CorporationLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[uint32]*monocle.Corporation
+	cache map[uint]*monocle.Corporation
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -55,7 +55,7 @@ type CorporationLoader struct {
 }
 
 type corporationLoaderBatch struct {
-	keys    []uint32
+	keys    []uint
 	data    []*monocle.Corporation
 	error   []error
 	closing bool
@@ -63,14 +63,14 @@ type corporationLoaderBatch struct {
 }
 
 // Load a Corporation by key, batching and caching will be applied automatically
-func (l *CorporationLoader) Load(key uint32) (*monocle.Corporation, error) {
+func (l *CorporationLoader) Load(key uint) (*monocle.Corporation, error) {
 	return l.LoadThunk(key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a Corporation.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *CorporationLoader) LoadThunk(key uint32) func() (*monocle.Corporation, error) {
+func (l *CorporationLoader) LoadThunk(key uint) func() (*monocle.Corporation, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
@@ -113,7 +113,7 @@ func (l *CorporationLoader) LoadThunk(key uint32) func() (*monocle.Corporation, 
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *CorporationLoader) LoadAll(keys []uint32) ([]*monocle.Corporation, []error) {
+func (l *CorporationLoader) LoadAll(keys []uint) ([]*monocle.Corporation, []error) {
 	results := make([]func() (*monocle.Corporation, error), len(keys))
 
 	for i, key := range keys {
@@ -131,7 +131,7 @@ func (l *CorporationLoader) LoadAll(keys []uint32) ([]*monocle.Corporation, []er
 // LoadAllThunk returns a function that when called will block waiting for a Corporations.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *CorporationLoader) LoadAllThunk(keys []uint32) func() ([]*monocle.Corporation, []error) {
+func (l *CorporationLoader) LoadAllThunk(keys []uint) func() ([]*monocle.Corporation, []error) {
 	results := make([]func() (*monocle.Corporation, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
@@ -149,7 +149,7 @@ func (l *CorporationLoader) LoadAllThunk(keys []uint32) func() ([]*monocle.Corpo
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *CorporationLoader) Prime(key uint32, value *monocle.Corporation) bool {
+func (l *CorporationLoader) Prime(key uint, value *monocle.Corporation) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
@@ -163,22 +163,22 @@ func (l *CorporationLoader) Prime(key uint32, value *monocle.Corporation) bool {
 }
 
 // Clear the value at key from the cache, if it exists
-func (l *CorporationLoader) Clear(key uint32) {
+func (l *CorporationLoader) Clear(key uint) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
 
-func (l *CorporationLoader) unsafeSet(key uint32, value *monocle.Corporation) {
+func (l *CorporationLoader) unsafeSet(key uint, value *monocle.Corporation) {
 	if l.cache == nil {
-		l.cache = map[uint32]*monocle.Corporation{}
+		l.cache = map[uint]*monocle.Corporation{}
 	}
 	l.cache[key] = value
 }
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *corporationLoaderBatch) keyIndex(l *CorporationLoader, key uint32) int {
+func (b *corporationLoaderBatch) keyIndex(l *CorporationLoader, key uint) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i

@@ -56,29 +56,6 @@ var CorporationAllianceHistoryColumns = struct {
 
 // Generated where
 
-type whereHelpernull_Uint struct{ field string }
-
-func (w whereHelpernull_Uint) EQ(x null.Uint) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Uint) NEQ(x null.Uint) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Uint) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Uint) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-func (w whereHelpernull_Uint) LT(x null.Uint) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Uint) LTE(x null.Uint) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Uint) GT(x null.Uint) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Uint) GTE(x null.Uint) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
 var CorporationAllianceHistoryWhere = struct {
 	ID         whereHelperuint64
 	RecordID   whereHelperuint
@@ -151,6 +128,11 @@ var (
 	_ = qmhelper.Where
 )
 
+// OneG returns a single corporationAllianceHistory record from the query using the global executor.
+func (q corporationAllianceHistoryQuery) OneG(ctx context.Context) (*CorporationAllianceHistory, error) {
+	return q.One(ctx, boil.GetContextDB())
+}
+
 // One returns a single corporationAllianceHistory record from the query.
 func (q corporationAllianceHistoryQuery) One(ctx context.Context, exec boil.ContextExecutor) (*CorporationAllianceHistory, error) {
 	o := &CorporationAllianceHistory{}
@@ -168,6 +150,11 @@ func (q corporationAllianceHistoryQuery) One(ctx context.Context, exec boil.Cont
 	return o, nil
 }
 
+// AllG returns all CorporationAllianceHistory records from the query using the global executor.
+func (q corporationAllianceHistoryQuery) AllG(ctx context.Context) (CorporationAllianceHistorySlice, error) {
+	return q.All(ctx, boil.GetContextDB())
+}
+
 // All returns all CorporationAllianceHistory records from the query.
 func (q corporationAllianceHistoryQuery) All(ctx context.Context, exec boil.ContextExecutor) (CorporationAllianceHistorySlice, error) {
 	var o []*CorporationAllianceHistory
@@ -178,6 +165,11 @@ func (q corporationAllianceHistoryQuery) All(ctx context.Context, exec boil.Cont
 	}
 
 	return o, nil
+}
+
+// CountG returns the count of all CorporationAllianceHistory records in the query, and panics on error.
+func (q corporationAllianceHistoryQuery) CountG(ctx context.Context) (int64, error) {
+	return q.Count(ctx, boil.GetContextDB())
 }
 
 // Count returns the count of all CorporationAllianceHistory records in the query.
@@ -193,6 +185,11 @@ func (q corporationAllianceHistoryQuery) Count(ctx context.Context, exec boil.Co
 	}
 
 	return count, nil
+}
+
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q corporationAllianceHistoryQuery) ExistsG(ctx context.Context) (bool, error) {
+	return q.Exists(ctx, boil.GetContextDB())
 }
 
 // Exists checks if the row exists in the table.
@@ -215,6 +212,11 @@ func (q corporationAllianceHistoryQuery) Exists(ctx context.Context, exec boil.C
 func CorporationAllianceHistories(mods ...qm.QueryMod) corporationAllianceHistoryQuery {
 	mods = append(mods, qm.From("`corporation_alliance_history`"))
 	return corporationAllianceHistoryQuery{NewQuery(mods...)}
+}
+
+// FindCorporationAllianceHistoryG retrieves a single record by ID.
+func FindCorporationAllianceHistoryG(ctx context.Context, iD uint64, recordID uint, selectCols ...string) (*CorporationAllianceHistory, error) {
+	return FindCorporationAllianceHistory(ctx, boil.GetContextDB(), iD, recordID, selectCols...)
 }
 
 // FindCorporationAllianceHistory retrieves a single record by ID with an executor.
@@ -241,6 +243,11 @@ func FindCorporationAllianceHistory(ctx context.Context, exec boil.ContextExecut
 	}
 
 	return corporationAllianceHistoryObj, nil
+}
+
+// InsertG a single record. See Insert for whitelist behavior description.
+func (o *CorporationAllianceHistory) InsertG(ctx context.Context, columns boil.Columns) error {
+	return o.Insert(ctx, boil.GetContextDB(), columns)
 }
 
 // Insert a single record using an executor.
@@ -345,6 +352,12 @@ CacheNoHooks:
 	return nil
 }
 
+// UpdateG a single CorporationAllianceHistory record using the global executor.
+// See Update for more documentation.
+func (o *CorporationAllianceHistory) UpdateG(ctx context.Context, columns boil.Columns) error {
+	return o.Update(ctx, boil.GetContextDB(), columns)
+}
+
 // Update uses an executor to update the CorporationAllianceHistory.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
@@ -405,6 +418,11 @@ func (o *CorporationAllianceHistory) Update(ctx context.Context, exec boil.Conte
 	return nil
 }
 
+// UpdateAllG updates all rows with the specified column values.
+func (q corporationAllianceHistoryQuery) UpdateAllG(ctx context.Context, cols M) error {
+	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
+}
+
 // UpdateAll updates all rows with the specified column values.
 func (q corporationAllianceHistoryQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
@@ -415,6 +433,11 @@ func (q corporationAllianceHistoryQuery) UpdateAll(ctx context.Context, exec boi
 	}
 
 	return nil
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (o CorporationAllianceHistorySlice) UpdateAllG(ctx context.Context, cols M) error {
+	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
@@ -459,6 +482,11 @@ func (o CorporationAllianceHistorySlice) UpdateAll(ctx context.Context, exec boi
 	}
 
 	return nil
+}
+
+// UpsertG attempts an insert, and does an update or ignore on conflict.
+func (o *CorporationAllianceHistory) UpsertG(ctx context.Context, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(ctx, boil.GetContextDB(), updateColumns, insertColumns)
 }
 
 var mySQLCorporationAllianceHistoryUniqueColumns = []string{}
@@ -600,6 +628,12 @@ CacheNoHooks:
 	return nil
 }
 
+// DeleteG deletes a single CorporationAllianceHistory record.
+// DeleteG will match against the primary key column to find the record to delete.
+func (o *CorporationAllianceHistory) DeleteG(ctx context.Context) error {
+	return o.Delete(ctx, boil.GetContextDB())
+}
+
 // Delete deletes a single CorporationAllianceHistory record with an executor.
 // Delete will match against the primary key column to find the record to delete.
 func (o *CorporationAllianceHistory) Delete(ctx context.Context, exec boil.ContextExecutor) error {
@@ -639,6 +673,11 @@ func (q corporationAllianceHistoryQuery) DeleteAll(ctx context.Context, exec boi
 	return nil
 }
 
+// DeleteAllG deletes all rows in the slice.
+func (o CorporationAllianceHistorySlice) DeleteAllG(ctx context.Context) error {
+	return o.DeleteAll(ctx, boil.GetContextDB())
+}
+
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o CorporationAllianceHistorySlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
@@ -667,6 +706,15 @@ func (o CorporationAllianceHistorySlice) DeleteAll(ctx context.Context, exec boi
 	return nil
 }
 
+// ReloadG refetches the object from the database using the primary keys.
+func (o *CorporationAllianceHistory) ReloadG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: no CorporationAllianceHistory provided for reload")
+	}
+
+	return o.Reload(ctx, boil.GetContextDB())
+}
+
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *CorporationAllianceHistory) Reload(ctx context.Context, exec boil.ContextExecutor) error {
@@ -677,6 +725,16 @@ func (o *CorporationAllianceHistory) Reload(ctx context.Context, exec boil.Conte
 
 	*o = *ret
 	return nil
+}
+
+// ReloadAllG refetches every row with matching primary key column values
+// and overwrites the original object slice with the newly updated slice.
+func (o *CorporationAllianceHistorySlice) ReloadAllG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: empty CorporationAllianceHistorySlice provided for reload all")
+	}
+
+	return o.ReloadAll(ctx, boil.GetContextDB())
 }
 
 // ReloadAll refetches every row with matching primary key column values
@@ -706,6 +764,11 @@ func (o *CorporationAllianceHistorySlice) ReloadAll(ctx context.Context, exec bo
 	*o = slice
 
 	return nil
+}
+
+// CorporationAllianceHistoryExistsG checks if the CorporationAllianceHistory row exists.
+func CorporationAllianceHistoryExistsG(ctx context.Context, iD uint64, recordID uint) (bool, error) {
+	return CorporationAllianceHistoryExists(ctx, boil.GetContextDB(), iD, recordID)
 }
 
 // CorporationAllianceHistoryExists checks if the CorporationAllianceHistory row exists.

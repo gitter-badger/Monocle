@@ -9,11 +9,13 @@ type Query {
         corporationID: Int!
         page: Int = 1
         limit: Int
+        sort: Sort = DESC
     ): [CorporationHistory]
     characterCorporationHistoryByAllianceID(
         allianceID: Int!
         page: Int = 1
         limit: Int
+        sort: Sort = DESC
     ): [CorporationHistory]
 }
 

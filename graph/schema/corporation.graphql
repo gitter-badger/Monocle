@@ -2,6 +2,14 @@ extend type Query {
     corporation(id: Int!): Corporation!
     corporationsByMemberCount(limit: Int!, independent: Boolean! = false, npc: Boolean! = false): [Corporation]!
     corporationsByAllianceID(allianceID: Int!, page: Int! = 1): [Corporation]!
+
+    corporationAllianceHistoryByAllianceID(
+        allianceID: Int!
+        page: Int = 1
+        limit: Int = 100
+        sort: Sort = DESC
+    ): [AllianceHistory]!
+
 }
 
 type Corporation {

@@ -144,7 +144,7 @@ func (p *Processor) corpUpdater() {
 			if err != sql.ErrNoRows {
 				p.Logger.WithError(err).Error("unable to query for corporations")
 			}
-			continue
+			return
 		}
 
 		if len(corporations) <= 0 {
@@ -173,11 +173,13 @@ func (p *Processor) corpUpdater() {
 			}(corporations)
 		}
 
-		p.Logger.Debug("waiting")
+		p.Logger.Info("waiting")
 		wg.Wait()
-		sleep := time.Second * 1
-		p.Logger.WithField("sleep", sleep).Debug("done. sleeping...")
-		time.Sleep(sleep)
+		// sleep := time.Second * 1
+		p.Logger.
+			// WithField("sleep", sleep).
+			Info("done.")
+		// time.Sleep(sleep)
 	}
 }
 
@@ -362,7 +364,7 @@ func (p *Processor) processCorporationAllianceHistory(corporation *Corporation) 
 	var boilEtag boiler.Etag
 	err = copier.Copy(&boilEtag, &etag.model)
 	if err != nil {
-		// Log an error
+		p.Logger.WithError(err).Error("failed to copy etag to boiler")
 		return
 	}
 
@@ -388,14 +390,13 @@ func (p *Processor) processCorporationAllianceHistory(corporation *Corporation) 
 			return
 		}
 	}
-
 	// If the response code is a not a 200, there is no new data, so return here
 	if response.Code > 200 {
 		return
 	}
 
-	if _, ok := data["history"].([]monocle.CorporationAllianceHistory); !ok {
-		// Log an error
+	if _, ok := data["history"].([]*monocle.CorporationAllianceHistory); !ok {
+		p.Logger.WithField("data", data).Error("history key does not exist in data")
 		return
 	}
 	history.model = data["history"].([]*monocle.CorporationAllianceHistory)
@@ -403,7 +404,7 @@ func (p *Processor) processCorporationAllianceHistory(corporation *Corporation) 
 	var boilHistory boiler.CorporationAllianceHistorySlice
 	err = copier.Copy(&boilHistory, &history.model)
 	if err != nil {
-		// Log error
+		p.Logger.WithError(err).Error("failed to copy history to boiler")
 		return
 	}
 
@@ -436,7 +437,6 @@ func (p *Processor) processCorporationAllianceHistory(corporation *Corporation) 
 					"record": history.RecordID,
 				}).Error("unable to insert character corporation history record into database")
 			}
-			time.Sleep(time.Millisecond * 100)
 		}
 		return
 	}
@@ -469,6 +469,7 @@ func (p *Processor) processCorporationAllianceHistory(corporation *Corporation) 
 		}
 
 		selected := existing[index]
+		selected.ID = uint64(corporation.model.ID)
 
 		if selected.LeaveDate.Valid {
 			continue
@@ -488,14 +489,14 @@ func (p *Processor) processCorporationAllianceHistory(corporation *Corporation) 
 					"id":     selected.ID,
 					"record": selected.RecordID,
 				}).Error("unable to insert character corporation history record into database")
-			} else {
-				err = selected.Update(context.Background(), p.DB, boil.Infer())
-				if err != nil {
-					p.Logger.WithError(err).WithFields(logrus.Fields{
-						"id":     selected.ID,
-						"record": selected.RecordID,
-					}).Error("unable to update character corporation history record in database")
-				}
+			}
+		} else {
+			err = selected.Update(context.Background(), p.DB, boil.Infer())
+			if err != nil {
+				p.Logger.WithError(err).WithFields(logrus.Fields{
+					"id":     selected.ID,
+					"record": selected.RecordID,
+				}).Error("unable to update character corporation history record in database")
 			}
 		}
 	}
@@ -525,8 +526,8 @@ func (p *Processor) findUnknownAlliances(histories boiler.CorporationAllianceHis
 	}
 
 	for _, known := range knowns {
-		if v := unique[known.ID]; v {
-			delete(unique, known.ID)
+		if v := unique[uint64(known.ID)]; v {
+			delete(unique, uint64(known.ID))
 		}
 	}
 
@@ -537,7 +538,7 @@ func (p *Processor) findUnknownAlliances(histories boiler.CorporationAllianceHis
 	for i := range unique {
 		alliance := &Alliance{
 			model: &monocle.Alliance{
-				ID: uint32(i),
+				ID: uint(i),
 			},
 			exists: false,
 		}

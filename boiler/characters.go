@@ -29,13 +29,13 @@ type Character struct {
 	Birthday       null.Time `db:"birthday" boil:"birthday" json:"birthday,omitempty" toml:"birthday" yaml:"birthday,omitempty"`
 	Gender         string    `db:"gender" boil:"gender" json:"gender" toml:"gender" yaml:"gender"`
 	SecurityStatus float32   `db:"security_status" boil:"security_status" json:"security_status" toml:"security_status" yaml:"security_status"`
-	AllianceID     null.Int  `db:"alliance_id" boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
-	CorporationID  int       `db:"corporation_id" boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
-	FactionID      null.Int  `db:"faction_id" boil:"faction_id" json:"faction_id,omitempty" toml:"faction_id" yaml:"faction_id,omitempty"`
-	AncestryID     int       `db:"ancestry_id" boil:"ancestry_id" json:"ancestry_id" toml:"ancestry_id" yaml:"ancestry_id"`
-	BloodlineID    int       `db:"bloodline_id" boil:"bloodline_id" json:"bloodline_id" toml:"bloodline_id" yaml:"bloodline_id"`
-	RaceID         int       `db:"race_id" boil:"race_id" json:"race_id" toml:"race_id" yaml:"race_id"`
-	Ignored        int8      `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
+	AllianceID     null.Uint `db:"alliance_id" boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
+	CorporationID  uint      `db:"corporation_id" boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
+	FactionID      null.Uint `db:"faction_id" boil:"faction_id" json:"faction_id,omitempty" toml:"faction_id" yaml:"faction_id,omitempty"`
+	AncestryID     uint      `db:"ancestry_id" boil:"ancestry_id" json:"ancestry_id" toml:"ancestry_id" yaml:"ancestry_id"`
+	BloodlineID    uint      `db:"bloodline_id" boil:"bloodline_id" json:"bloodline_id" toml:"bloodline_id" yaml:"bloodline_id"`
+	RaceID         uint      `db:"race_id" boil:"race_id" json:"race_id" toml:"race_id" yaml:"race_id"`
+	Ignored        bool      `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
 	Etag           string    `db:"etag" boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
 	Expires        time.Time `db:"expires" boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
 	CreatedAt      time.Time `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
@@ -98,43 +98,27 @@ func (w whereHelperfloat32) GTE(x float32) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
 
-type whereHelpernull_Int struct{ field string }
+type whereHelpernull_Uint struct{ field string }
 
-func (w whereHelpernull_Int) EQ(x null.Int) qm.QueryMod {
+func (w whereHelpernull_Uint) EQ(x null.Uint) qm.QueryMod {
 	return qmhelper.WhereNullEQ(w.field, false, x)
 }
-func (w whereHelpernull_Int) NEQ(x null.Int) qm.QueryMod {
+func (w whereHelpernull_Uint) NEQ(x null.Uint) qm.QueryMod {
 	return qmhelper.WhereNullEQ(w.field, true, x)
 }
-func (w whereHelpernull_Int) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-func (w whereHelpernull_Int) LT(x null.Int) qm.QueryMod {
+func (w whereHelpernull_Uint) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Uint) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_Uint) LT(x null.Uint) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.LT, x)
 }
-func (w whereHelpernull_Int) LTE(x null.Int) qm.QueryMod {
+func (w whereHelpernull_Uint) LTE(x null.Uint) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.LTE, x)
 }
-func (w whereHelpernull_Int) GT(x null.Int) qm.QueryMod {
+func (w whereHelpernull_Uint) GT(x null.Uint) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GT, x)
 }
-func (w whereHelpernull_Int) GTE(x null.Int) qm.QueryMod {
+func (w whereHelpernull_Uint) GTE(x null.Uint) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
-type whereHelperint struct{ field string }
-
-func (w whereHelperint) EQ(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperint) NEQ(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperint) LT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperint) LTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperint) GT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperint) GTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-func (w whereHelperint) IN(slice []int) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
 }
 
 var CharacterWhere = struct {
@@ -143,13 +127,13 @@ var CharacterWhere = struct {
 	Birthday       whereHelpernull_Time
 	Gender         whereHelperstring
 	SecurityStatus whereHelperfloat32
-	AllianceID     whereHelpernull_Int
-	CorporationID  whereHelperint
-	FactionID      whereHelpernull_Int
-	AncestryID     whereHelperint
-	BloodlineID    whereHelperint
-	RaceID         whereHelperint
-	Ignored        whereHelperint8
+	AllianceID     whereHelpernull_Uint
+	CorporationID  whereHelperuint
+	FactionID      whereHelpernull_Uint
+	AncestryID     whereHelperuint
+	BloodlineID    whereHelperuint
+	RaceID         whereHelperuint
+	Ignored        whereHelperbool
 	Etag           whereHelperstring
 	Expires        whereHelpertime_Time
 	CreatedAt      whereHelpertime_Time
@@ -160,13 +144,13 @@ var CharacterWhere = struct {
 	Birthday:       whereHelpernull_Time{field: "`characters`.`birthday`"},
 	Gender:         whereHelperstring{field: "`characters`.`gender`"},
 	SecurityStatus: whereHelperfloat32{field: "`characters`.`security_status`"},
-	AllianceID:     whereHelpernull_Int{field: "`characters`.`alliance_id`"},
-	CorporationID:  whereHelperint{field: "`characters`.`corporation_id`"},
-	FactionID:      whereHelpernull_Int{field: "`characters`.`faction_id`"},
-	AncestryID:     whereHelperint{field: "`characters`.`ancestry_id`"},
-	BloodlineID:    whereHelperint{field: "`characters`.`bloodline_id`"},
-	RaceID:         whereHelperint{field: "`characters`.`race_id`"},
-	Ignored:        whereHelperint8{field: "`characters`.`ignored`"},
+	AllianceID:     whereHelpernull_Uint{field: "`characters`.`alliance_id`"},
+	CorporationID:  whereHelperuint{field: "`characters`.`corporation_id`"},
+	FactionID:      whereHelpernull_Uint{field: "`characters`.`faction_id`"},
+	AncestryID:     whereHelperuint{field: "`characters`.`ancestry_id`"},
+	BloodlineID:    whereHelperuint{field: "`characters`.`bloodline_id`"},
+	RaceID:         whereHelperuint{field: "`characters`.`race_id`"},
+	Ignored:        whereHelperbool{field: "`characters`.`ignored`"},
 	Etag:           whereHelperstring{field: "`characters`.`etag`"},
 	Expires:        whereHelpertime_Time{field: "`characters`.`expires`"},
 	CreatedAt:      whereHelpertime_Time{field: "`characters`.`created_at`"},
@@ -227,6 +211,11 @@ var (
 	_ = qmhelper.Where
 )
 
+// OneG returns a single character record from the query using the global executor.
+func (q characterQuery) OneG(ctx context.Context) (*Character, error) {
+	return q.One(ctx, boil.GetContextDB())
+}
+
 // One returns a single character record from the query.
 func (q characterQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Character, error) {
 	o := &Character{}
@@ -244,6 +233,11 @@ func (q characterQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Ch
 	return o, nil
 }
 
+// AllG returns all Character records from the query using the global executor.
+func (q characterQuery) AllG(ctx context.Context) (CharacterSlice, error) {
+	return q.All(ctx, boil.GetContextDB())
+}
+
 // All returns all Character records from the query.
 func (q characterQuery) All(ctx context.Context, exec boil.ContextExecutor) (CharacterSlice, error) {
 	var o []*Character
@@ -254,6 +248,11 @@ func (q characterQuery) All(ctx context.Context, exec boil.ContextExecutor) (Cha
 	}
 
 	return o, nil
+}
+
+// CountG returns the count of all Character records in the query, and panics on error.
+func (q characterQuery) CountG(ctx context.Context) (int64, error) {
+	return q.Count(ctx, boil.GetContextDB())
 }
 
 // Count returns the count of all Character records in the query.
@@ -269,6 +268,11 @@ func (q characterQuery) Count(ctx context.Context, exec boil.ContextExecutor) (i
 	}
 
 	return count, nil
+}
+
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q characterQuery) ExistsG(ctx context.Context) (bool, error) {
+	return q.Exists(ctx, boil.GetContextDB())
 }
 
 // Exists checks if the row exists in the table.
@@ -291,6 +295,11 @@ func (q characterQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (
 func Characters(mods ...qm.QueryMod) characterQuery {
 	mods = append(mods, qm.From("`characters`"))
 	return characterQuery{NewQuery(mods...)}
+}
+
+// FindCharacterG retrieves a single record by ID.
+func FindCharacterG(ctx context.Context, iD uint64, selectCols ...string) (*Character, error) {
+	return FindCharacter(ctx, boil.GetContextDB(), iD, selectCols...)
 }
 
 // FindCharacter retrieves a single record by ID with an executor.
@@ -317,6 +326,11 @@ func FindCharacter(ctx context.Context, exec boil.ContextExecutor, iD uint64, se
 	}
 
 	return characterObj, nil
+}
+
+// InsertG a single record. See Insert for whitelist behavior description.
+func (o *Character) InsertG(ctx context.Context, columns boil.Columns) error {
+	return o.Insert(ctx, boil.GetContextDB(), columns)
 }
 
 // Insert a single record using an executor.
@@ -420,6 +434,12 @@ CacheNoHooks:
 	return nil
 }
 
+// UpdateG a single Character record using the global executor.
+// See Update for more documentation.
+func (o *Character) UpdateG(ctx context.Context, columns boil.Columns) error {
+	return o.Update(ctx, boil.GetContextDB(), columns)
+}
+
 // Update uses an executor to update the Character.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
@@ -480,6 +500,11 @@ func (o *Character) Update(ctx context.Context, exec boil.ContextExecutor, colum
 	return nil
 }
 
+// UpdateAllG updates all rows with the specified column values.
+func (q characterQuery) UpdateAllG(ctx context.Context, cols M) error {
+	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
+}
+
 // UpdateAll updates all rows with the specified column values.
 func (q characterQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
@@ -490,6 +515,11 @@ func (q characterQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor
 	}
 
 	return nil
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (o CharacterSlice) UpdateAllG(ctx context.Context, cols M) error {
+	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
@@ -534,6 +564,11 @@ func (o CharacterSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor
 	}
 
 	return nil
+}
+
+// UpsertG attempts an insert, and does an update or ignore on conflict.
+func (o *Character) UpsertG(ctx context.Context, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(ctx, boil.GetContextDB(), updateColumns, insertColumns)
 }
 
 var mySQLCharacterUniqueColumns = []string{
@@ -677,6 +712,12 @@ CacheNoHooks:
 	return nil
 }
 
+// DeleteG deletes a single Character record.
+// DeleteG will match against the primary key column to find the record to delete.
+func (o *Character) DeleteG(ctx context.Context) error {
+	return o.Delete(ctx, boil.GetContextDB())
+}
+
 // Delete deletes a single Character record with an executor.
 // Delete will match against the primary key column to find the record to delete.
 func (o *Character) Delete(ctx context.Context, exec boil.ContextExecutor) error {
@@ -716,6 +757,11 @@ func (q characterQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor
 	return nil
 }
 
+// DeleteAllG deletes all rows in the slice.
+func (o CharacterSlice) DeleteAllG(ctx context.Context) error {
+	return o.DeleteAll(ctx, boil.GetContextDB())
+}
+
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o CharacterSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
@@ -744,6 +790,15 @@ func (o CharacterSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor
 	return nil
 }
 
+// ReloadG refetches the object from the database using the primary keys.
+func (o *Character) ReloadG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: no Character provided for reload")
+	}
+
+	return o.Reload(ctx, boil.GetContextDB())
+}
+
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Character) Reload(ctx context.Context, exec boil.ContextExecutor) error {
@@ -754,6 +809,16 @@ func (o *Character) Reload(ctx context.Context, exec boil.ContextExecutor) error
 
 	*o = *ret
 	return nil
+}
+
+// ReloadAllG refetches every row with matching primary key column values
+// and overwrites the original object slice with the newly updated slice.
+func (o *CharacterSlice) ReloadAllG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: empty CharacterSlice provided for reload all")
+	}
+
+	return o.ReloadAll(ctx, boil.GetContextDB())
 }
 
 // ReloadAll refetches every row with matching primary key column values
@@ -783,6 +848,11 @@ func (o *CharacterSlice) ReloadAll(ctx context.Context, exec boil.ContextExecuto
 	*o = slice
 
 	return nil
+}
+
+// CharacterExistsG checks if the Character row exists.
+func CharacterExistsG(ctx context.Context, iD uint64) (bool, error) {
+	return CharacterExists(ctx, boil.GetContextDB(), iD)
 }
 
 // CharacterExists checks if the Character row exists.

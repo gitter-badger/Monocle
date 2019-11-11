@@ -24,7 +24,7 @@ import (
 
 // Corporation is an object representing the database table.
 type Corporation struct {
-	ID            uint64      `db:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
+	ID            uint        `db:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
 	Name          string      `db:"name" boil:"name" json:"name" toml:"name" yaml:"name"`
 	Ticker        string      `db:"ticker" boil:"ticker" json:"ticker" toml:"ticker" yaml:"ticker"`
 	MemberCount   uint        `db:"member_count" boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
@@ -35,8 +35,8 @@ type Corporation struct {
 	HomeStationID null.Uint64 `db:"home_station_id" boil:"home_station_id" json:"home_station_id,omitempty" toml:"home_station_id" yaml:"home_station_id,omitempty"`
 	TaxRate       float32     `db:"tax_rate" boil:"tax_rate" json:"tax_rate" toml:"tax_rate" yaml:"tax_rate"`
 	WarEligible   bool        `db:"war_eligible" boil:"war_eligible" json:"war_eligible" toml:"war_eligible" yaml:"war_eligible"`
-	Ignored       int8        `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
-	Closed        int8        `db:"closed" boil:"closed" json:"closed" toml:"closed" yaml:"closed"`
+	Ignored       bool        `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
+	Closed        bool        `db:"closed" boil:"closed" json:"closed" toml:"closed" yaml:"closed"`
 	Etag          string      `db:"etag" boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
 	Expires       time.Time   `db:"expires" boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
 	CreatedAt     time.Time   `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
@@ -86,6 +86,29 @@ var CorporationColumns = struct {
 
 // Generated where
 
+type whereHelpernull_Int struct{ field string }
+
+func (w whereHelpernull_Int) EQ(x null.Int) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Int) NEQ(x null.Int) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Int) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_Int) LT(x null.Int) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Int) LTE(x null.Int) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Int) GT(x null.Int) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Int) GTE(x null.Int) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
 type whereHelpernull_Uint64 struct{ field string }
 
 func (w whereHelpernull_Uint64) EQ(x null.Uint64) qm.QueryMod {
@@ -109,17 +132,8 @@ func (w whereHelpernull_Uint64) GTE(x null.Uint64) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
 
-type whereHelperbool struct{ field string }
-
-func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-
 var CorporationWhere = struct {
-	ID            whereHelperuint64
+	ID            whereHelperuint
 	Name          whereHelperstring
 	Ticker        whereHelperstring
 	MemberCount   whereHelperuint
@@ -130,14 +144,14 @@ var CorporationWhere = struct {
 	HomeStationID whereHelpernull_Uint64
 	TaxRate       whereHelperfloat32
 	WarEligible   whereHelperbool
-	Ignored       whereHelperint8
-	Closed        whereHelperint8
+	Ignored       whereHelperbool
+	Closed        whereHelperbool
 	Etag          whereHelperstring
 	Expires       whereHelpertime_Time
 	CreatedAt     whereHelpertime_Time
 	UpdatedAt     whereHelpertime_Time
 }{
-	ID:            whereHelperuint64{field: "`corporations`.`id`"},
+	ID:            whereHelperuint{field: "`corporations`.`id`"},
 	Name:          whereHelperstring{field: "`corporations`.`name`"},
 	Ticker:        whereHelperstring{field: "`corporations`.`ticker`"},
 	MemberCount:   whereHelperuint{field: "`corporations`.`member_count`"},
@@ -148,8 +162,8 @@ var CorporationWhere = struct {
 	HomeStationID: whereHelpernull_Uint64{field: "`corporations`.`home_station_id`"},
 	TaxRate:       whereHelperfloat32{field: "`corporations`.`tax_rate`"},
 	WarEligible:   whereHelperbool{field: "`corporations`.`war_eligible`"},
-	Ignored:       whereHelperint8{field: "`corporations`.`ignored`"},
-	Closed:        whereHelperint8{field: "`corporations`.`closed`"},
+	Ignored:       whereHelperbool{field: "`corporations`.`ignored`"},
+	Closed:        whereHelperbool{field: "`corporations`.`closed`"},
 	Etag:          whereHelperstring{field: "`corporations`.`etag`"},
 	Expires:       whereHelpertime_Time{field: "`corporations`.`expires`"},
 	CreatedAt:     whereHelpertime_Time{field: "`corporations`.`created_at`"},
@@ -210,6 +224,11 @@ var (
 	_ = qmhelper.Where
 )
 
+// OneG returns a single corporation record from the query using the global executor.
+func (q corporationQuery) OneG(ctx context.Context) (*Corporation, error) {
+	return q.One(ctx, boil.GetContextDB())
+}
+
 // One returns a single corporation record from the query.
 func (q corporationQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Corporation, error) {
 	o := &Corporation{}
@@ -227,6 +246,11 @@ func (q corporationQuery) One(ctx context.Context, exec boil.ContextExecutor) (*
 	return o, nil
 }
 
+// AllG returns all Corporation records from the query using the global executor.
+func (q corporationQuery) AllG(ctx context.Context) (CorporationSlice, error) {
+	return q.All(ctx, boil.GetContextDB())
+}
+
 // All returns all Corporation records from the query.
 func (q corporationQuery) All(ctx context.Context, exec boil.ContextExecutor) (CorporationSlice, error) {
 	var o []*Corporation
@@ -237,6 +261,11 @@ func (q corporationQuery) All(ctx context.Context, exec boil.ContextExecutor) (C
 	}
 
 	return o, nil
+}
+
+// CountG returns the count of all Corporation records in the query, and panics on error.
+func (q corporationQuery) CountG(ctx context.Context) (int64, error) {
+	return q.Count(ctx, boil.GetContextDB())
 }
 
 // Count returns the count of all Corporation records in the query.
@@ -252,6 +281,11 @@ func (q corporationQuery) Count(ctx context.Context, exec boil.ContextExecutor) 
 	}
 
 	return count, nil
+}
+
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q corporationQuery) ExistsG(ctx context.Context) (bool, error) {
+	return q.Exists(ctx, boil.GetContextDB())
 }
 
 // Exists checks if the row exists in the table.
@@ -276,9 +310,14 @@ func Corporations(mods ...qm.QueryMod) corporationQuery {
 	return corporationQuery{NewQuery(mods...)}
 }
 
+// FindCorporationG retrieves a single record by ID.
+func FindCorporationG(ctx context.Context, iD uint, selectCols ...string) (*Corporation, error) {
+	return FindCorporation(ctx, boil.GetContextDB(), iD, selectCols...)
+}
+
 // FindCorporation retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindCorporation(ctx context.Context, exec boil.ContextExecutor, iD uint64, selectCols ...string) (*Corporation, error) {
+func FindCorporation(ctx context.Context, exec boil.ContextExecutor, iD uint, selectCols ...string) (*Corporation, error) {
 	corporationObj := &Corporation{}
 
 	sel := "*"
@@ -300,6 +339,11 @@ func FindCorporation(ctx context.Context, exec boil.ContextExecutor, iD uint64, 
 	}
 
 	return corporationObj, nil
+}
+
+// InsertG a single record. See Insert for whitelist behavior description.
+func (o *Corporation) InsertG(ctx context.Context, columns boil.Columns) error {
+	return o.Insert(ctx, boil.GetContextDB(), columns)
 }
 
 // Insert a single record using an executor.
@@ -403,6 +447,12 @@ CacheNoHooks:
 	return nil
 }
 
+// UpdateG a single Corporation record using the global executor.
+// See Update for more documentation.
+func (o *Corporation) UpdateG(ctx context.Context, columns boil.Columns) error {
+	return o.Update(ctx, boil.GetContextDB(), columns)
+}
+
 // Update uses an executor to update the Corporation.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
@@ -463,6 +513,11 @@ func (o *Corporation) Update(ctx context.Context, exec boil.ContextExecutor, col
 	return nil
 }
 
+// UpdateAllG updates all rows with the specified column values.
+func (q corporationQuery) UpdateAllG(ctx context.Context, cols M) error {
+	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
+}
+
 // UpdateAll updates all rows with the specified column values.
 func (q corporationQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
@@ -473,6 +528,11 @@ func (q corporationQuery) UpdateAll(ctx context.Context, exec boil.ContextExecut
 	}
 
 	return nil
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (o CorporationSlice) UpdateAllG(ctx context.Context, cols M) error {
+	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
@@ -517,6 +577,11 @@ func (o CorporationSlice) UpdateAll(ctx context.Context, exec boil.ContextExecut
 	}
 
 	return nil
+}
+
+// UpsertG attempts an insert, and does an update or ignore on conflict.
+func (o *Corporation) UpsertG(ctx context.Context, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(ctx, boil.GetContextDB(), updateColumns, insertColumns)
 }
 
 var mySQLCorporationUniqueColumns = []string{
@@ -660,6 +725,12 @@ CacheNoHooks:
 	return nil
 }
 
+// DeleteG deletes a single Corporation record.
+// DeleteG will match against the primary key column to find the record to delete.
+func (o *Corporation) DeleteG(ctx context.Context) error {
+	return o.Delete(ctx, boil.GetContextDB())
+}
+
 // Delete deletes a single Corporation record with an executor.
 // Delete will match against the primary key column to find the record to delete.
 func (o *Corporation) Delete(ctx context.Context, exec boil.ContextExecutor) error {
@@ -699,6 +770,11 @@ func (q corporationQuery) DeleteAll(ctx context.Context, exec boil.ContextExecut
 	return nil
 }
 
+// DeleteAllG deletes all rows in the slice.
+func (o CorporationSlice) DeleteAllG(ctx context.Context) error {
+	return o.DeleteAll(ctx, boil.GetContextDB())
+}
+
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o CorporationSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
@@ -727,6 +803,15 @@ func (o CorporationSlice) DeleteAll(ctx context.Context, exec boil.ContextExecut
 	return nil
 }
 
+// ReloadG refetches the object from the database using the primary keys.
+func (o *Corporation) ReloadG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: no Corporation provided for reload")
+	}
+
+	return o.Reload(ctx, boil.GetContextDB())
+}
+
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Corporation) Reload(ctx context.Context, exec boil.ContextExecutor) error {
@@ -737,6 +822,16 @@ func (o *Corporation) Reload(ctx context.Context, exec boil.ContextExecutor) err
 
 	*o = *ret
 	return nil
+}
+
+// ReloadAllG refetches every row with matching primary key column values
+// and overwrites the original object slice with the newly updated slice.
+func (o *CorporationSlice) ReloadAllG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: empty CorporationSlice provided for reload all")
+	}
+
+	return o.ReloadAll(ctx, boil.GetContextDB())
 }
 
 // ReloadAll refetches every row with matching primary key column values
@@ -768,8 +863,13 @@ func (o *CorporationSlice) ReloadAll(ctx context.Context, exec boil.ContextExecu
 	return nil
 }
 
+// CorporationExistsG checks if the Corporation row exists.
+func CorporationExistsG(ctx context.Context, iD uint) (bool, error) {
+	return CorporationExists(ctx, boil.GetContextDB(), iD)
+}
+
 // CorporationExists checks if the Corporation row exists.
-func CorporationExists(ctx context.Context, exec boil.ContextExecutor, iD uint64) (bool, error) {
+func CorporationExists(ctx context.Context, exec boil.ContextExecutor, iD uint) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from `corporations` where `id`=? limit 1)"
 

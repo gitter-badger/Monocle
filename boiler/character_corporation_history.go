@@ -128,6 +128,11 @@ var (
 	_ = qmhelper.Where
 )
 
+// OneG returns a single characterCorporationHistory record from the query using the global executor.
+func (q characterCorporationHistoryQuery) OneG(ctx context.Context) (*CharacterCorporationHistory, error) {
+	return q.One(ctx, boil.GetContextDB())
+}
+
 // One returns a single characterCorporationHistory record from the query.
 func (q characterCorporationHistoryQuery) One(ctx context.Context, exec boil.ContextExecutor) (*CharacterCorporationHistory, error) {
 	o := &CharacterCorporationHistory{}
@@ -145,6 +150,11 @@ func (q characterCorporationHistoryQuery) One(ctx context.Context, exec boil.Con
 	return o, nil
 }
 
+// AllG returns all CharacterCorporationHistory records from the query using the global executor.
+func (q characterCorporationHistoryQuery) AllG(ctx context.Context) (CharacterCorporationHistorySlice, error) {
+	return q.All(ctx, boil.GetContextDB())
+}
+
 // All returns all CharacterCorporationHistory records from the query.
 func (q characterCorporationHistoryQuery) All(ctx context.Context, exec boil.ContextExecutor) (CharacterCorporationHistorySlice, error) {
 	var o []*CharacterCorporationHistory
@@ -155,6 +165,11 @@ func (q characterCorporationHistoryQuery) All(ctx context.Context, exec boil.Con
 	}
 
 	return o, nil
+}
+
+// CountG returns the count of all CharacterCorporationHistory records in the query, and panics on error.
+func (q characterCorporationHistoryQuery) CountG(ctx context.Context) (int64, error) {
+	return q.Count(ctx, boil.GetContextDB())
 }
 
 // Count returns the count of all CharacterCorporationHistory records in the query.
@@ -170,6 +185,11 @@ func (q characterCorporationHistoryQuery) Count(ctx context.Context, exec boil.C
 	}
 
 	return count, nil
+}
+
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q characterCorporationHistoryQuery) ExistsG(ctx context.Context) (bool, error) {
+	return q.Exists(ctx, boil.GetContextDB())
 }
 
 // Exists checks if the row exists in the table.
@@ -192,6 +212,11 @@ func (q characterCorporationHistoryQuery) Exists(ctx context.Context, exec boil.
 func CharacterCorporationHistories(mods ...qm.QueryMod) characterCorporationHistoryQuery {
 	mods = append(mods, qm.From("`character_corporation_history`"))
 	return characterCorporationHistoryQuery{NewQuery(mods...)}
+}
+
+// FindCharacterCorporationHistoryG retrieves a single record by ID.
+func FindCharacterCorporationHistoryG(ctx context.Context, iD uint64, recordID uint, selectCols ...string) (*CharacterCorporationHistory, error) {
+	return FindCharacterCorporationHistory(ctx, boil.GetContextDB(), iD, recordID, selectCols...)
 }
 
 // FindCharacterCorporationHistory retrieves a single record by ID with an executor.
@@ -218,6 +243,11 @@ func FindCharacterCorporationHistory(ctx context.Context, exec boil.ContextExecu
 	}
 
 	return characterCorporationHistoryObj, nil
+}
+
+// InsertG a single record. See Insert for whitelist behavior description.
+func (o *CharacterCorporationHistory) InsertG(ctx context.Context, columns boil.Columns) error {
+	return o.Insert(ctx, boil.GetContextDB(), columns)
 }
 
 // Insert a single record using an executor.
@@ -322,6 +352,12 @@ CacheNoHooks:
 	return nil
 }
 
+// UpdateG a single CharacterCorporationHistory record using the global executor.
+// See Update for more documentation.
+func (o *CharacterCorporationHistory) UpdateG(ctx context.Context, columns boil.Columns) error {
+	return o.Update(ctx, boil.GetContextDB(), columns)
+}
+
 // Update uses an executor to update the CharacterCorporationHistory.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
@@ -382,6 +418,11 @@ func (o *CharacterCorporationHistory) Update(ctx context.Context, exec boil.Cont
 	return nil
 }
 
+// UpdateAllG updates all rows with the specified column values.
+func (q characterCorporationHistoryQuery) UpdateAllG(ctx context.Context, cols M) error {
+	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
+}
+
 // UpdateAll updates all rows with the specified column values.
 func (q characterCorporationHistoryQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
@@ -392,6 +433,11 @@ func (q characterCorporationHistoryQuery) UpdateAll(ctx context.Context, exec bo
 	}
 
 	return nil
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (o CharacterCorporationHistorySlice) UpdateAllG(ctx context.Context, cols M) error {
+	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
@@ -436,6 +482,11 @@ func (o CharacterCorporationHistorySlice) UpdateAll(ctx context.Context, exec bo
 	}
 
 	return nil
+}
+
+// UpsertG attempts an insert, and does an update or ignore on conflict.
+func (o *CharacterCorporationHistory) UpsertG(ctx context.Context, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(ctx, boil.GetContextDB(), updateColumns, insertColumns)
 }
 
 var mySQLCharacterCorporationHistoryUniqueColumns = []string{}
@@ -577,6 +628,12 @@ CacheNoHooks:
 	return nil
 }
 
+// DeleteG deletes a single CharacterCorporationHistory record.
+// DeleteG will match against the primary key column to find the record to delete.
+func (o *CharacterCorporationHistory) DeleteG(ctx context.Context) error {
+	return o.Delete(ctx, boil.GetContextDB())
+}
+
 // Delete deletes a single CharacterCorporationHistory record with an executor.
 // Delete will match against the primary key column to find the record to delete.
 func (o *CharacterCorporationHistory) Delete(ctx context.Context, exec boil.ContextExecutor) error {
@@ -616,6 +673,11 @@ func (q characterCorporationHistoryQuery) DeleteAll(ctx context.Context, exec bo
 	return nil
 }
 
+// DeleteAllG deletes all rows in the slice.
+func (o CharacterCorporationHistorySlice) DeleteAllG(ctx context.Context) error {
+	return o.DeleteAll(ctx, boil.GetContextDB())
+}
+
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o CharacterCorporationHistorySlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
@@ -644,6 +706,15 @@ func (o CharacterCorporationHistorySlice) DeleteAll(ctx context.Context, exec bo
 	return nil
 }
 
+// ReloadG refetches the object from the database using the primary keys.
+func (o *CharacterCorporationHistory) ReloadG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: no CharacterCorporationHistory provided for reload")
+	}
+
+	return o.Reload(ctx, boil.GetContextDB())
+}
+
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *CharacterCorporationHistory) Reload(ctx context.Context, exec boil.ContextExecutor) error {
@@ -654,6 +725,16 @@ func (o *CharacterCorporationHistory) Reload(ctx context.Context, exec boil.Cont
 
 	*o = *ret
 	return nil
+}
+
+// ReloadAllG refetches every row with matching primary key column values
+// and overwrites the original object slice with the newly updated slice.
+func (o *CharacterCorporationHistorySlice) ReloadAllG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: empty CharacterCorporationHistorySlice provided for reload all")
+	}
+
+	return o.ReloadAll(ctx, boil.GetContextDB())
 }
 
 // ReloadAll refetches every row with matching primary key column values
@@ -683,6 +764,11 @@ func (o *CharacterCorporationHistorySlice) ReloadAll(ctx context.Context, exec b
 	*o = slice
 
 	return nil
+}
+
+// CharacterCorporationHistoryExistsG checks if the CharacterCorporationHistory row exists.
+func CharacterCorporationHistoryExistsG(ctx context.Context, iD uint64, recordID uint) (bool, error) {
+	return CharacterCorporationHistoryExists(ctx, boil.GetContextDB(), iD, recordID)
 }
 
 // CharacterCorporationHistoryExists checks if the CharacterCorporationHistory row exists.

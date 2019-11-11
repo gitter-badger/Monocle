@@ -24,7 +24,7 @@ import (
 // CorporationDelta is an object representing the database table.
 type CorporationDelta struct {
 	ID            uint64    `db:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
-	CorporationID uint64    `db:"corporation_id" boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
+	CorporationID uint      `db:"corporation_id" boil:"corporation_id" json:"corporation_id" toml:"corporation_id" yaml:"corporation_id"`
 	MemberCount   uint64    `db:"member_count" boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
 	CreatedAt     time.Time `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 
@@ -48,12 +48,12 @@ var CorporationDeltaColumns = struct {
 
 var CorporationDeltaWhere = struct {
 	ID            whereHelperuint64
-	CorporationID whereHelperuint64
+	CorporationID whereHelperuint
 	MemberCount   whereHelperuint64
 	CreatedAt     whereHelpertime_Time
 }{
 	ID:            whereHelperuint64{field: "`corporation_deltas`.`id`"},
-	CorporationID: whereHelperuint64{field: "`corporation_deltas`.`corporation_id`"},
+	CorporationID: whereHelperuint{field: "`corporation_deltas`.`corporation_id`"},
 	MemberCount:   whereHelperuint64{field: "`corporation_deltas`.`member_count`"},
 	CreatedAt:     whereHelpertime_Time{field: "`corporation_deltas`.`created_at`"},
 }
@@ -112,6 +112,11 @@ var (
 	_ = qmhelper.Where
 )
 
+// OneG returns a single corporationDelta record from the query using the global executor.
+func (q corporationDeltaQuery) OneG(ctx context.Context) (*CorporationDelta, error) {
+	return q.One(ctx, boil.GetContextDB())
+}
+
 // One returns a single corporationDelta record from the query.
 func (q corporationDeltaQuery) One(ctx context.Context, exec boil.ContextExecutor) (*CorporationDelta, error) {
 	o := &CorporationDelta{}
@@ -129,6 +134,11 @@ func (q corporationDeltaQuery) One(ctx context.Context, exec boil.ContextExecuto
 	return o, nil
 }
 
+// AllG returns all CorporationDelta records from the query using the global executor.
+func (q corporationDeltaQuery) AllG(ctx context.Context) (CorporationDeltaSlice, error) {
+	return q.All(ctx, boil.GetContextDB())
+}
+
 // All returns all CorporationDelta records from the query.
 func (q corporationDeltaQuery) All(ctx context.Context, exec boil.ContextExecutor) (CorporationDeltaSlice, error) {
 	var o []*CorporationDelta
@@ -139,6 +149,11 @@ func (q corporationDeltaQuery) All(ctx context.Context, exec boil.ContextExecuto
 	}
 
 	return o, nil
+}
+
+// CountG returns the count of all CorporationDelta records in the query, and panics on error.
+func (q corporationDeltaQuery) CountG(ctx context.Context) (int64, error) {
+	return q.Count(ctx, boil.GetContextDB())
 }
 
 // Count returns the count of all CorporationDelta records in the query.
@@ -154,6 +169,11 @@ func (q corporationDeltaQuery) Count(ctx context.Context, exec boil.ContextExecu
 	}
 
 	return count, nil
+}
+
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q corporationDeltaQuery) ExistsG(ctx context.Context) (bool, error) {
+	return q.Exists(ctx, boil.GetContextDB())
 }
 
 // Exists checks if the row exists in the table.
@@ -176,6 +196,11 @@ func (q corporationDeltaQuery) Exists(ctx context.Context, exec boil.ContextExec
 func CorporationDeltas(mods ...qm.QueryMod) corporationDeltaQuery {
 	mods = append(mods, qm.From("`corporation_deltas`"))
 	return corporationDeltaQuery{NewQuery(mods...)}
+}
+
+// FindCorporationDeltaG retrieves a single record by ID.
+func FindCorporationDeltaG(ctx context.Context, iD uint64, selectCols ...string) (*CorporationDelta, error) {
+	return FindCorporationDelta(ctx, boil.GetContextDB(), iD, selectCols...)
 }
 
 // FindCorporationDelta retrieves a single record by ID with an executor.
@@ -202,6 +227,11 @@ func FindCorporationDelta(ctx context.Context, exec boil.ContextExecutor, iD uin
 	}
 
 	return corporationDeltaObj, nil
+}
+
+// InsertG a single record. See Insert for whitelist behavior description.
+func (o *CorporationDelta) InsertG(ctx context.Context, columns boil.Columns) error {
+	return o.Insert(ctx, boil.GetContextDB(), columns)
 }
 
 // Insert a single record using an executor.
@@ -313,6 +343,12 @@ CacheNoHooks:
 	return nil
 }
 
+// UpdateG a single CorporationDelta record using the global executor.
+// See Update for more documentation.
+func (o *CorporationDelta) UpdateG(ctx context.Context, columns boil.Columns) error {
+	return o.Update(ctx, boil.GetContextDB(), columns)
+}
+
 // Update uses an executor to update the CorporationDelta.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
@@ -367,6 +403,11 @@ func (o *CorporationDelta) Update(ctx context.Context, exec boil.ContextExecutor
 	return nil
 }
 
+// UpdateAllG updates all rows with the specified column values.
+func (q corporationDeltaQuery) UpdateAllG(ctx context.Context, cols M) error {
+	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
+}
+
 // UpdateAll updates all rows with the specified column values.
 func (q corporationDeltaQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
@@ -377,6 +418,11 @@ func (q corporationDeltaQuery) UpdateAll(ctx context.Context, exec boil.ContextE
 	}
 
 	return nil
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (o CorporationDeltaSlice) UpdateAllG(ctx context.Context, cols M) error {
+	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
@@ -421,6 +467,11 @@ func (o CorporationDeltaSlice) UpdateAll(ctx context.Context, exec boil.ContextE
 	}
 
 	return nil
+}
+
+// UpsertG attempts an insert, and does an update or ignore on conflict.
+func (o *CorporationDelta) UpsertG(ctx context.Context, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(ctx, boil.GetContextDB(), updateColumns, insertColumns)
 }
 
 var mySQLCorporationDeltaUniqueColumns = []string{
@@ -574,6 +625,12 @@ CacheNoHooks:
 	return nil
 }
 
+// DeleteG deletes a single CorporationDelta record.
+// DeleteG will match against the primary key column to find the record to delete.
+func (o *CorporationDelta) DeleteG(ctx context.Context) error {
+	return o.Delete(ctx, boil.GetContextDB())
+}
+
 // Delete deletes a single CorporationDelta record with an executor.
 // Delete will match against the primary key column to find the record to delete.
 func (o *CorporationDelta) Delete(ctx context.Context, exec boil.ContextExecutor) error {
@@ -613,6 +670,11 @@ func (q corporationDeltaQuery) DeleteAll(ctx context.Context, exec boil.ContextE
 	return nil
 }
 
+// DeleteAllG deletes all rows in the slice.
+func (o CorporationDeltaSlice) DeleteAllG(ctx context.Context) error {
+	return o.DeleteAll(ctx, boil.GetContextDB())
+}
+
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o CorporationDeltaSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
@@ -641,6 +703,15 @@ func (o CorporationDeltaSlice) DeleteAll(ctx context.Context, exec boil.ContextE
 	return nil
 }
 
+// ReloadG refetches the object from the database using the primary keys.
+func (o *CorporationDelta) ReloadG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: no CorporationDelta provided for reload")
+	}
+
+	return o.Reload(ctx, boil.GetContextDB())
+}
+
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *CorporationDelta) Reload(ctx context.Context, exec boil.ContextExecutor) error {
@@ -651,6 +722,16 @@ func (o *CorporationDelta) Reload(ctx context.Context, exec boil.ContextExecutor
 
 	*o = *ret
 	return nil
+}
+
+// ReloadAllG refetches every row with matching primary key column values
+// and overwrites the original object slice with the newly updated slice.
+func (o *CorporationDeltaSlice) ReloadAllG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: empty CorporationDeltaSlice provided for reload all")
+	}
+
+	return o.ReloadAll(ctx, boil.GetContextDB())
 }
 
 // ReloadAll refetches every row with matching primary key column values
@@ -680,6 +761,11 @@ func (o *CorporationDeltaSlice) ReloadAll(ctx context.Context, exec boil.Context
 	*o = slice
 
 	return nil
+}
+
+// CorporationDeltaExistsG checks if the CorporationDelta row exists.
+func CorporationDeltaExistsG(ctx context.Context, iD uint64) (bool, error) {
+	return CorporationDeltaExists(ctx, boil.GetContextDB(), iD)
 }
 
 // CorporationDeltaExists checks if the CorporationDelta row exists.

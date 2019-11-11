@@ -21,7 +21,7 @@ func allianceLoader(ctx context.Context, db *sqlx.DB) *generated.AllianceLoader 
 	return generated.NewAllianceLoader(generated.AllianceLoaderConfig{
 		Wait:     defaultWait,
 		MaxBatch: defaultMaxBatch,
-		Fetch: func(ids []uint32) ([]*monocle.Alliance, []error) {
+		Fetch: func(ids []uint) ([]*monocle.Alliance, []error) {
 
 			alliances := make([]*monocle.Alliance, len(ids))
 			errors := make([]error, len(ids))
@@ -40,7 +40,7 @@ func allianceLoader(ctx context.Context, db *sqlx.DB) *generated.AllianceLoader 
 				return nil, errors
 			}
 
-			allianceByAllianceID := map[uint32]*monocle.Alliance{}
+			allianceByAllianceID := map[uint]*monocle.Alliance{}
 			for _, c := range allAlliances {
 				allianceByAllianceID[c.ID] = c
 			}
@@ -97,7 +97,7 @@ func corporationLoader(ctx context.Context, db *sqlx.DB) *generated.CorporationL
 	return generated.NewCorporationLoader(generated.CorporationLoaderConfig{
 		Wait:     defaultWait,
 		MaxBatch: defaultMaxBatch,
-		Fetch: func(ids []uint32) ([]*monocle.Corporation, []error) {
+		Fetch: func(ids []uint) ([]*monocle.Corporation, []error) {
 			corporations := make([]*monocle.Corporation, len(ids))
 			errors := make([]error, len(ids))
 
@@ -115,7 +115,7 @@ func corporationLoader(ctx context.Context, db *sqlx.DB) *generated.CorporationL
 				return nil, errors
 			}
 
-			corporationByCorporationID := map[uint32]*monocle.Corporation{}
+			corporationByCorporationID := map[uint]*monocle.Corporation{}
 			for _, c := range allCorporations {
 				corporationByCorporationID[c.ID] = c
 			}
@@ -133,7 +133,7 @@ func corporationMembersLoader(ctx context.Context, db *sqlx.DB) *generated.Corpo
 	return generated.NewCorporationMembersLoader(generated.CorporationMembersLoaderConfig{
 		Wait:     defaultWait,
 		MaxBatch: defaultMaxBatch,
-		Fetch: func(ids []uint32) ([][]*monocle.Character, []error) {
+		Fetch: func(ids []uint) ([][]*monocle.Character, []error) {
 			corporationMembers := make([][]*monocle.Character, len(ids))
 			errors := make([]error, len(ids))
 
@@ -151,7 +151,7 @@ func corporationMembersLoader(ctx context.Context, db *sqlx.DB) *generated.Corpo
 				return nil, errors
 			}
 
-			membersByCorporationID := map[uint32][]*monocle.Character{}
+			membersByCorporationID := map[uint][]*monocle.Character{}
 			for _, c := range allCharacters {
 				membersByCorporationID[c.CorporationID] = append(membersByCorporationID[c.CorporationID], c)
 			}

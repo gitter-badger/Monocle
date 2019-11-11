@@ -1,6 +1,7 @@
 extend type Query {
     alliance(id: Int!): Alliance!
     alliancesByMemberCount(limit: Int!): [Alliance]!
+
 }
 
 type Alliance {

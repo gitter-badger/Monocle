@@ -122,6 +122,11 @@ var (
 	_ = qmhelper.Where
 )
 
+// OneG returns a single etag record from the query using the global executor.
+func (q etagQuery) OneG(ctx context.Context) (*Etag, error) {
+	return q.One(ctx, boil.GetContextDB())
+}
+
 // One returns a single etag record from the query.
 func (q etagQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Etag, error) {
 	o := &Etag{}
@@ -139,6 +144,11 @@ func (q etagQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Etag, e
 	return o, nil
 }
 
+// AllG returns all Etag records from the query using the global executor.
+func (q etagQuery) AllG(ctx context.Context) (EtagSlice, error) {
+	return q.All(ctx, boil.GetContextDB())
+}
+
 // All returns all Etag records from the query.
 func (q etagQuery) All(ctx context.Context, exec boil.ContextExecutor) (EtagSlice, error) {
 	var o []*Etag
@@ -149,6 +159,11 @@ func (q etagQuery) All(ctx context.Context, exec boil.ContextExecutor) (EtagSlic
 	}
 
 	return o, nil
+}
+
+// CountG returns the count of all Etag records in the query, and panics on error.
+func (q etagQuery) CountG(ctx context.Context) (int64, error) {
+	return q.Count(ctx, boil.GetContextDB())
 }
 
 // Count returns the count of all Etag records in the query.
@@ -164,6 +179,11 @@ func (q etagQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64,
 	}
 
 	return count, nil
+}
+
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q etagQuery) ExistsG(ctx context.Context) (bool, error) {
+	return q.Exists(ctx, boil.GetContextDB())
 }
 
 // Exists checks if the row exists in the table.
@@ -186,6 +206,11 @@ func (q etagQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool,
 func Etags(mods ...qm.QueryMod) etagQuery {
 	mods = append(mods, qm.From("`etags`"))
 	return etagQuery{NewQuery(mods...)}
+}
+
+// FindEtagG retrieves a single record by ID.
+func FindEtagG(ctx context.Context, iD uint, resource string, selectCols ...string) (*Etag, error) {
+	return FindEtag(ctx, boil.GetContextDB(), iD, resource, selectCols...)
 }
 
 // FindEtag retrieves a single record by ID with an executor.
@@ -212,6 +237,11 @@ func FindEtag(ctx context.Context, exec boil.ContextExecutor, iD uint, resource 
 	}
 
 	return etagObj, nil
+}
+
+// InsertG a single record. See Insert for whitelist behavior description.
+func (o *Etag) InsertG(ctx context.Context, columns boil.Columns) error {
+	return o.Insert(ctx, boil.GetContextDB(), columns)
 }
 
 // Insert a single record using an executor.
@@ -316,6 +346,12 @@ CacheNoHooks:
 	return nil
 }
 
+// UpdateG a single Etag record using the global executor.
+// See Update for more documentation.
+func (o *Etag) UpdateG(ctx context.Context, columns boil.Columns) error {
+	return o.Update(ctx, boil.GetContextDB(), columns)
+}
+
 // Update uses an executor to update the Etag.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
@@ -376,6 +412,11 @@ func (o *Etag) Update(ctx context.Context, exec boil.ContextExecutor, columns bo
 	return nil
 }
 
+// UpdateAllG updates all rows with the specified column values.
+func (q etagQuery) UpdateAllG(ctx context.Context, cols M) error {
+	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
+}
+
 // UpdateAll updates all rows with the specified column values.
 func (q etagQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
@@ -386,6 +427,11 @@ func (q etagQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, col
 	}
 
 	return nil
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (o EtagSlice) UpdateAllG(ctx context.Context, cols M) error {
+	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
@@ -430,6 +476,11 @@ func (o EtagSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, col
 	}
 
 	return nil
+}
+
+// UpsertG attempts an insert, and does an update or ignore on conflict.
+func (o *Etag) UpsertG(ctx context.Context, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(ctx, boil.GetContextDB(), updateColumns, insertColumns)
 }
 
 var mySQLEtagUniqueColumns = []string{}
@@ -571,6 +622,12 @@ CacheNoHooks:
 	return nil
 }
 
+// DeleteG deletes a single Etag record.
+// DeleteG will match against the primary key column to find the record to delete.
+func (o *Etag) DeleteG(ctx context.Context) error {
+	return o.Delete(ctx, boil.GetContextDB())
+}
+
 // Delete deletes a single Etag record with an executor.
 // Delete will match against the primary key column to find the record to delete.
 func (o *Etag) Delete(ctx context.Context, exec boil.ContextExecutor) error {
@@ -610,6 +667,11 @@ func (q etagQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) err
 	return nil
 }
 
+// DeleteAllG deletes all rows in the slice.
+func (o EtagSlice) DeleteAllG(ctx context.Context) error {
+	return o.DeleteAll(ctx, boil.GetContextDB())
+}
+
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o EtagSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
@@ -638,6 +700,15 @@ func (o EtagSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) err
 	return nil
 }
 
+// ReloadG refetches the object from the database using the primary keys.
+func (o *Etag) ReloadG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: no Etag provided for reload")
+	}
+
+	return o.Reload(ctx, boil.GetContextDB())
+}
+
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Etag) Reload(ctx context.Context, exec boil.ContextExecutor) error {
@@ -648,6 +719,16 @@ func (o *Etag) Reload(ctx context.Context, exec boil.ContextExecutor) error {
 
 	*o = *ret
 	return nil
+}
+
+// ReloadAllG refetches every row with matching primary key column values
+// and overwrites the original object slice with the newly updated slice.
+func (o *EtagSlice) ReloadAllG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: empty EtagSlice provided for reload all")
+	}
+
+	return o.ReloadAll(ctx, boil.GetContextDB())
 }
 
 // ReloadAll refetches every row with matching primary key column values
@@ -677,6 +758,11 @@ func (o *EtagSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) er
 	*o = slice
 
 	return nil
+}
+
+// EtagExistsG checks if the Etag row exists.
+func EtagExistsG(ctx context.Context, iD uint, resource string) (bool, error) {
+	return EtagExists(ctx, boil.GetContextDB(), iD, resource)
 }
 
 // EtagExists checks if the Etag row exists.

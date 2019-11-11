@@ -117,6 +117,11 @@ var (
 	_ = qmhelper.Where
 )
 
+// OneG returns a single total record from the query using the global executor.
+func (q totalQuery) OneG(ctx context.Context) (*Total, error) {
+	return q.One(ctx, boil.GetContextDB())
+}
+
 // One returns a single total record from the query.
 func (q totalQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Total, error) {
 	o := &Total{}
@@ -134,6 +139,11 @@ func (q totalQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Total,
 	return o, nil
 }
 
+// AllG returns all Total records from the query using the global executor.
+func (q totalQuery) AllG(ctx context.Context) (TotalSlice, error) {
+	return q.All(ctx, boil.GetContextDB())
+}
+
 // All returns all Total records from the query.
 func (q totalQuery) All(ctx context.Context, exec boil.ContextExecutor) (TotalSlice, error) {
 	var o []*Total
@@ -144,6 +154,11 @@ func (q totalQuery) All(ctx context.Context, exec boil.ContextExecutor) (TotalSl
 	}
 
 	return o, nil
+}
+
+// CountG returns the count of all Total records in the query, and panics on error.
+func (q totalQuery) CountG(ctx context.Context) (int64, error) {
+	return q.Count(ctx, boil.GetContextDB())
 }
 
 // Count returns the count of all Total records in the query.
@@ -159,6 +174,11 @@ func (q totalQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64
 	}
 
 	return count, nil
+}
+
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q totalQuery) ExistsG(ctx context.Context) (bool, error) {
+	return q.Exists(ctx, boil.GetContextDB())
 }
 
 // Exists checks if the row exists in the table.
@@ -181,6 +201,11 @@ func (q totalQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool
 func Totals(mods ...qm.QueryMod) totalQuery {
 	mods = append(mods, qm.From("`totals`"))
 	return totalQuery{NewQuery(mods...)}
+}
+
+// FindTotalG retrieves a single record by ID.
+func FindTotalG(ctx context.Context, iD uint64, selectCols ...string) (*Total, error) {
+	return FindTotal(ctx, boil.GetContextDB(), iD, selectCols...)
 }
 
 // FindTotal retrieves a single record by ID with an executor.
@@ -207,6 +232,11 @@ func FindTotal(ctx context.Context, exec boil.ContextExecutor, iD uint64, select
 	}
 
 	return totalObj, nil
+}
+
+// InsertG a single record. See Insert for whitelist behavior description.
+func (o *Total) InsertG(ctx context.Context, columns boil.Columns) error {
+	return o.Insert(ctx, boil.GetContextDB(), columns)
 }
 
 // Insert a single record using an executor.
@@ -318,6 +348,12 @@ CacheNoHooks:
 	return nil
 }
 
+// UpdateG a single Total record using the global executor.
+// See Update for more documentation.
+func (o *Total) UpdateG(ctx context.Context, columns boil.Columns) error {
+	return o.Update(ctx, boil.GetContextDB(), columns)
+}
+
 // Update uses an executor to update the Total.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
@@ -372,6 +408,11 @@ func (o *Total) Update(ctx context.Context, exec boil.ContextExecutor, columns b
 	return nil
 }
 
+// UpdateAllG updates all rows with the specified column values.
+func (q totalQuery) UpdateAllG(ctx context.Context, cols M) error {
+	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
+}
+
 // UpdateAll updates all rows with the specified column values.
 func (q totalQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) error {
 	queries.SetUpdate(q.Query, cols)
@@ -382,6 +423,11 @@ func (q totalQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, co
 	}
 
 	return nil
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (o TotalSlice) UpdateAllG(ctx context.Context, cols M) error {
+	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
@@ -426,6 +472,11 @@ func (o TotalSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, co
 	}
 
 	return nil
+}
+
+// UpsertG attempts an insert, and does an update or ignore on conflict.
+func (o *Total) UpsertG(ctx context.Context, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(ctx, boil.GetContextDB(), updateColumns, insertColumns)
 }
 
 var mySQLTotalUniqueColumns = []string{
@@ -579,6 +630,12 @@ CacheNoHooks:
 	return nil
 }
 
+// DeleteG deletes a single Total record.
+// DeleteG will match against the primary key column to find the record to delete.
+func (o *Total) DeleteG(ctx context.Context) error {
+	return o.Delete(ctx, boil.GetContextDB())
+}
+
 // Delete deletes a single Total record with an executor.
 // Delete will match against the primary key column to find the record to delete.
 func (o *Total) Delete(ctx context.Context, exec boil.ContextExecutor) error {
@@ -618,6 +675,11 @@ func (q totalQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) er
 	return nil
 }
 
+// DeleteAllG deletes all rows in the slice.
+func (o TotalSlice) DeleteAllG(ctx context.Context) error {
+	return o.DeleteAll(ctx, boil.GetContextDB())
+}
+
 // DeleteAll deletes all rows in the slice, using an executor.
 func (o TotalSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if len(o) == 0 {
@@ -646,6 +708,15 @@ func (o TotalSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) er
 	return nil
 }
 
+// ReloadG refetches the object from the database using the primary keys.
+func (o *Total) ReloadG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: no Total provided for reload")
+	}
+
+	return o.Reload(ctx, boil.GetContextDB())
+}
+
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Total) Reload(ctx context.Context, exec boil.ContextExecutor) error {
@@ -656,6 +727,16 @@ func (o *Total) Reload(ctx context.Context, exec boil.ContextExecutor) error {
 
 	*o = *ret
 	return nil
+}
+
+// ReloadAllG refetches every row with matching primary key column values
+// and overwrites the original object slice with the newly updated slice.
+func (o *TotalSlice) ReloadAllG(ctx context.Context) error {
+	if o == nil {
+		return errors.New("boiler: empty TotalSlice provided for reload all")
+	}
+
+	return o.ReloadAll(ctx, boil.GetContextDB())
 }
 
 // ReloadAll refetches every row with matching primary key column values
@@ -685,6 +766,11 @@ func (o *TotalSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) e
 	*o = slice
 
 	return nil
+}
+
+// TotalExistsG checks if the Total row exists.
+func TotalExistsG(ctx context.Context, iD uint64) (bool, error) {
+	return TotalExists(ctx, boil.GetContextDB(), iD)
 }
 
 // TotalExists checks if the Total row exists.

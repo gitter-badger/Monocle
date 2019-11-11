@@ -6,6 +6,7 @@ import (
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/boiler"
 	"github.com/ddouglas/monocle/graph/dataloaders"
+	"github.com/ddouglas/monocle/graph/models"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
@@ -59,6 +60,39 @@ func (r *queryResolver) CorporationsByAllianceID(ctx context.Context, allianceID
 	).Bind(ctx, r.DB, &corporations)
 
 	return corporations, err
+}
+
+func (r *queryResolver) CorporationAllianceHistoryByAllianceID(ctx context.Context, allianceID int, page *int, limit *int, sort *models.Sort) ([]*monocle.CorporationAllianceHistory, error) {
+	// histories := make([]*monocle.CorporationAllianceHistory, 0)
+
+	// if limit == nil || *limit > 50 {
+	// 	x := 50
+	// 	limit = &x
+	// }
+
+	// offset := (*page * *limit) - *limit
+
+	// /**
+	// 	SELECT
+	// 		*
+	// 	FROM `character_corporation_history`
+	// 	WHERE (corporation_id = ?)
+	// 	AND (leave_date IS NULL)
+	// 	ORDER BY record_id DESC
+	// 	LIMIT 50
+	// 	OFFSET 50;
+	// **/
+
+	// err := boiler.CharacterCorporationHistories(
+	// 	qm.Where("corporation_id = ?", corporationID),
+	// 	qm.And("leave_date IS NULL"),
+	// 	qm.Limit(*limit),
+	// 	qm.Offset(offset),
+	// 	qm.OrderBy(fmt.Sprintf("record_id %s", sort.String())),
+	// ).Bind(ctx, r.DB, &histories)
+
+	// return histories, err
+	return nil, nil
 }
 
 type corporationResolver struct {
