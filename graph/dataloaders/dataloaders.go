@@ -169,7 +169,7 @@ func corporationAllianceHistoryLoader(ctx context.Context, db *sqlx.DB) *generat
 	return generated.NewCorporationAllianceHistoryLoader(generated.CorporationAllianceHistoryLoaderConfig{
 		Wait:     defaultWait,
 		MaxBatch: defaultMaxBatch,
-		Fetch: func(corporationIDs []uint32) ([][]*monocle.CorporationAllianceHistory, []error) {
+		Fetch: func(corporationIDs []uint) ([][]*monocle.CorporationAllianceHistory, []error) {
 			histories := make([][]*monocle.CorporationAllianceHistory, len(corporationIDs))
 			errors := make([]error, len(corporationIDs))
 
@@ -189,9 +189,9 @@ func corporationAllianceHistoryLoader(ctx context.Context, db *sqlx.DB) *generat
 				return nil, errors
 			}
 
-			historiesByCorporationID := map[uint32][]*monocle.CorporationAllianceHistory{}
+			historiesByCorporationID := map[uint][]*monocle.CorporationAllianceHistory{}
 			for _, h := range allHistories {
-				historiesByCorporationID[uint32(h.ID)] = append(historiesByCorporationID[uint32(h.ID)], h)
+				historiesByCorporationID[uint(h.ID)] = append(historiesByCorporationID[uint(h.ID)], h)
 			}
 
 			for i, x := range corporationIDs {
