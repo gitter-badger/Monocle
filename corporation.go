@@ -12,7 +12,7 @@ type Corporation struct {
 	Ticker        string      `db:"ticker" boil:"ticker" json:"ticker" toml:"ticker" yaml:"ticker"`
 	MemberCount   uint        `db:"member_count" boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
 	CeoID         uint64      `db:"ceo_id" boil:"ceo_id" json:"ceo_id" toml:"ceo_id" yaml:"ceo_id"`
-	AllianceID    null.Int    `db:"alliance_id" boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
+	AllianceID    null.Uint   `db:"alliance_id" boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
 	DateFounded   null.Time   `db:"date_founded" boil:"date_founded" json:"date_founded,omitempty" toml:"date_founded" yaml:"date_founded,omitempty"`
 	CreatorID     uint64      `db:"creator_id" boil:"creator_id" json:"creator_id" toml:"creator_id" yaml:"creator_id"`
 	HomeStationID null.Uint64 `db:"home_station_id" boil:"home_station_id" json:"home_station_id,omitempty" toml:"home_station_id" yaml:"home_station_id,omitempty"`

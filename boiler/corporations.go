@@ -29,7 +29,7 @@ type Corporation struct {
 	Ticker        string      `db:"ticker" boil:"ticker" json:"ticker" toml:"ticker" yaml:"ticker"`
 	MemberCount   uint        `db:"member_count" boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
 	CeoID         uint64      `db:"ceo_id" boil:"ceo_id" json:"ceo_id" toml:"ceo_id" yaml:"ceo_id"`
-	AllianceID    null.Int    `db:"alliance_id" boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
+	AllianceID    null.Uint   `db:"alliance_id" boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
 	DateFounded   null.Time   `db:"date_founded" boil:"date_founded" json:"date_founded,omitempty" toml:"date_founded" yaml:"date_founded,omitempty"`
 	CreatorID     uint64      `db:"creator_id" boil:"creator_id" json:"creator_id" toml:"creator_id" yaml:"creator_id"`
 	HomeStationID null.Uint64 `db:"home_station_id" boil:"home_station_id" json:"home_station_id,omitempty" toml:"home_station_id" yaml:"home_station_id,omitempty"`
@@ -86,29 +86,6 @@ var CorporationColumns = struct {
 
 // Generated where
 
-type whereHelpernull_Int struct{ field string }
-
-func (w whereHelpernull_Int) EQ(x null.Int) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Int) NEQ(x null.Int) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Int) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-func (w whereHelpernull_Int) LT(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Int) LTE(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Int) GT(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Int) GTE(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
 type whereHelpernull_Uint64 struct{ field string }
 
 func (w whereHelpernull_Uint64) EQ(x null.Uint64) qm.QueryMod {
@@ -138,7 +115,7 @@ var CorporationWhere = struct {
 	Ticker        whereHelperstring
 	MemberCount   whereHelperuint
 	CeoID         whereHelperuint64
-	AllianceID    whereHelpernull_Int
+	AllianceID    whereHelpernull_Uint
 	DateFounded   whereHelpernull_Time
 	CreatorID     whereHelperuint64
 	HomeStationID whereHelpernull_Uint64
@@ -156,7 +133,7 @@ var CorporationWhere = struct {
 	Ticker:        whereHelperstring{field: "`corporations`.`ticker`"},
 	MemberCount:   whereHelperuint{field: "`corporations`.`member_count`"},
 	CeoID:         whereHelperuint64{field: "`corporations`.`ceo_id`"},
-	AllianceID:    whereHelpernull_Int{field: "`corporations`.`alliance_id`"},
+	AllianceID:    whereHelpernull_Uint{field: "`corporations`.`alliance_id`"},
 	DateFounded:   whereHelpernull_Time{field: "`corporations`.`date_founded`"},
 	CreatorID:     whereHelperuint64{field: "`corporations`.`creator_id`"},
 	HomeStationID: whereHelpernull_Uint64{field: "`corporations`.`home_station_id`"},
