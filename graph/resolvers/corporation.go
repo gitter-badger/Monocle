@@ -100,7 +100,7 @@ type corporationResolver struct {
 }
 
 func (q *corporationResolver) Alliance(ctx context.Context, obj *monocle.Corporation) (*monocle.Alliance, error) {
-	return dataloaders.CtxLoader(ctx).Alliance.Load(obj.AllianceID.Uint32)
+	return dataloaders.CtxLoader(ctx).Alliance.Load(obj.AllianceID.Uint)
 }
 
 func (q *corporationResolver) Members(ctx context.Context, obj *monocle.Corporation) ([]*monocle.Character, error) {

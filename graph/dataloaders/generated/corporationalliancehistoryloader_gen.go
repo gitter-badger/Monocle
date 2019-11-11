@@ -12,7 +12,7 @@ import (
 // CorporationAllianceHistoryLoaderConfig captures the config to create a new CorporationAllianceHistoryLoader
 type CorporationAllianceHistoryLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []uint32) ([][]*monocle.CorporationAllianceHistory, []error)
+	Fetch func(keys []uint) ([][]*monocle.CorporationAllianceHistory, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -33,7 +33,7 @@ func NewCorporationAllianceHistoryLoader(config CorporationAllianceHistoryLoader
 // CorporationAllianceHistoryLoader batches and caches requests
 type CorporationAllianceHistoryLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []uint32) ([][]*monocle.CorporationAllianceHistory, []error)
+	fetch func(keys []uint) ([][]*monocle.CorporationAllianceHistory, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -44,7 +44,7 @@ type CorporationAllianceHistoryLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[uint32][]*monocle.CorporationAllianceHistory
+	cache map[uint][]*monocle.CorporationAllianceHistory
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -55,7 +55,7 @@ type CorporationAllianceHistoryLoader struct {
 }
 
 type corporationAllianceHistoryLoaderBatch struct {
-	keys    []uint32
+	keys    []uint
 	data    [][]*monocle.CorporationAllianceHistory
 	error   []error
 	closing bool
@@ -63,14 +63,14 @@ type corporationAllianceHistoryLoaderBatch struct {
 }
 
 // Load a CorporationAllianceHistory by key, batching and caching will be applied automatically
-func (l *CorporationAllianceHistoryLoader) Load(key uint32) ([]*monocle.CorporationAllianceHistory, error) {
+func (l *CorporationAllianceHistoryLoader) Load(key uint) ([]*monocle.CorporationAllianceHistory, error) {
 	return l.LoadThunk(key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a CorporationAllianceHistory.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *CorporationAllianceHistoryLoader) LoadThunk(key uint32) func() ([]*monocle.CorporationAllianceHistory, error) {
+func (l *CorporationAllianceHistoryLoader) LoadThunk(key uint) func() ([]*monocle.CorporationAllianceHistory, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
@@ -113,7 +113,7 @@ func (l *CorporationAllianceHistoryLoader) LoadThunk(key uint32) func() ([]*mono
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *CorporationAllianceHistoryLoader) LoadAll(keys []uint32) ([][]*monocle.CorporationAllianceHistory, []error) {
+func (l *CorporationAllianceHistoryLoader) LoadAll(keys []uint) ([][]*monocle.CorporationAllianceHistory, []error) {
 	results := make([]func() ([]*monocle.CorporationAllianceHistory, error), len(keys))
 
 	for i, key := range keys {
@@ -131,7 +131,7 @@ func (l *CorporationAllianceHistoryLoader) LoadAll(keys []uint32) ([][]*monocle.
 // LoadAllThunk returns a function that when called will block waiting for a CorporationAllianceHistorys.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *CorporationAllianceHistoryLoader) LoadAllThunk(keys []uint32) func() ([][]*monocle.CorporationAllianceHistory, []error) {
+func (l *CorporationAllianceHistoryLoader) LoadAllThunk(keys []uint) func() ([][]*monocle.CorporationAllianceHistory, []error) {
 	results := make([]func() ([]*monocle.CorporationAllianceHistory, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
@@ -149,7 +149,7 @@ func (l *CorporationAllianceHistoryLoader) LoadAllThunk(keys []uint32) func() ([
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *CorporationAllianceHistoryLoader) Prime(key uint32, value []*monocle.CorporationAllianceHistory) bool {
+func (l *CorporationAllianceHistoryLoader) Prime(key uint, value []*monocle.CorporationAllianceHistory) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
@@ -164,22 +164,22 @@ func (l *CorporationAllianceHistoryLoader) Prime(key uint32, value []*monocle.Co
 }
 
 // Clear the value at key from the cache, if it exists
-func (l *CorporationAllianceHistoryLoader) Clear(key uint32) {
+func (l *CorporationAllianceHistoryLoader) Clear(key uint) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
 
-func (l *CorporationAllianceHistoryLoader) unsafeSet(key uint32, value []*monocle.CorporationAllianceHistory) {
+func (l *CorporationAllianceHistoryLoader) unsafeSet(key uint, value []*monocle.CorporationAllianceHistory) {
 	if l.cache == nil {
-		l.cache = map[uint32][]*monocle.CorporationAllianceHistory{}
+		l.cache = map[uint][]*monocle.CorporationAllianceHistory{}
 	}
 	l.cache[key] = value
 }
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *corporationAllianceHistoryLoaderBatch) keyIndex(l *CorporationAllianceHistoryLoader, key uint32) int {
+func (b *corporationAllianceHistoryLoaderBatch) keyIndex(l *CorporationAllianceHistoryLoader, key uint) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i
