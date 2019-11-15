@@ -2,11 +2,9 @@ package audit
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/boiler"
 	"github.com/ddouglas/monocle/tools"
@@ -18,11 +16,10 @@ import (
 )
 
 func (a *Auditor) corpUpdater(c *cli.Context) {
-	// page := c.Int("page")
+	page := c.Int("page")
 
-	limit := 1
-	i := 1
-	for {
+	limit := 25000
+	for i := page; i <= 500; i++ {
 
 		var corporations []monocle.Corporation
 		offset := (i * limit) - limit
@@ -36,8 +33,6 @@ func (a *Auditor) corpUpdater(c *cli.Context) {
 			qm.Offset(offset),
 			qm.Where("id >= 98000000"),
 		)
-
-		// tools.OutputDebugQuery(query.Query)
 
 		err := query.Bind(context.Background(), a.DB, &corporations)
 		if err != nil {
@@ -53,23 +48,22 @@ func (a *Auditor) corpUpdater(c *cli.Context) {
 
 		a.Logger.WithField("count", len(corporations)).Info("character query successful")
 
-		corpChunk := tools.ChunkCorporationSlice(1000, corporations)
+		corpChunk := tools.ChunkCorporationSlice(2500, corporations)
 		for _, corporations := range corpChunk {
-			// wg.Add(1)
+			wg.Add(1)
 
-			a.processCorporationChunk(corporations)
+			go a.processCorporationChunk(corporations)
 		}
 
 		a.Logger.Info("waiting")
-		// wg.Wait()
+		wg.Wait()
 		a.Logger.Info("done")
-		i++
 	}
 }
 
 func (a *Auditor) processCorporationChunk(corporations []monocle.Corporation) {
 	var err error
-	// defer wg.Done()
+	defer wg.Done()
 
 	corpMap := tools.CorporationSliceToMap(corporations)
 	corpIds := tools.CorpIDsFromCorpMap(corpMap)
@@ -78,7 +72,6 @@ func (a *Auditor) processCorporationChunk(corporations []monocle.Corporation) {
 	for _, id := range corpIds {
 		whereIds = append(whereIds, id)
 	}
-	spew.Dump(whereIds)
 	histories := []*monocle.CorporationAllianceHistory{}
 	err = boiler.CorporationAllianceHistories(
 		qm.WhereIn("id IN ?", whereIds...),
@@ -104,9 +97,9 @@ func (a *Auditor) processCorporationChunk(corporations []monocle.Corporation) {
 		if historiesLen == 1 {
 			a.Logger.WithField("id", histories[0].ID).Debug("1 history entry. skipping...")
 			a.UpdateCorporation(histories[0].ID)
-
 			continue
 		}
+		a.Logger.WithField("id", histories[0].ID).Debug("working history")
 
 		for i, history := range histories {
 			if i != historiesLen-1 {
@@ -116,7 +109,6 @@ func (a *Auditor) processCorporationChunk(corporations []monocle.Corporation) {
 				j := i + 1
 				history.LeaveDate.SetValid(histories[j].StartDate)
 			}
-			spew.Dump(history)
 			var boilHistory boiler.CorporationAllianceHistory
 			err = copier.Copy(&boilHistory, history)
 			if err != nil {
@@ -126,40 +118,24 @@ func (a *Auditor) processCorporationChunk(corporations []monocle.Corporation) {
 				}).WithError(err).Error("Failed to copy history to boilHistory")
 				continue
 			}
-			fmt.Println("--------------------------------")
-			spew.Dump(boilHistory)
-			// boil.DebugMode = true
 
-			// err = boilHistory.Update(context.Background(), a.DB, boil.Infer())
-			// if err != nil {
-			// 	a.Logger.WithFields(logrus.Fields{
-			// 		"id":        history.ID,
-			// 		"record_id": history.RecordID,
-			// 	}).WithError(err).Error("Failed to update history in database")
-			// }
-			// boil.DebugMode = false
-			DebugSleep("End of Main History Loop", 0)
+			err = boilHistory.Update(context.Background(), a.DB, boil.Infer())
+			if err != nil {
+				a.Logger.WithFields(logrus.Fields{
+					"id":        history.ID,
+					"record_id": history.RecordID,
+				}).WithError(err).Error("Failed to update history in database")
+			}
 
 		}
-		DebugSleep("End of Main History Loop", 0)
 		a.Logger.WithField("id", histories[0].ID).Debug("Done")
-		a.Logger.Debug("---------------")
-		// a.UpdateCorporation(histories[0].ID)
+		a.UpdateCorporation(histories[0].ID)
 	}
-	DebugSleep("End of Main Histories Loop", 0)
-}
-
-func DebugSleep(msg string, dur int) {
-	if dur == 0 {
-		dur = 5
-	}
-	fmt.Println(msg)
-	time.Sleep(time.Second * time.Duration(dur))
 }
 
 func (a *Auditor) UpdateCorporation(id uint64) {
 
-	corporation, err := boiler.FindCorporation(context.Background(), a.DB, id)
+	corporation, err := boiler.FindCorporation(context.Background(), a.DB, uint(id))
 	if err != nil {
 		a.Logger.WithFields(logrus.Fields{
 			"id": id,

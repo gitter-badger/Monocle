@@ -33,8 +33,6 @@ func (a *Auditor) charUpdater(c *cli.Context) {
 			qm.Offset(offset),
 		)
 
-		// tools.OutputDebugQuery(query.Query)
-
 		err := query.Bind(context.Background(), a.DB, &characters)
 		if err != nil {
 			a.Logger.WithError(err).Error("error encountered querying database")
