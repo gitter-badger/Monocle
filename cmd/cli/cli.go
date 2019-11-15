@@ -9,6 +9,7 @@ import (
 	"github.com/ddouglas/monocle/hack"
 	"github.com/ddouglas/monocle/processor"
 	"github.com/ddouglas/monocle/server"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/urfave/cli"
 )
 
