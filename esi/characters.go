@@ -10,6 +10,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// HeadCharactersCharacterID makes a HTTP GET Request to the /characters/{character_id} endpoint
+// Often used to see if a particular character exists or to check the remaining time until
+// the cache expires
+//
+// Documentation: https://esi.evetech.net/ui/#/Character/get_characters_character_id
+// Version: v4
+// Cache: 3600 sec (1 Hour)
 func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
 
 	path := fmt.Sprintf("/v4/characters/%d/", id)
@@ -48,6 +55,12 @@ func (e *Client) HeadCharactersCharacterID(id uint64) (Response, error) {
 	return response, err
 }
 
+// GetCharactersCharacterID makes a HTTP GET Request to the /characters/{character_id} endpoint
+// for information about the provided character
+//
+// Documentation: https://esi.evetech.net/ui/#/Character/get_characters_character_id
+// Version: v4
+// Cache: 3600 sec (1 Hour)
 func (e *Client) GetCharactersCharacterID(character *monocle.Character) (Response, error) {
 
 	path := fmt.Sprintf("/v4/characters/%d/", character.ID)
@@ -90,7 +103,7 @@ func (e *Client) GetCharactersCharacterID(character *monocle.Character) (Respons
 			newChar.Ignored = true
 		}
 
-		newChar.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		newChar.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrap(err, "Error Encountered attempting to parse expires header")
 		}
@@ -104,7 +117,7 @@ func (e *Client) GetCharactersCharacterID(character *monocle.Character) (Respons
 
 		break
 	case 304:
-		character.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		character.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrap(err, "Error Encountered attempting to parse expires header")
 		}
@@ -129,6 +142,13 @@ func (e *Client) GetCharactersCharacterID(character *monocle.Character) (Respons
 	return response, err
 }
 
+// GetCharactersCharacterIDCorporationHistory makes a HTTP GET Request to the
+// /characters/{character_id}/corporationhistory endpoint for a list of corporations
+// the character has previously been a member of
+//
+// Documentation: https://esi.evetech.net/ui/#/Character/get_characters_character_id_corporationhistory
+// Version: v1
+// Cache: 3600 sec (1 Hour)
 func (e *Client) GetCharactersCharacterIDCorporationHistory(etag *monocle.EtagResource) (Response, error) {
 
 	var history []*monocle.CharacterCorporationHistory
@@ -166,7 +186,7 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etag *monocle.EtagRe
 			return response, errors.Wrapf(err, "unable to unmarshel response body for %d corporation history", etag.ID)
 		}
 
-		etag.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		etag.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s", response.Path)
 		}
@@ -178,7 +198,7 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etag *monocle.EtagRe
 
 		break
 	case 304:
-		etag.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		etag.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s", response.Path)
 		}
@@ -203,6 +223,14 @@ func (e *Client) GetCharactersCharacterIDCorporationHistory(etag *monocle.EtagRe
 	return response, err
 }
 
+// PostCharactersAffiliation makes a HTTP POST Request to the
+// /characters/affiliation/ endpoint containing up to 1K character ids
+// This is often used to quickly determine if a characters affiliation with an alliance,
+// corporation, or faction has recently changed.
+//
+// Documentation: https://esi.evetech.net/ui/#/Character/post_characters_affiliation
+// Version: v1
+// Cache: 3600 sec (1 Hour)
 func (e *Client) PostCharactersAffiliation(ids []uint64) (Response, error) {
 	var affiliations []monocle.CharacterAffiliation
 

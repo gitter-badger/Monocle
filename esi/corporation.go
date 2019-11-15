@@ -10,6 +10,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// HeadCorporationsCorporationID makes a HTTP GET Request to the /corporations/{corporation_id} endpoint
+// Often used to see if a particular corporation exists or to check the remaining time until
+// the cache expires
+//
+// Documentation: https://esi.evetech.net/ui/#/Corporation/get_corporations_corporation_id
+// Version: v4
+// Cache: 3600 sec (1 Hour)
 func (e *Client) HeadCorporationsCorporationID(id uint) (Response, error) {
 
 	path := fmt.Sprintf("/v4/corporations/%d/", id)
@@ -43,6 +50,12 @@ func (e *Client) HeadCorporationsCorporationID(id uint) (Response, error) {
 	return response, err
 }
 
+// GetCorporationsCorporationID makes a HTTP GET Request to the /corporations/{corporation_id} endpoint
+// for information about the provided corporation
+//
+// Documentation: https://esi.evetech.net/ui/#/Corporation/get_corporations_corporation_id
+// Version: v4
+// Cache: 3600 sec (1 Hour)
 func (e *Client) GetCorporationsCorporationID(corporation *monocle.Corporation) (Response, error) {
 
 	path := fmt.Sprintf("/v4/corporations/%d/", corporation.ID)
@@ -82,7 +95,7 @@ func (e *Client) GetCorporationsCorporationID(corporation *monocle.Corporation) 
 
 		newCorp.ID = corporation.ID
 
-		newCorp.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		newCorp.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrap(err, "Error Encountered attempting to parse expires header")
 		}
@@ -96,7 +109,7 @@ func (e *Client) GetCorporationsCorporationID(corporation *monocle.Corporation) 
 
 		break
 	case 304:
-		corporation.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		corporation.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrap(err, "Error Encountered attempting to parse expires header")
 		}
@@ -122,6 +135,13 @@ func (e *Client) GetCorporationsCorporationID(corporation *monocle.Corporation) 
 
 }
 
+// GetCorporationsCorporationIDAllianceHistory makes a HTTP GET Request to the
+// /v2/corporations/{corporation_id}/alliancehistory/ endpoint for a list of alliances that the
+// provided corporation has previously been a member of.
+//
+// Documentation: https://esi.evetech.net/ui/#/Corporation/get_corporations_corporation_id_alliancehistory
+// Version: v2
+// Cache: 3600 sec (1 Hour)
 func (e *Client) GetCorporationsCorporationIDAllianceHistory(etagResource *monocle.EtagResource) (Response, error) {
 
 	var history []*monocle.CorporationAllianceHistory
@@ -160,7 +180,7 @@ func (e *Client) GetCorporationsCorporationIDAllianceHistory(etagResource *monoc
 			return response, err
 		}
 
-		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}
@@ -172,7 +192,7 @@ func (e *Client) GetCorporationsCorporationIDAllianceHistory(etagResource *monoc
 
 		break
 	case 304:
-		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrapf(err, "Error Encountered attempting to parse expires header for url %s: %s", response.Path, err)
 		}

@@ -53,6 +53,7 @@ type (
 	}
 )
 
+// New returns a default configuration for this package
 func New() (*Client, error) {
 	var config monocle.Config
 	err := envconfig.Process("", &config)
@@ -74,6 +75,8 @@ func New() (*Client, error) {
 
 }
 
+// Request prepares and executes an http request to the EVE Swagger Interface OpenAPI
+// and returns the response
 func (e *Client) Request(request Request) (Response, error) {
 
 	var rBody io.Reader
@@ -127,7 +130,9 @@ func (e *Client) Request(request Request) (Response, error) {
 	return response, nil
 }
 
-func RetrieveExpiresHeaderFromResponse(response Response) (time.Time, error) {
+// RetrieveExpiresHeaderFromResponse takes a response and pull Expires header from the headers. If duraction
+// is greater than zero(0), then that number of minutes will be add to the expires time that is parsed from the header.
+func RetrieveExpiresHeaderFromResponse(response Response, duration int) (time.Time, error) {
 	if _, ok := response.Headers["Expires"]; !ok {
 		err := fmt.Errorf("Expires Headers is missing for url %s", response.Path)
 		return time.Time{}, err
@@ -136,15 +141,16 @@ func RetrieveExpiresHeaderFromResponse(response Response) (time.Time, error) {
 	if err != nil {
 		return expires, err
 	}
-	/*
-		Setting the default Etag Expiration to six hours because it is highly unlikely that somebody, unless a super malicious character, is going to jump through more than two corps (one NPC and one Player Owned)
-		in less than 6 hours
-	*/
-	expires = expires.Add(time.Hour * 6)
+
+	if duration > 0 {
+		expires = expires.Add(time.Minute * time.Duration(duration))
+	}
 
 	return expires, nil
 }
 
+// RetrieveEtagHeaderFromResponse is a helper method that retrieves an Etag for the most recent request to
+// ESI
 func RetrieveEtagHeaderFromResponse(response Response) (string, error) {
 	if _, ok := response.Headers["Etag"]; !ok {
 		err = fmt.Errorf("Etag Header is missing from url %s", response.Path)
@@ -153,6 +159,8 @@ func RetrieveEtagHeaderFromResponse(response Response) (string, error) {
 	return response.Headers["Etag"], nil
 }
 
+// RetrieveErrorCountFromResponse is a helper method that retrieves the number of errors that this application
+// has triggered and how many more we can trigger before being 420'd
 func RetrieveErrorCountFromResponse(response Response) uint64 {
 	if _, ok := response.Headers["X-Esi-Error-Limit-Remain"]; !ok {
 		err = fmt.Errorf("X-Esi-Error-Limit-Remain Header is missing from url %s", response.Path)
@@ -167,6 +175,7 @@ func RetrieveErrorCountFromResponse(response Response) uint64 {
 	return count
 }
 
+// RetrieveErrorResetFromResponse is a helper method that retrieves the number of seconds until our Error Limit resets
 func RetrieveErrorResetFromResponse(response Response) uint64 {
 	if _, ok := response.Headers["X-Esi-Error-Limit-Reset"]; !ok {
 		err = fmt.Errorf("X-Esi-Error-Limit-Reset Header is missing from url %s", response.Path)

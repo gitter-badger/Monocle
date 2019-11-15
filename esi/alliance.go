@@ -9,6 +9,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// GetAlliancesAllianceID makes a HTTP HEAD Request to the /alliances/{alliance_id} endpoint
+// Often used to see if a particular alliance exists or to check the remaining time until
+// the cache expires
+//
+// Documentation: https://esi.evetech.net/ui/#/Alliance/get_alliances_alliance_id
+// Version: v3
+// Cache: 3600 sec (1 Hour)
 func (e *Client) HeadAlliancesAllianceID(id uint) (Response, error) {
 
 	path := fmt.Sprintf("/v3/alliances/%d/", id)
@@ -45,6 +52,12 @@ func (e *Client) HeadAlliancesAllianceID(id uint) (Response, error) {
 	return response, err
 }
 
+// GetAlliancesAllianceID makes a HTTP GET Request to the /alliances/{alliance_id} endpoint
+// for information about the provided alliance
+//
+// Documentation: https://esi.evetech.net/ui/#/Alliance/get_alliances_alliance_id
+// Version: v3
+// Cache: 3600 sec (1 Hour)
 func (e *Client) GetAlliancesAllianceID(alliance *monocle.Alliance) (Response, error) {
 
 	path := fmt.Sprintf("/v3/alliances/%d/", alliance.ID)
@@ -82,7 +95,7 @@ func (e *Client) GetAlliancesAllianceID(alliance *monocle.Alliance) (Response, e
 
 		newAlliance.ID = alliance.ID
 
-		newAlliance.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		newAlliance.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrapf(err, "Error Encounter with Request %s", path)
 		}
@@ -97,7 +110,7 @@ func (e *Client) GetAlliancesAllianceID(alliance *monocle.Alliance) (Response, e
 		break
 
 	case 304:
-		expires, err := RetrieveExpiresHeaderFromResponse(response)
+		expires, err := RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			err = errors.Wrapf(err, "Error Encounter with Request %s", path)
 
@@ -123,6 +136,13 @@ func (e *Client) GetAlliancesAllianceID(alliance *monocle.Alliance) (Response, e
 	return response, err
 }
 
+// GetAlliancesAllianceIDCorporations makes a HTTP GET Request to the /alliances/{alliance_id}/corporations endpoint
+// and receives a list of ids corresponding to the corporations that are currently a member of the provided
+// alliance
+//
+// Documentation: https://esi.evetech.net/ui/#/Alliance/get_alliances_alliance_id_corporations
+// Version: v1
+// Cache: 3600 sec (1 Hour)
 func (e *Client) GetAlliancesAllianceIDCorporations(etagResource *monocle.EtagResource) (Response, error) {
 
 	path := fmt.Sprintf("/v1/alliances/%d/corporations/", etagResource.ID)
@@ -146,7 +166,7 @@ func (e *Client) GetAlliancesAllianceIDCorporations(etagResource *monocle.EtagRe
 		Body:    []byte(""),
 	}
 
-	var ids = make([]uint32, 0)
+	var ids = make([]uint, 0)
 
 	response, err := e.Request(request)
 	if err != nil {
@@ -160,7 +180,7 @@ func (e *Client) GetAlliancesAllianceIDCorporations(etagResource *monocle.EtagRe
 			return response, errors.Wrapf(err, "unable to unmarshel response body on request %s", path)
 		}
 
-		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrapf(err, "Error Encounter with Request %s", path)
 		}
@@ -173,7 +193,7 @@ func (e *Client) GetAlliancesAllianceIDCorporations(etagResource *monocle.EtagRe
 		break
 
 	case 304:
-		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response)
+		etagResource.Expires, err = RetrieveExpiresHeaderFromResponse(response, 0)
 		if err != nil {
 			return response, errors.Wrapf(err, "Error Encounter with Request %s", path)
 		}
