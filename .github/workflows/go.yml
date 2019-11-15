@@ -1,8 +1,6 @@
 name: "DockerBuildAndDeploy"
 on:
   push:
-    branches: 
-      - master
     tags:
       - '**'
 
