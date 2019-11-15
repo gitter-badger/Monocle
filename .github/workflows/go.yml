@@ -1,0 +1,11 @@
+name: Go
+on:
+  pull_request:
+    types: [closed]
+jobs:
+   deploy:
+     runs-on: [ubuntu-latest]
+     steps:
+       - name: Build Docker
+         run: docker build . -t monocle:latest
+         if: github.event.pull_request.merged == true
