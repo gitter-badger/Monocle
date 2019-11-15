@@ -24,23 +24,23 @@ import (
 
 // Corporation is an object representing the database table.
 type Corporation struct {
-	ID            uint        `db:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
-	Name          string      `db:"name" boil:"name" json:"name" toml:"name" yaml:"name"`
-	Ticker        string      `db:"ticker" boil:"ticker" json:"ticker" toml:"ticker" yaml:"ticker"`
-	MemberCount   uint        `db:"member_count" boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
-	CeoID         uint64      `db:"ceo_id" boil:"ceo_id" json:"ceo_id" toml:"ceo_id" yaml:"ceo_id"`
-	AllianceID    null.Uint   `db:"alliance_id" boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
-	DateFounded   null.Time   `db:"date_founded" boil:"date_founded" json:"date_founded,omitempty" toml:"date_founded" yaml:"date_founded,omitempty"`
-	CreatorID     uint64      `db:"creator_id" boil:"creator_id" json:"creator_id" toml:"creator_id" yaml:"creator_id"`
-	HomeStationID null.Uint64 `db:"home_station_id" boil:"home_station_id" json:"home_station_id,omitempty" toml:"home_station_id" yaml:"home_station_id,omitempty"`
-	TaxRate       float32     `db:"tax_rate" boil:"tax_rate" json:"tax_rate" toml:"tax_rate" yaml:"tax_rate"`
-	WarEligible   bool        `db:"war_eligible" boil:"war_eligible" json:"war_eligible" toml:"war_eligible" yaml:"war_eligible"`
-	Ignored       bool        `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
-	Closed        bool        `db:"closed" boil:"closed" json:"closed" toml:"closed" yaml:"closed"`
-	Etag          string      `db:"etag" boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
-	Expires       time.Time   `db:"expires" boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
-	CreatedAt     time.Time   `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt     time.Time   `db:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID            uint      `db:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
+	Name          string    `db:"name" boil:"name" json:"name" toml:"name" yaml:"name"`
+	Ticker        string    `db:"ticker" boil:"ticker" json:"ticker" toml:"ticker" yaml:"ticker"`
+	MemberCount   uint      `db:"member_count" boil:"member_count" json:"member_count" toml:"member_count" yaml:"member_count"`
+	CeoID         uint64    `db:"ceo_id" boil:"ceo_id" json:"ceo_id" toml:"ceo_id" yaml:"ceo_id"`
+	AllianceID    null.Uint `db:"alliance_id" boil:"alliance_id" json:"alliance_id,omitempty" toml:"alliance_id" yaml:"alliance_id,omitempty"`
+	DateFounded   null.Time `db:"date_founded" boil:"date_founded" json:"date_founded,omitempty" toml:"date_founded" yaml:"date_founded,omitempty"`
+	CreatorID     uint64    `db:"creator_id" boil:"creator_id" json:"creator_id" toml:"creator_id" yaml:"creator_id"`
+	HomeStationID null.Uint `db:"home_station_id" boil:"home_station_id" json:"home_station_id,omitempty" toml:"home_station_id" yaml:"home_station_id,omitempty"`
+	TaxRate       float32   `db:"tax_rate" boil:"tax_rate" json:"tax_rate" toml:"tax_rate" yaml:"tax_rate"`
+	WarEligible   bool      `db:"war_eligible" boil:"war_eligible" json:"war_eligible" toml:"war_eligible" yaml:"war_eligible"`
+	Ignored       bool      `db:"ignored" boil:"ignored" json:"ignored" toml:"ignored" yaml:"ignored"`
+	Closed        bool      `db:"closed" boil:"closed" json:"closed" toml:"closed" yaml:"closed"`
+	Etag          string    `db:"etag" boil:"etag" json:"etag" toml:"etag" yaml:"etag"`
+	Expires       time.Time `db:"expires" boil:"expires" json:"expires" toml:"expires" yaml:"expires"`
+	CreatedAt     time.Time `db:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt     time.Time `db:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *corporationR `db:"-" boil:"-" json:"-" toml:"-" yaml:"-"`
 	L corporationL  `db:"-" boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -86,29 +86,6 @@ var CorporationColumns = struct {
 
 // Generated where
 
-type whereHelpernull_Uint64 struct{ field string }
-
-func (w whereHelpernull_Uint64) EQ(x null.Uint64) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Uint64) NEQ(x null.Uint64) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Uint64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Uint64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-func (w whereHelpernull_Uint64) LT(x null.Uint64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Uint64) LTE(x null.Uint64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Uint64) GT(x null.Uint64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Uint64) GTE(x null.Uint64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
 var CorporationWhere = struct {
 	ID            whereHelperuint
 	Name          whereHelperstring
@@ -118,7 +95,7 @@ var CorporationWhere = struct {
 	AllianceID    whereHelpernull_Uint
 	DateFounded   whereHelpernull_Time
 	CreatorID     whereHelperuint64
-	HomeStationID whereHelpernull_Uint64
+	HomeStationID whereHelpernull_Uint
 	TaxRate       whereHelperfloat32
 	WarEligible   whereHelperbool
 	Ignored       whereHelperbool
@@ -136,7 +113,7 @@ var CorporationWhere = struct {
 	AllianceID:    whereHelpernull_Uint{field: "`corporations`.`alliance_id`"},
 	DateFounded:   whereHelpernull_Time{field: "`corporations`.`date_founded`"},
 	CreatorID:     whereHelperuint64{field: "`corporations`.`creator_id`"},
-	HomeStationID: whereHelpernull_Uint64{field: "`corporations`.`home_station_id`"},
+	HomeStationID: whereHelpernull_Uint{field: "`corporations`.`home_station_id`"},
 	TaxRate:       whereHelperfloat32{field: "`corporations`.`tax_rate`"},
 	WarEligible:   whereHelperbool{field: "`corporations`.`war_eligible`"},
 	Ignored:       whereHelperbool{field: "`corporations`.`ignored`"},
