@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/volatiletech/sqlboiler/boil"
+
 	"github.com/99designs/gqlgen/handler"
 	"github.com/go-chi/chi"
 	"github.com/kelseyhightower/envconfig"
@@ -101,6 +103,8 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 	r.Use(NewStructuredLogger(s.App.Logger))
 	r.Use(s.RateLimiter)
 
+	boil.SetDB(s.App.DB.DB)
+
 	graphSchema := service.NewExecutableSchema(service.Config{
 		Resolvers: &resolvers.Common{DB: s.App.DB.DB},
 	})
@@ -108,7 +112,7 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 	// One handler to process graphQL queries
 	queryHandler := handler.GraphQL(
 		graphSchema,
-		handler.IntrospectionEnabled(false),
+		// handler.IntrospectionEnabled(false),
 	)
 
 	r.Handle("/pg", dataloaders.Dataloader(s.App.DB.DB, handler.Playground("GraphQL playground", "/query")))

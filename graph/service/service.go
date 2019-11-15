@@ -68,11 +68,12 @@ type ComplexityRoot struct {
 	}
 
 	AllianceHistory struct {
-		Alliance   func(childComplexity int) int
-		AllianceID func(childComplexity int) int
-		ID         func(childComplexity int) int
-		RecordID   func(childComplexity int) int
-		StartDate  func(childComplexity int) int
+		Alliance    func(childComplexity int) int
+		AllianceID  func(childComplexity int) int
+		Corporation func(childComplexity int) int
+		ID          func(childComplexity int) int
+		RecordID    func(childComplexity int) int
+		StartDate   func(childComplexity int) int
 	}
 
 	Character struct {
@@ -167,14 +168,10 @@ type AllianceResolver interface {
 	Executor(ctx context.Context, obj *monocle.Alliance) (*monocle.Corporation, error)
 }
 type AllianceHistoryResolver interface {
-	AllianceID(ctx context.Context, obj *monocle.CorporationAllianceHistory) (*int, error)
 	Alliance(ctx context.Context, obj *monocle.CorporationAllianceHistory) (*monocle.Alliance, error)
+	Corporation(ctx context.Context, obj *monocle.CorporationAllianceHistory) (*monocle.Corporation, error)
 }
 type CharacterResolver interface {
-	AllianceID(ctx context.Context, obj *monocle.Character) (*int, error)
-
-	FactionID(ctx context.Context, obj *monocle.Character) (*int, error)
-
 	Corporation(ctx context.Context, obj *monocle.Character) (*monocle.Corporation, error)
 	History(ctx context.Context, obj *monocle.Character) ([]*monocle.CharacterCorporationHistory, error)
 }
@@ -323,6 +320,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AllianceHistory.AllianceID(childComplexity), true
+
+	case "AllianceHistory.corporation":
+		if e.complexity.AllianceHistory.Corporation == nil {
+			break
+		}
+
+		return e.complexity.AllianceHistory.Corporation(childComplexity), true
 
 	case "AllianceHistory.id":
 		if e.complexity.AllianceHistory.ID == nil {
@@ -1044,6 +1048,7 @@ type AllianceHistory {
     record_id: Int!
     alliance_id: Int
     alliance: Alliance
+    corporation: Corporation!
     start_date: Time
 }
 `},
@@ -2006,13 +2011,13 @@ func (ec *executionContext) _AllianceHistory_alliance_id(ctx context.Context, fi
 		Object:   "AllianceHistory",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.AllianceHistory().AllianceID(rctx, obj)
+		return obj.AllianceID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2021,10 +2026,10 @@ func (ec *executionContext) _AllianceHistory_alliance_id(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(null.Uint)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOInt2githubᚗcomᚋvolatiletechᚋnullᚐUint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AllianceHistory_alliance(ctx context.Context, field graphql.CollectedField, obj *monocle.CorporationAllianceHistory) (ret graphql.Marshaler) {
@@ -2059,6 +2064,43 @@ func (ec *executionContext) _AllianceHistory_alliance(ctx context.Context, field
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOAlliance2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐAlliance(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AllianceHistory_corporation(ctx context.Context, field graphql.CollectedField, obj *monocle.CorporationAllianceHistory) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "AllianceHistory",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.AllianceHistory().Corporation(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*monocle.Corporation)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCorporation2ᚖgithubᚗcomᚋddouglasᚋmonocleᚐCorporation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AllianceHistory_start_date(ctx context.Context, field graphql.CollectedField, obj *monocle.CorporationAllianceHistory) (ret graphql.Marshaler) {
@@ -2253,13 +2295,13 @@ func (ec *executionContext) _Character_alliance_id(ctx context.Context, field gr
 		Object:   "Character",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Character().AllianceID(rctx, obj)
+		return obj.AllianceID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2268,10 +2310,10 @@ func (ec *executionContext) _Character_alliance_id(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(null.Uint)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOInt2githubᚗcomᚋvolatiletechᚋnullᚐUint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Character_corporation_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Character) (ret graphql.Marshaler) {
@@ -2324,13 +2366,13 @@ func (ec *executionContext) _Character_faction_id(ctx context.Context, field gra
 		Object:   "Character",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Character().FactionID(rctx, obj)
+		return obj.FactionID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2339,10 +2381,10 @@ func (ec *executionContext) _Character_faction_id(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(null.Uint)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOInt2githubᚗcomᚋvolatiletechᚋnullᚐUint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Character_ancestry_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Character) (ret graphql.Marshaler) {
@@ -2561,10 +2603,10 @@ func (ec *executionContext) _Corporation_id(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uint32)
+	res := resTmp.(uint)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNInt2uint32(ctx, field.Selections, res)
+	return ec.marshalNInt2uint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Corporation_name(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
@@ -2672,10 +2714,10 @@ func (ec *executionContext) _Corporation_member_count(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uint64)
+	res := resTmp.(uint)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNInt2uint64(ctx, field.Selections, res)
+	return ec.marshalNInt2uint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Corporation_ceo_id(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
@@ -2743,10 +2785,10 @@ func (ec *executionContext) _Corporation_alliance_id(ctx context.Context, field 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(null.Uint32)
+	res := resTmp.(null.Uint)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOInt2githubᚗcomᚋvolatiletechᚋnullᚐUint32(ctx, field.Selections, res)
+	return ec.marshalOInt2githubᚗcomᚋvolatiletechᚋnullᚐUint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Corporation_date_founded(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
@@ -2848,10 +2890,10 @@ func (ec *executionContext) _Corporation_home_station_id(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(null.Uint32)
+	res := resTmp.(null.Uint)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOInt2githubᚗcomᚋvolatiletechᚋnullᚐUint32(ctx, field.Selections, res)
+	return ec.marshalOInt2githubᚗcomᚋvolatiletechᚋnullᚐUint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Corporation_tax_rate(ctx context.Context, field graphql.CollectedField, obj *monocle.Corporation) (ret graphql.Marshaler) {
@@ -5901,16 +5943,7 @@ func (ec *executionContext) _AllianceHistory(ctx context.Context, sel ast.Select
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "alliance_id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._AllianceHistory_alliance_id(ctx, field, obj)
-				return res
-			})
+			out.Values[i] = ec._AllianceHistory_alliance_id(ctx, field, obj)
 		case "alliance":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -5920,6 +5953,20 @@ func (ec *executionContext) _AllianceHistory(ctx context.Context, sel ast.Select
 					}
 				}()
 				res = ec._AllianceHistory_alliance(ctx, field, obj)
+				return res
+			})
+		case "corporation":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AllianceHistory_corporation(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "start_date":
@@ -7215,20 +7262,6 @@ func (ec *executionContext) unmarshalNInt2uint(ctx context.Context, v interface{
 
 func (ec *executionContext) marshalNInt2uint(ctx context.Context, sel ast.SelectionSet, v uint) graphql.Marshaler {
 	res := scalar.MarshalUint(v)
-	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNInt2uint32(ctx context.Context, v interface{}) (uint32, error) {
-	return scalar.UnmarshalUint32(v)
-}
-
-func (ec *executionContext) marshalNInt2uint32(ctx context.Context, sel ast.SelectionSet, v uint32) graphql.Marshaler {
-	res := scalar.MarshalUint32(v)
 	if res == graphql.Null {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")

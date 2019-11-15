@@ -341,7 +341,7 @@ func (p *Processor) processAllianceCorporationMembers(alliance *Alliance) {
 		}
 	}
 
-	ids := data["ids"].([]uint32)
+	ids := data["ids"].([]uint)
 
 	member_count := 0
 	if len(ids) > 0 {

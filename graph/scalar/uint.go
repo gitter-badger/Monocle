@@ -23,6 +23,20 @@ func UnmarshalUint(v interface{}) (uint, error) {
 	return v.(uint), nil
 }
 
+func MarshalNullUint(n null.Uint) graphql.Marshaler {
+	return graphql.WriterFunc(func(w io.Writer) {
+		json.NewEncoder(w).Encode(n.Uint)
+	})
+}
+
+func UnmarshalNullUint(v interface{}) (null.Uint, error) {
+	if _, ok := v.(uint); !ok {
+		return null.UintFromPtr(nil), fmt.Errorf("%T is not a uint", v)
+	}
+
+	return null.UintFrom(v.(uint)), nil
+}
+
 func MarshalUint32(i uint32) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
 		json.NewEncoder(w).Encode(i)

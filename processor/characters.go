@@ -573,13 +573,13 @@ func (p *Processor) processCharacterCorpHistory(character *Character) {
 
 func (p *Processor) findUnknownCorps(histories boiler.CharacterCorporationHistorySlice) {
 
-	unique := map[uint32]bool{}
+	unique := map[uint]bool{}
 	list := []interface{}{}
 
 	for _, history := range histories {
-		if _, v := unique[uint32(history.CorporationID)]; !v {
-			unique[uint32(history.CorporationID)] = true
-			list = append(list, uint32(history.CorporationID))
+		if _, v := unique[history.CorporationID]; !v {
+			unique[history.CorporationID] = true
+			list = append(list, history.CorporationID)
 		}
 	}
 

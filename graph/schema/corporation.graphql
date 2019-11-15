@@ -21,6 +21,7 @@ type CorporationDelta {
     created_at: Time!
     corporation: Corporation!
 }
+
 type Corporation {
     id: Int!
     name: String!
@@ -45,5 +46,6 @@ type AllianceHistory {
     record_id: Int!
     alliance_id: Int
     alliance: Alliance
+    corporation: Corporation!
     start_date: Time
 }

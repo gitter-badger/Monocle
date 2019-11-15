@@ -91,7 +91,7 @@ func (p *Processor) corpHunter() {
 
 			corporation := &Corporation{
 				model: &monocle.Corporation{
-					ID: uint32(x),
+					ID: uint(x),
 				},
 				exists: false,
 			}

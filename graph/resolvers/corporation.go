@@ -2,6 +2,10 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
+	"time"
+
+	"github.com/volatiletech/null"
 
 	"github.com/ddouglas/monocle"
 	"github.com/ddouglas/monocle/boiler"
@@ -63,14 +67,45 @@ func (r *queryResolver) CorporationsByAllianceID(ctx context.Context, allianceID
 }
 
 func (r *queryResolver) CorporationAllianceHistoryByAllianceID(ctx context.Context, allianceID int, page *int, limit *int, sort *models.Sort) ([]*monocle.CorporationAllianceHistory, error) {
-	// histories := make([]*monocle.CorporationAllianceHistory, 0)
+	histories := make([]*monocle.CorporationAllianceHistory, 0)
 
-	// if limit == nil || *limit > 50 {
-	// 	x := 50
-	// 	limit = &x
-	// }
+	if limit == nil || *limit > 10 {
+		x := 10
+		limit = &x
+	}
 
-	// offset := (*page * *limit) - *limit
+	offset := (*page * *limit) - *limit
+
+	/**
+		SELECT
+			*
+		FROM `character_corporation_history`
+		WHERE (corporation_id = ?)
+		AND (leave_date IS NULL)
+		ORDER BY record_id DESC
+		LIMIT 50
+		OFFSET 50;
+	**/
+
+	var nullAllianceID null.Uint
+	nullAllianceID.SetValid(uint(allianceID))
+
+	err := boiler.CorporationAllianceHistories(
+		boiler.CorporationAllianceHistoryWhere.AllianceID.EQ(nullAllianceID),
+		boiler.CorporationAllianceHistoryWhere.LeaveDate.IsNull(),
+		qm.Limit(*limit),
+		qm.Offset(offset),
+		qm.OrderBy(
+			fmt.Sprintf(
+				"%s %s",
+				boiler.CorporationAllianceHistoryColumns.RecordID,
+				sort.String(),
+			),
+		),
+	).BindG(ctx, &histories)
+
+	return histories, err
+}
 
 func (r *queryResolver) CorporationDeltasByCorporationID(ctx context.Context, id int, limit *int) ([]*monocle.CorporationDelta, error) {
 	deltas := make([]*monocle.CorporationDelta, 0)
