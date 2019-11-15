@@ -16,8 +16,14 @@ import (
 )
 
 func (a *Auditor) charUpdater(c *cli.Context) {
-	page := c.Int("page")
+	page := c.Int("page") // 1
 	end := c.Int("end")
+	if end == 0 {
+		// If end was not passed from the cli, set a default value
+		//  instead of using the zero value of the type
+		end = 1000
+	}
+
 	limit := 50000
 	for i := page; i <= end; i++ {
 		var characters []monocle.Character

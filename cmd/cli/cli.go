@@ -36,7 +36,8 @@ var begin = cli.IntFlag{
 }
 
 var page = cli.IntFlag{
-	Name: "page",
+	Name:  "page",
+	Value: 1,
 }
 
 var end = cli.IntFlag{
