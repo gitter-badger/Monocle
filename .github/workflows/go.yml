@@ -1,7 +1,8 @@
 name: "DockerBuildAndDeploy"
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - v*
 jobs:
 
   build:
