@@ -2,7 +2,7 @@ name: "DockerBuildAndDeploy"
 on:
   push:
     tags:
-      - v*
+      - '**'
 jobs:
 
   build:
