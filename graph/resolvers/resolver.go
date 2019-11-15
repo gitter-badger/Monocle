@@ -36,3 +36,7 @@ func (r *Common) Corporation() generated.CorporationResolver {
 func (r *Common) CorporationHistory() generated.CorporationHistoryResolver {
 	return &corporationHistoryResolver{r}
 }
+
+func (r *Common) CorporationDelta() generated.CorporationDeltaResolver {
+	return &corporationDeltaResolver{r}
+}

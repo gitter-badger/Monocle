@@ -72,27 +72,15 @@ func (r *queryResolver) CorporationAllianceHistoryByAllianceID(ctx context.Conte
 
 	// offset := (*page * *limit) - *limit
 
-	// /**
-	// 	SELECT
-	// 		*
-	// 	FROM `character_corporation_history`
-	// 	WHERE (corporation_id = ?)
-	// 	AND (leave_date IS NULL)
-	// 	ORDER BY record_id DESC
-	// 	LIMIT 50
-	// 	OFFSET 50;
-	// **/
+func (r *queryResolver) CorporationDeltasByCorporationID(ctx context.Context, id int, limit *int) ([]*monocle.CorporationDelta, error) {
+	deltas := make([]*monocle.CorporationDelta, 0)
 
-	// err := boiler.CharacterCorporationHistories(
-	// 	qm.Where("corporation_id = ?", corporationID),
-	// 	qm.And("leave_date IS NULL"),
-	// 	qm.Limit(*limit),
-	// 	qm.Offset(offset),
-	// 	qm.OrderBy(fmt.Sprintf("record_id %s", sort.String())),
-	// ).Bind(ctx, r.DB, &histories)
+	err := boiler.CorporationDeltas(
+		boiler.CorporationDeltaWhere.CorporationID.EQ(uint(id)),
+		boiler.CorporationDeltaWhere.CreatedAt.GTE(time.Now().Add((time.Hour*24*7)*-1)),
+	).Bind(ctx, r.DB, &deltas)
 
-	// return histories, err
-	return nil, nil
+	return deltas, err
 }
 
 type corporationResolver struct {
@@ -113,4 +101,12 @@ func (q *corporationResolver) History(ctx context.Context, obj *monocle.Corporat
 
 func (q *corporationResolver) Ceo(ctx context.Context, obj *monocle.Corporation) (*monocle.Character, error) {
 	return dataloaders.CtxLoader(ctx).Character.Load(obj.CreatorID)
+}
+
+type corporationDeltaResolver struct {
+	*Common
+}
+
+func (cd *corporationDeltaResolver) Corporation(ctx context.Context, obj *monocle.CorporationDelta) (*monocle.Corporation, error) {
+	return dataloaders.CtxLoader(ctx).Corporation.Load(uint(obj.CorporationID))
 }

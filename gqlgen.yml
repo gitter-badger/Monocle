@@ -34,6 +34,7 @@ models:
         model:
             - github.com/99designs/gqlgen/graphql.Int
             - github.com/ddouglas/monocle/graph/scalar.Uint
+            - github.com/ddouglas/monocle/graph/scalar.NullUint
             - github.com/99designs/gqlgen/graphql.Int32
             - github.com/ddouglas/monocle/graph/scalar.Uint32
             - github.com/ddouglas/monocle/graph/scalar.NullUint32
@@ -55,6 +56,9 @@ models:
     AllianceHistory:
         model:
             - github.com/ddouglas/monocle.CorporationAllianceHistory
+    CorporationDelta:
+        model:
+            - github.com/ddouglas/monocle.CorporationDelta
     CorporationHistory:
         model:
             - github.com/ddouglas/monocle.CharacterCorporationHistory
