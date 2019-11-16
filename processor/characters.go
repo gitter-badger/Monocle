@@ -163,9 +163,9 @@ func (p *Processor) charUpdater() {
 		}
 
 		if len(characters) <= 0 {
-			temp := sleep * 30
+			temp := sleep * 30 // 5 * 30 = 600
 			p.Logger.WithField("sleep", temp).Info("no characters queried. sleeping...")
-			time.Sleep(time.Second * time.Duration(temp))
+			time.Sleep(time.Second * time.Duration(temp)) // 600 seconds
 			p.Logger.Debug("continuing loop")
 			continue
 		}
