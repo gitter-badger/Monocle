@@ -235,18 +235,23 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 	for _, affiliation := range affiliations {
 
 		selected := charMap[affiliation.CharacterID]
-		updated = append(updated, selected)
 
 		switch {
 		case affiliation.CorporationID != selected.CorporationID,
 			affiliation.AllianceID.Uint != selected.AllianceID.Uint,
 			affiliation.FactionID.Uint != selected.FactionID.Uint:
 			updated = append(updated, selected)
+			break
 		default:
 			stale = append(stale, selected.ID)
 			args = append(args, "?")
 		}
 	}
+
+	p.Logger.WithFields(logrus.Fields{
+		"stale":   len(stale),
+		"updated": len(updated),
+	}).Debug("Stale/Updated Count")
 
 	for _, model := range updated {
 		character := &Character{
