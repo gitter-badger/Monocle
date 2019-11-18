@@ -236,17 +236,19 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 	for _, affiliation := range affiliations {
 
 		selected := charMap[affiliation.CharacterID]
+		// Temp to fix some history issues
+		updated = append(updated, selected)
 
-		switch {
-		case affiliation.CorporationID != selected.CorporationID,
-			affiliation.AllianceID.Uint != selected.AllianceID.Uint,
-			affiliation.FactionID.Uint != selected.FactionID.Uint:
-			updated = append(updated, selected)
-			break
-		default:
-			stale = append(stale, selected.ID)
-			args = append(args, "?")
-		}
+		// switch {
+		// case affiliation.CorporationID != selected.CorporationID,
+		// 	affiliation.AllianceID.Uint != selected.AllianceID.Uint,
+		// 	affiliation.FactionID.Uint != selected.FactionID.Uint:
+		// 	updated = append(updated, selected)
+		// 	break
+		// default:
+		// 	stale = append(stale, selected.ID)
+		// 	args = append(args, "?")
+		// }
 	}
 
 	p.Logger.WithFields(logrus.Fields{
