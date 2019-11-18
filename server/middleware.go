@@ -27,7 +27,7 @@ func Cors(next http.Handler) http.Handler {
 	})
 }
 
-func NewStructuredLogger(logger *logrus.Logger) func(next http.Handler) http.Handler {
+func NewStructuredLogger(logger *logrus.Entry) func(next http.Handler) http.Handler {
 	return middleware.RequestLogger(&StructuredLogger{logger})
 }
 

@@ -11,12 +11,12 @@ import (
 
 // StructuredLogger holds our application's instance of our logger
 type StructuredLogger struct {
-	Logger *logrus.Logger
+	Logger *logrus.Entry
 }
 
 // NewLogEntry will return a new log entry scoped to the http.Request
 func (l *StructuredLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
-	entry := &StructuredLoggerEntry{Logger: logrus.NewEntry(l.Logger)}
+	entry := &StructuredLoggerEntry{Logger: l.Logger}
 	logFields := logrus.Fields{}
 
 	logFields["ts"] = time.Now()
@@ -25,23 +25,17 @@ func (l *StructuredLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
 		logFields["req_id"] = reqID
 	}
 
-	scheme := "http"
-	if r.TLS != nil {
-		scheme = "https"
-	}
-
-	logFields["application"] = "agentx-common-api"
-	logFields["http_scheme"] = scheme
-	logFields["http_proto"] = r.Proto
-	logFields["http_method"] = r.Method
+	logFields["application"] = "monocle-api"
+	logFields["proto"] = r.Proto
+	logFields["method"] = r.Method
 
 	logFields["remote_addr"] = r.RemoteAddr
 
-	logFields["uri"] = fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
+	logFields["uri"] = r.RequestURI
 
 	entry.Logger = entry.Logger.WithFields(logFields)
 
-	entry.Logger.Println()
+	entry.Logger.Print()
 
 	return entry
 }

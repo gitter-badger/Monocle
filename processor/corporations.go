@@ -60,7 +60,7 @@ func (p *Processor) corpHunter() {
 			"errors":    p.ESI.Remain,
 			"remaining": p.ESI.Reset,
 			"loop":      x,
-		}).Info()
+		}).Info("loop stats")
 
 		attempts := 0
 		for {
@@ -128,7 +128,7 @@ func (p *Processor) corpUpdater() {
 		p.Logger.WithFields(logrus.Fields{
 			"errors":    p.ESI.Remain,
 			"remaining": p.ESI.Reset,
-		}).Debug()
+		}).Debug("loop stats")
 
 		p.SleepDuringDowntime(time.Now())
 		p.EvaluateESIArtifacts()
@@ -234,7 +234,7 @@ func (p *Processor) processCorporation(corporation *Corporation) {
 		"id":     corporation.model.ID,
 		"name":   corporation.model.Name,
 		"exists": corporation.exists,
-	}).Debug()
+	}).Debug("loop stats")
 
 	switch corporation.exists {
 	case true:

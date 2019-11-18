@@ -46,7 +46,7 @@ func (a *Auditor) corpUpdater(c *cli.Context) {
 			return
 		}
 
-		a.Logger.WithField("count", len(corporations)).Info("character query successful")
+		a.Logger.WithField("count", len(corporations)).Info("corporation query successful")
 
 		corpChunk := tools.ChunkCorporationSlice(2500, corporations)
 		for _, corporations := range corpChunk {

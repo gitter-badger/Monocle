@@ -11,4 +11,7 @@ type Config struct {
 	EsiHost           string `envconfig:"ESI_HOST" required:"true"`
 	ApiUserAgent      string `envconfig:"API_USER_AGENT" required:"true"`
 	DiscordToken      string `envconfig:"DISCORD_TOKEN" required:"true"`
+	GrayLogEnabled    bool   `envconfig:"GRAYLOG_ENABLED" required:"true"`
+	GraylogURL        string `envconfig:"GRAYLOG_URL" required:"true"`
+	GraylogPort       uint   `envconfig:"GRAYLOG_PORT" required:"true"`
 }

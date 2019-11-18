@@ -63,7 +63,7 @@ func (p *Processor) charHunter() {
 			"remaining": p.ESI.Reset,
 			"loop":      x,
 			"end":       end,
-		}).Info()
+		}).Info("loop stats")
 
 		attempts := 0
 		for {
@@ -144,7 +144,8 @@ func (p *Processor) charUpdater() {
 		p.Logger.WithFields(logrus.Fields{
 			"errors":    p.ESI.Remain,
 			"remaining": p.ESI.Reset,
-		}).Debug()
+		}).Debug("loop stats")
+
 		p.SleepDuringDowntime(time.Now())
 		p.EvaluateESIArtifacts()
 		p.Logger.Info("starting loop...")
@@ -253,12 +254,13 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 			model:  &model,
 			exists: true,
 		}
+
 		p.processCharacter(character)
 		p.processCharacterCorpHistory(character)
 	}
 
 	if len(stale) > 0 {
-		query := `UPDATE characters SET expires = '%v' WHERE id IN (%s)`
+		query := `UPDATE characters SET expires = '%v', updated_at = NOW() WHERE id IN (%s)`
 
 		t := time.Now().Add(time.Hour * 12).Format("2006-01-02 15:04:05")
 
@@ -268,6 +270,7 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 			p.Logger.WithError(err).WithField("stale_records", len(stale)).Error("build update of etag expiry failed")
 		}
 	}
+
 }
 
 func (p *Processor) processCharacter(character *Character) {
@@ -280,6 +283,7 @@ func (p *Processor) processCharacter(character *Character) {
 	if !character.model.IsExpired() {
 		return
 	}
+
 	p.Logger.WithField("id", character.model.ID).Debug("processing char")
 
 	attempts := 0
@@ -318,7 +322,7 @@ func (p *Processor) processCharacter(character *Character) {
 		"id":     character.model.ID,
 		"name":   character.model.Name,
 		"exists": character.exists,
-	}).Debug()
+	}).Debug("loop stats")
 
 	switch character.exists {
 	case true:
@@ -334,7 +338,6 @@ func (p *Processor) processCharacter(character *Character) {
 			return
 		}
 	}
-
 }
 
 func (p *Processor) processCharacterCorpHistory(character *Character) {
@@ -434,7 +437,7 @@ func (p *Processor) processCharacterCorpHistory(character *Character) {
 	var boilEtag boiler.Etag
 	err = copier.Copy(&boilEtag, &etag.model)
 	if err != nil {
-		// Log an error
+		p.Logger.WithError(err).Error("failed to copy etag model into boilEtag")
 		return
 	}
 
@@ -465,8 +468,12 @@ func (p *Processor) processCharacterCorpHistory(character *Character) {
 		return
 	}
 
-	if _, ok := data["history"].([]monocle.CharacterCorporationHistory); !ok {
-		// Log an error
+	if _, ok := data["history"].([]*monocle.CharacterCorporationHistory); !ok {
+		p.Logger.
+			WithField("id", etag.model.ID).
+			WithField("resource", etag.model.Resource).
+			WithField("etag", etag.model.Etag).
+			Error("history index on data is not set or is wrong type")
 		return
 	}
 	history.model = data["history"].([]*monocle.CharacterCorporationHistory)
@@ -474,7 +481,7 @@ func (p *Processor) processCharacterCorpHistory(character *Character) {
 	var boilHistory boiler.CharacterCorporationHistorySlice
 	err = copier.Copy(&boilHistory, &history.model)
 	if err != nil {
-		// Log error
+		p.Logger.WithError(err).Error("error encountered while coping history.model into boilHistory")
 		return
 	}
 
@@ -551,24 +558,27 @@ func (p *Processor) processCharacterCorpHistory(character *Character) {
 		if insert {
 			err = selected.Insert(context.Background(), p.DB, boil.Infer())
 			if err != nil {
+				msg := "unable to insert character corporation history record into database"
 				p.Logger.WithError(err).WithFields(logrus.Fields{
 					"id":     selected.ID,
 					"record": selected.RecordID,
-				}).Error("unable to insert character corporation history record into database")
+				}).Error(msg)
+				return
 			}
 		} else {
 			err = selected.Update(context.Background(), p.DB, boil.Infer())
 			if err != nil {
+				msg := "unable to update character corporation history record in database"
 				p.Logger.WithError(err).WithFields(logrus.Fields{
 					"id":     selected.ID,
 					"record": selected.RecordID,
-				}).Error("unable to update character corporation history record in database")
+				}).Error(msg)
+				return
 			}
 		}
 		time.Sleep(time.Millisecond * 100)
 
 	}
-
 }
 
 func (p *Processor) findUnknownCorps(histories boiler.CharacterCorporationHistorySlice) {
