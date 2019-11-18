@@ -198,65 +198,67 @@ func (p *Processor) processCharacterChunk(characters []monocle.Character) {
 	p.SleepDuringDowntime(time.Now())
 	p.EvaluateESIArtifacts()
 
-	charMap := characterSliceToMap(characters)
-	charIds := charIdsFromSlice(characters)
+	// charMap := characterSliceToMap(characters)
+	// charIds := charIdsFromSlice(characters)
 
-	attempts := 1
-	for {
-		if attempts >= 3 {
-			p.Logger.WithField("attempts", attempts).Error("all attempts exhausted")
-			return
-		}
-		response, err = p.ESI.PostCharactersAffiliation(charIds)
-		if err != nil {
-			p.Logger.WithField("count", len(charIds)).WithError(err).Error("PostCharacterAffiliation request failed")
-			return
-		}
+	// attempts := 1
+	// for {
+	// 	if attempts >= 3 {
+	// 		p.Logger.WithField("attempts", attempts).Error("all attempts exhausted")
+	// 		return
+	// 	}
+	// 	response, err = p.ESI.PostCharactersAffiliation(charIds)
+	// 	if err != nil {
+	// 		p.Logger.WithField("count", len(charIds)).WithError(err).Error("PostCharacterAffiliation request failed")
+	// 		return
+	// 	}
 
-		if response.Code < 400 {
-			break
-		}
+	// 	if response.Code < 400 {
+	// 		break
+	// 	}
 
-		attempts++
-		sleep := time.Second * 1
-		p.Logger.WithFields(logrus.Fields{
-			"code":    response.Code,
-			"path":    response.Path,
-			"attempt": attempts,
-			"method":  "processCharacterChunk",
-			"sleep":   sleep,
-		}).Error("request failed. attempting again after sleeping.")
-		time.Sleep(sleep)
-	}
+	// 	attempts++
+	// 	sleep := time.Second * 1
+	// 	p.Logger.WithFields(logrus.Fields{
+	// 		"code":    response.Code,
+	// 		"path":    response.Path,
+	// 		"attempt": attempts,
+	// 		"method":  "processCharacterChunk",
+	// 		"sleep":   sleep,
+	// 	}).Error("request failed. attempting again after sleeping.")
+	// 	time.Sleep(sleep)
+	// }
 
-	affiliations := response.Data.([]monocle.CharacterAffiliation)
-	updated := []monocle.Character{}
+	// affiliations := response.Data.([]monocle.CharacterAffiliation)
+	// updated := []monocle.Character{}
 	stale := []interface{}{}
 	args := []string{}
-	for _, affiliation := range affiliations {
+	// for _, affiliation := range affiliations {
 
-		selected := charMap[affiliation.CharacterID]
-		// Temp to fix some history issues
-		updated = append(updated, selected)
+	// 	selected := charMap[affiliation.CharacterID]
+	// 	// Temp to fix some history issues
+	// 	updated = append(updated, selected)
 
-		// switch {
-		// case affiliation.CorporationID != selected.CorporationID,
-		// 	affiliation.AllianceID.Uint != selected.AllianceID.Uint,
-		// 	affiliation.FactionID.Uint != selected.FactionID.Uint:
-		// 	updated = append(updated, selected)
-		// 	break
-		// default:
-		// 	stale = append(stale, selected.ID)
-		// 	args = append(args, "?")
-		// }
-	}
+	// 	// switch {
+	// 	// case affiliation.CorporationID != selected.CorporationID,
+	// 	// 	affiliation.AllianceID.Uint != selected.AllianceID.Uint,
+	// 	// 	affiliation.FactionID.Uint != selected.FactionID.Uint:
+	// 	// 	updated = append(updated, selected)
+	// 	// 	break
+	// 	// default:
+	// 	// 	stale = append(stale, selected.ID)
+	// 	// 	args = append(args, "?")
+	// 	// }
+	// }
 
-	p.Logger.WithFields(logrus.Fields{
-		"stale":   len(stale),
-		"updated": len(updated),
-	}).Debug("Stale/Updated Count")
+	// p.Logger.WithFields(logrus.Fields{
+	// 	"stale":   len(stale),
+	// 	"updated": len(updated),
+	// }).Debug("Stale/Updated Count")
 
-	for _, model := range updated {
+	// updated = characters
+	for _, model := range characters {
+		// for _, model := range updated {
 		character := &Character{
 			model:  &model,
 			exists: true,
