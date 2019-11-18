@@ -191,7 +191,7 @@ func (p *Processor) charUpdater() {
 }
 
 func (p *Processor) processCharacterChunk(characters []monocle.Character) {
-	var response esi.Response
+	// var response esi.Response
 	var err error
 	defer wg.Done()
 
