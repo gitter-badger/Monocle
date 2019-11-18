@@ -35,26 +35,9 @@ func New(name string) (*App, error) {
 	if err != nil {
 		log.Fatal("unable initialize environment variables")
 	}
-	// logDir := "core/logs"
-	// if _, err := os.Stat(logDir); os.IsNotExist(err) {
-	// 	err = os.Mkdir(logDir, os.ModeDir)
-	// 	if err != nil {
-	// 		log.Fatal("unable make log directory")
-	// 	}
-	// }
 
 	var logger = logrus.New()
-	// if name == "" {
-	// 	name = "unknown"
-	// }
-	// name = fmt.Sprintf("%s/%s", logDir, name)
-	// logFileName := fmt.Sprintf("%s_%s.log", name, time.Now().Format("2006-01-02-15-04"))
-	// logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 
-	// mw := io.MultiWriter(os.Stdout, logFile)
 	logger.SetOutput(os.Stdout)
 
 	level, err := logrus.ParseLevel(config.LogLevel)
@@ -70,7 +53,9 @@ func New(name string) (*App, error) {
 		},
 	})
 
-	logger.AddHook(NewGraylogLogrusHook(config.GraylogURL, config.GraylogPort))
+	if config.GrayLogEnabled {
+		logger.AddHook(NewGraylogLogrusHook(config.GraylogURL, config.GraylogPort))
+	}
 
 	connection, err := mysql.Connect()
 	if err != nil {
