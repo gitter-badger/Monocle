@@ -12,6 +12,7 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=alliHunter
         container_name: alliHunter
+        hostname: alliHunter
         env_file:
             - .env-docker
     alliUpdater:
@@ -25,6 +26,7 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=alliUpdater --workers=2 --records=100
         container_name: alliUpdater
+        hostname: alliUpdater
         env_file:
             - .env-docker
     charUpdater:
@@ -38,6 +40,7 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=charUpdater --workers=50 --records=1000
         container_name: charUpdater
+        hostname: charUpdater
         env_file:
             - .env-docker
     charHunter:
@@ -51,6 +54,7 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=charHunter --records=10
         container_name: charHunter
+        hostname: charHunter
         env_file:
             - .env-docker
     corpHunter:
@@ -64,6 +68,7 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=corpHunter
         container_name: corpHunter
+        hostname: corpHunter
         env_file:
             - .env-docker
     corpUpdater:
@@ -77,6 +82,7 @@ services:
                 max-size: "50m"
         command: ./cli processor --scope=corpUpdater
         container_name: corpUpdater
+        hostname: corpUpdater
         env_file:
             - .env-docker
     cron:
@@ -90,6 +96,7 @@ services:
                 max-size: "50m"
         command: ./cli cron
         container_name: cron
+        hostname: cron
         env_file:
             - .env-docker
     api:
@@ -103,6 +110,7 @@ services:
                 max-size: "50m"
         command: ./cli api
         container_name: api
+        hostname: api
         env_file:
             - .env-docker
         ports:
